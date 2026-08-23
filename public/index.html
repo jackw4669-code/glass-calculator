@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wilson's Glass — Quote Calculator</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  *{-webkit-tap-highlight-color:transparent}
+  input[type=number]{-moz-appearance:textfield}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .scroll::-webkit-scrollbar{width:6px}
+  .scroll::-webkit-scrollbar-track{background:#1e293b;border-radius:3px}
+  .scroll::-webkit-scrollbar-thumb{background:#475569;border-radius:3px}
+  .scroll::-webkit-scrollbar-thumb:hover{background:#64748b}
+  :focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body class="bg-slate-900">
+<div id="app"></div>
+
+<script>
+const e = React.createElement;
+const { useState, useEffect, Fragment } = React;
+
+/* ============================================================
+   PRICE LIST
+   These are the current selling prices per m² (or per linear
+   metre for edgework). What you see is what is charged — no
+   hidden multiplier. To move prices across the board, use the
+   Prices panel in the header rather than editing every line.
+   ============================================================ */
+
+const VAT_RATE  = 0.20;
+const CARD_FEE  = 0.02;
+const STORE_KEY = 'wilsons_glass_quotes';
+const ADJ_KEY   = 'wilsons_glass_price_adjust';
+
+/* Minimum chargeable area by category */
+const MIN_AREA = {
+  'Double Glazed Units': 0.3,
+  'Toughened':           0.2,
+  'DEFAULT':             0.1,
+};
+
+const PRODUCTS = [
+  { id:'c2mm',    name:'2 MM GLASS',                      category:'Clear Float Glass',   price:51.61 },
+  { id:'c2mmrf',  name:'2MM NON REFLECTIVE',              category:'Clear Float Glass',   price:66.31 },
+  { id:'c4mm',    name:'4 MM GLASS',                      category:'Clear Float Glass',   price:48.63 },
+  { id:'c6mm',    name:'6MM GLASS',                       category:'Clear Float Glass',   price:80.04 },
+  { id:'c8mm',    name:'8 MM GLASS',                      category:'Clear Float Glass',   price:127.33 },
+  { id:'c10mm',   name:'10 MM GLASS',                     category:'Clear Float Glass',   price:147.62 },
+
+  { id:'w-ps',    name:'Georgian wired, polished safety', category:'Wired Glass',         price:217.31 },
+  { id:'w-cast',  name:'Georgian wired, cast',            category:'Wired Glass',         price:133.43 },
+
+  { id:'o4mm',    name:'4 MM OBSCURED',                   category:'Obscured / Tinted',   price:66.72 },
+  { id:'o6mm',    name:'6 MM OBSCURED',                   category:'Obscured / Tinted',   price:84.89 },
+  { id:'o4oriel', name:'4 MM Obscured oriel range',       category:'Obscured / Tinted',   price:425.92 },
+  { id:'oacid',   name:'Acid film & design',              category:'Obscured / Tinted',   price:114.40 },
+  { id:'a4mm',    name:'4 MM ANTISUN',                    category:'Obscured / Tinted',   price:105.93 },
+  { id:'a6mm',    name:'6 MM ANTISUN',                    category:'Obscured / Tinted',   price:179.95 },
+
+  { id:'s64l',    name:'6.4 MM LAMINATED',                category:'Safety Glass',        price:106.61 },
+  { id:'s64w',    name:'6.4 MM WHITE LAMINATED',          category:'Safety Glass',        price:173.15 },
+  { id:'s730',    name:'C730 — 30 min fire rating',       category:'Safety Glass',        price:424.41 },
+
+  { id:'t4mm',    name:'4 MM CLEAR',                      category:'Toughened',           price:93.37 },
+  { id:'t6mm',    name:'6 MM CLEAR',                      category:'Toughened',           price:115.95 },
+  { id:'t4o',     name:'4 MM OBSCURED',                   category:'Toughened',           price:111.66 },
+  { id:'t6o',     name:'6 MM OBSCURED',                   category:'Toughened',           price:139.21 },
+  { id:'t8mm',    name:'8 MM',                            category:'Toughened',           price:193.53 },
+  { id:'t10mm',   name:'10 MM',                           category:'Toughened',           price:167.03 },
+  { id:'t6tint',  name:'6 MM bronze / grey tint',         category:'Toughened',           price:157.88 },
+  { id:'t6sb',    name:'6 MM toughened & sandblasted',    category:'Toughened',           price:187.00 },
+
+  { id:'m4mm',    name:'4 MM mirror',                     category:'Mirrors',             price:81.49 },
+  { id:'m6mm',    name:'6 MM mirror',                     category:'Mirrors',             price:113.23 },
+  { id:'m4s',     name:'4 MM mirror, safety backed',      category:'Mirrors',             price:100.33 },
+  { id:'m4b',     name:'4 MM bronze silvered',            category:'Mirrors',             price:165.00 },
+  { id:'m6b',     name:'6 MM bronze silvered',            category:'Mirrors',             price:207.11 },
+  { id:'m6t',     name:'6 MM bronze / grey tint',         category:'Mirrors',             price:133.34 },
+  { id:'m6a',     name:'6 MM antique silvered',           category:'Mirrors',             price:354.96 },
+
+  { id:'sb4mm',   name:'4 MM satin',                      category:'Sandblasted',         price:120.53 },
+  { id:'sb6mm',   name:'6 MM sandblasted',                category:'Sandblasted',         price:144.30 },
+
+  { id:'pimg',    name:'Painted image',                   category:'Painted Glass',       price:356.50 },
+  { id:'pral',    name:'Painted glass, RAL colour',       category:'Painted Glass',       price:305.57 },
+
+  { id:'dgclear', name:'Clear × 4 MM',                    category:'Double Glazed Units', price:113.16 },
+  { id:'dglead',  name:'Leaded units',                    category:'Double Glazed Units', price:165.00 },
+  { id:'dgtuf',   name:'Toughened units',                 category:'Double Glazed Units', price:132.00 },
+  { id:'dglam',   name:'Laminated units',                 category:'Double Glazed Units', price:165.00 },
+  { id:'dgleadt', name:'Leaded toughened',                category:'Double Glazed Units', price:187.00 },
+  { id:'dglowe',  name:'Low E',                           category:'Double Glazed Units', price:132.00 },
+  { id:'dglowet', name:'Low E toughened',                 category:'Double Glazed Units', price:154.00 },
+  { id:'dglowel', name:'Low E leaded',                    category:'Double Glazed Units', price:181.50 },
+  { id:'dglowelt',name:'Low E leaded toughened',          category:'Double Glazed Units', price:203.50 },
+];
+
+const HORTICULTURAL = [
+  { id:'h1', name:'610 × 457',  price:8.80  },
+  { id:'h2', name:'610 × 610',  price:9.90  },
+  { id:'h3', name:'1207 × 703', price:25.85 },
+];
+
+/* charge: 'lm' per linear metre (defaults to perimeter) | 'm2' per m² | 'each' per unit */
+const ADDONS = [
+  { id:'pol-std', name:'Polished edges',         detail:'Rectangles, up to 8 MM',   charge:'lm', price:5.50,  group:'Edgework' },
+  { id:'pol-10',  name:'Polished edges — 10 MM', detail:'Thicker glass rate',       charge:'lm', price:9.90,  group:'Edgework' },
+  { id:'bev-str', name:'1" straight bevel',      detail:'',                         charge:'lm', price:14.30, group:'Edgework' },
+  { id:'bev-shp', name:'1" shaped bevel',        detail:'Curved or profiled edges', charge:'lm', price:28.60, group:'Edgework' },
+  { id:'leading', name:'Leading',                detail:'Applied over the pane',    charge:'m2', price:51.99, group:'Decorative' },
+  { id:'obsunit', name:'Obscure glass in unit',  detail:'Double-glazed units only', charge:'m2', price:11.00, group:'Unit options' },
+];
+
+const PRESETS = [
+  { label:'1000 × 800',  height:1000, width:800  },
+  { label:'1200 × 1200', height:1200, width:1200 },
+  { label:'1500 × 800',  height:1500, width:800  },
+  { label:'900 × 600',   height:900,  width:600  },
+];
+
+/* ---------- helpers ---------- */
+const num = v => (typeof v === 'number' && isFinite(v)) ? v : (parseFloat(v) || 0);
+const money = n => '£' + num(n).toFixed(2);
+
+const STORAGE_OK = (() => {
+  try {
+    localStorage.setItem('__wg_probe', '1');
+    localStorage.removeItem('__wg_probe');
+    return true;
+  } catch (err) { return false; }
+})();
+
+/* Totals. Extras (labour, delivery and so on) are added AFTER any
+   discount, so a trade discount applies to the glass but not to
+   labour. Move extrasTotal above the discount line if you'd rather
+   discount everything. */
+function computeTotals(items, discountPct, cardFee, extras) {
+  const list           = Array.isArray(extras) ? extras : [];
+  const subtotal       = items.reduce((s, i) => s + num(i.total), 0);
+  const pct            = num(discountPct);
+  const discountAmount = subtotal * (pct / 100);
+  const afterDiscount  = subtotal - discountAmount;
+  const extrasTotal    = list.reduce((s, x) => s + num(x.amount), 0);
+  const net            = afterDiscount + extrasTotal;
+  const vat            = net * VAT_RATE;
+  const beforeCard     = net + vat;
+  const cardAmount     = cardFee ? beforeCard * CARD_FEE : 0;
+  return {
+    subtotal, discountAmount, afterDiscount, extrasTotal, net, vat, cardAmount,
+    grandTotal: beforeCard + cardAmount,
+    totalM2: items.reduce((s, i) => s + num(i.totalArea), 0),
+    totalLm: items.reduce((s, i) => s +
+      (i.addons || []).filter(a => a.charge === 'lm').reduce((t, a) => t + num(a.qty), 0), 0),
+  };
+}
+
+/* Older builds used different field names and had no extras array.
+   Normalise everything on the way in so one stale record can't take
+   the panel down. */
+function normaliseQuote(q) {
+  if (!q || typeof q !== 'object') return null;
+
+  const items = (Array.isArray(q.items) ? q.items : []).map((i, idx) => {
+    const area  = num(i.totalArea);
+    const glass = num(i.glassCost !== undefined ? i.glassCost : i.markedUpPrice);
+    const addons = (Array.isArray(i.addons) ? i.addons : []).map(a => ({
+      id: a.id || 'addon', name: a.name || 'Add-on',
+      charge: a.charge || 'm2', rate: num(a.rate),
+      qty: num(a.qty), cost: num(a.cost),
+    }));
+    return {
+      key: i.key || i.id || (Date.now() + idx),
+      productName: i.productName || 'Glass',
+      category: i.category || '',
+      height: num(i.height), width: num(i.width), unit: i.unit || 'mm',
+      quantity: num(i.quantity) || 1,
+      totalArea: area,
+      totalPerim: num(i.totalPerim),
+      glassRate: num(i.glassRate !== undefined ? i.glassRate : (area ? glass / area : 0)),
+      glassCost: glass,
+      addons,
+      total: num(i.total !== undefined ? i.total : glass + addons.reduce((s, a) => s + a.cost, 0)),
+    };
+  });
+
+  const extras = (Array.isArray(q.extras) ? q.extras : []).map((x, idx) => ({
+    id: x.id || (Date.now() + idx),
+    label: x.label || 'Extra cost',
+    amount: num(x.amount),
+  }));
+
+  const discountPct = num(q.discountPct !== undefined ? q.discountPct : q.discountPercent);
+  const cardFee = !!q.cardFee;
+
+  return {
+    id: q.id || Date.now(),
+    ref: q.ref || q.quoteNumber || 'Q------',
+    date: q.date || new Date().toLocaleDateString('en-GB'),
+    edited: q.edited || '',
+    sent: q.sent || '',
+    customerName: q.customerName || 'No name given',
+    customerEmail: q.customerEmail || '',
+    notes: q.notes || '',
+    items, extras, discountPct, cardFee,
+    totals: computeTotals(items, discountPct, cardFee, extras),
+  };
+}
+
+/* Text a search box should match against */
+const quoteHaystack = q => [
+  q.ref, q.customerName, q.customerEmail, q.notes, q.date,
+  ...q.items.map(i => i.productName + ' ' + i.category),
+  ...q.extras.map(x => x.label),
+].join(' ').toLowerCase();
+
+/* Common extras, offered as one-tap labels */
+const EXTRA_PRESETS = ['Labour', 'Fitting', 'Delivery', 'Waste removal', 'Survey'];
+
+const newRef = () => 'Q' + Date.now().toString().slice(-6);
+
+/* ---------- email ----------
+   A file served from a static host has no server to send mail from,
+   so the quote is handed to whatever mail client the person already
+   uses, pre-filled and ready. They press Send, which means it leaves
+   from the shop's own address and replies come back there.
+
+   Note on length: a desktop client opened via mailto: generally caps
+   pre-filled text near 2000 characters. The web compose URLs take far
+   more. composeLinks reports the encoded length so the UI can warn. */
+const composeLinks = (to, subject, body) => {
+  const t = encodeURIComponent(to || '');
+  const s = encodeURIComponent(subject || '');
+  const b = encodeURIComponent(body || '');
+  return {
+    mailto:  'mailto:' + t + '?subject=' + s + '&body=' + b,
+    outlook: 'https://outlook.live.com/mail/0/deeplink/compose?to=' + t + '&subject=' + s + '&body=' + b,
+    gmail:   'https://mail.google.com/mail/?view=cm&fs=1&to=' + t + '&su=' + s + '&body=' + b,
+    length:  b.length,
+  };
+};
+
+function Calculator() {
+  const [height, setHeight]       = useState('');
+  const [width, setWidth]         = useState('');
+  const [quantity, setQuantity]   = useState('1');
+  const [unit, setUnit]           = useState('mm');
+  const [productId, setProductId] = useState('c6mm');
+
+  const [activeAddons, setActiveAddons] = useState([]);
+  const [addonMetres, setAddonMetres]   = useState({});
+
+  const [lineItems, setLineItems] = useState([]);
+  const [extras, setExtras]       = useState([]);
+  const [extraLabel, setExtraLabel]   = useState('');
+  const [extraAmount, setExtraAmount] = useState('');
+  const [discount, setDiscount]   = useState('0');
+  const [cardFee, setCardFee]     = useState(false);
+
+  const [customerName, setCustomerName]   = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [notes, setNotes]                 = useState('');
+
+  const [draftRef, setDraftRef] = useState(newRef);
+
+  const [savedQuotes, setSavedQuotes] = useState([]);
+  const [showQuotes, setShowQuotes]   = useState(false);
+  const [search, setSearch]           = useState('');
+  const [editingId, setEditingId]     = useState(null);
+
+  const [showEmail, setShowEmail]       = useState(false);
+  const [emailTo, setEmailTo]           = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+
+  const [showPrices, setShowPrices] = useState(true);
+  const [showAdjust, setShowAdjust] = useState(false);
+  const [adjust, setAdjust]         = useState('0');
+  const [toast, setToast]           = useState('');
+
+  useEffect(() => {
+    if (!STORAGE_OK) return;
+    let parsed = [];
+    try { parsed = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch (err) { parsed = []; }
+    if (!Array.isArray(parsed)) parsed = [];
+    const clean = parsed.map(normaliseQuote).filter(Boolean);
+    setSavedQuotes(clean);
+    if (clean.length) { try { localStorage.setItem(STORE_KEY, JSON.stringify(clean)); } catch (err) {} }
+    try {
+      const a = localStorage.getItem(ADJ_KEY);
+      if (a !== null) setAdjust(a);
+    } catch (err) {}
+  }, []);
+
+  const flash = msg => { setToast(msg); setTimeout(() => setToast(''), 2600); };
+
+  const persist = list => {
+    setSavedQuotes(list);
+    if (!STORAGE_OK) return false;
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); return true; }
+    catch (err) { return false; }
+  };
+
+  const setAdjustment = v => {
+    setAdjust(v);
+    if (STORAGE_OK) { try { localStorage.setItem(ADJ_KEY, v); } catch (err) {} }
+  };
+
+  /* ---------- price adjustment ---------- */
+  const adjPct = num(adjust);
+  const rate = p => p * (1 + adjPct / 100);
+
+  /* ---------- geometry ---------- */
+  const toMm = v => {
+    const n = parseFloat(v);
+    if (!n) return 0;
+    return unit === 'mm' ? n : unit === 'cm' ? n * 10 : unit === 'inches' ? n * 25.4 : n * 304.8;
+  };
+
+  const product    = PRODUCTS.find(p => p.id === productId);
+  const hMm        = toMm(height);
+  const wMm        = toMm(width);
+  const qty        = Math.max(1, parseInt(quantity) || 1);
+  const rawArea    = (hMm * wMm) / 1000000;
+  const minArea    = MIN_AREA[product.category] !== undefined ? MIN_AREA[product.category] : MIN_AREA.DEFAULT;
+  const totalArea  = rawArea > 0 ? Math.max(rawArea, minArea) * qty : 0;
+  const totalPerim = (hMm && wMm) ? ((hMm * 2 + wMm * 2) / 1000) * qty : 0;
+
+  const metresFor = id => {
+    const o = addonMetres[id];
+    return (o === undefined || o === '') ? totalPerim : (parseFloat(o) || 0);
+  };
+
+  const addonCost = a =>
+    a.charge === 'lm' ? rate(a.price) * metresFor(a.id)
+  : a.charge === 'm2' ? rate(a.price) * totalArea
+  :                     rate(a.price) * qty;
+
+  const toggleAddon = id =>
+    setActiveAddons(activeAddons.includes(id)
+      ? activeAddons.filter(x => x !== id)
+      : [...activeAddons, id]);
+
+  const glassCost   = rate(product.price) * totalArea;
+  const addonsCost  = activeAddons.reduce((s, id) => s + addonCost(ADDONS.find(a => a.id === id)), 0);
+  const linePreview = glassCost + addonsCost;
+
+  const addLineItem = () => {
+    if (!hMm || !wMm) { flash('Enter a height and a width first.'); return; }
+    const addons = activeAddons.map(id => {
+      const a = ADDONS.find(x => x.id === id);
+      return {
+        id: a.id, name: a.name, charge: a.charge, rate: rate(a.price),
+        qty: a.charge === 'lm' ? metresFor(a.id) : a.charge === 'm2' ? totalArea : qty,
+        cost: addonCost(a),
+      };
+    });
+    setLineItems([...lineItems, {
+      key: Date.now(),
+      productName: product.name, category: product.category,
+      height: parseFloat(height), width: parseFloat(width), unit,
+      quantity: qty, totalArea, totalPerim,
+      glassRate: rate(product.price),
+      glassCost, addons, total: linePreview,
+    }]);
+    setHeight(''); setWidth(''); setQuantity('1');
+    setActiveAddons([]); setAddonMetres({});
+  };
+
+  const removeLine = key => setLineItems(lineItems.filter(i => i.key !== key));
+
+  /* ---------- extra costs ---------- */
+  const addExtra = () => {
+    const amt = parseFloat(extraAmount);
+    if (!extraLabel.trim()) { flash('Give the extra cost a name.'); return; }
+    if (!isFinite(amt) || amt === 0) { flash('Enter an amount.'); return; }
+    setExtras([...extras, { id: Date.now(), label: extraLabel.trim(), amount: amt }]);
+    setExtraLabel(''); setExtraAmount('');
+  };
+
+  const removeExtra = id => setExtras(extras.filter(x => x.id !== id));
+
+  const discountPct = num(discount);
+  const T = computeTotals(lineItems, discountPct, cardFee, extras);
+  const hasContent = lineItems.length > 0 || extras.length > 0;
+
+  /* ---------- quote builder ---------- */
+  const resetBuilder = () => {
+    setLineItems([]); setExtras([]); setExtraLabel(''); setExtraAmount('');
+    setDiscount('0'); setCardFee(false);
+    setCustomerName(''); setCustomerEmail(''); setNotes('');
+    setEditingId(null);
+    setDraftRef(newRef());
+    setShowEmail(false);
+  };
+
+  const editingQuote = editingId ? savedQuotes.find(q => q.id === editingId) : null;
+
+  const saveQuote = (asNew) => {
+    if (!hasContent) { flash('Add something to the quote before saving.'); return; }
+    const today = new Date().toLocaleDateString('en-GB');
+
+    if (editingId && !asNew) {
+      const existing = savedQuotes.find(q => q.id === editingId);
+      const updated = savedQuotes.map(q => q.id === editingId ? Object.assign({}, q, {
+        customerName: customerName || 'No name given',
+        customerEmail, notes,
+        items: lineItems, extras, discountPct, cardFee, totals: T,
+        edited: today,
+      }) : q);
+      const ok = persist(updated);
+      flash(ok ? ('Updated ' + (existing ? existing.ref : '')) : 'Updated — this session only');
+      return;
+    }
+
+    const ref = draftRef;
+    const id = Date.now();
+    const ok = persist([...savedQuotes, {
+      id, ref, date: today, edited: '', sent: '',
+      customerName: customerName || 'No name given',
+      customerEmail, notes,
+      items: lineItems, extras, discountPct, cardFee, totals: T,
+    }]);
+    setEditingId(id);
+    flash(ok ? ('Saved as ' + ref) : ('Saved as ' + ref + ' — this session only'));
+  };
+
+  const editQuote = q => {
+    setLineItems(q.items);
+    setExtras(q.extras || []);
+    setDiscount(String(q.discountPct));
+    setCardFee(!!q.cardFee);
+    setCustomerName(q.customerName === 'No name given' ? '' : q.customerName);
+    setCustomerEmail(q.customerEmail || '');
+    setNotes(q.notes || '');
+    setEditingId(q.id);
+    setShowQuotes(false);
+    flash('Editing ' + q.ref);
+  };
+
+  const deleteQuote = id => {
+    persist(savedQuotes.filter(q => q.id !== id));
+    if (id === editingId) setEditingId(null);
+  };
+
+
+  /* The reference is pinned for the life of the builder, so the saved
+     quote, the downloaded file and the emailed copy all agree. */
+  const activeRef = editingQuote ? editingQuote.ref : draftRef;
+
+  /* Customer-facing quote text. Deliberately omits per-m² and per-metre
+     rates, the m² each item was charged on, and the internal notes. */
+  const buildQuoteText = () => {
+    const W = 52;
+    const row = (l, v) => l + ' '.repeat(Math.max(2, W - 10 - l.length)) + String(v).padStart(10);
+    const L = [];
+
+    L.push("WILSON'S GLASS");
+    L.push("6 St Mary's Lane, Upminster, Essex");
+    L.push('01708 224215   wilsons.glass@outlook.com');
+    L.push('');
+    L.push('QUOTE ' + activeRef);
+    L.push('Date: ' + new Date().toLocaleDateString('en-GB'));
+    if (customerName)  L.push('Customer: ' + customerName);
+    L.push('');
+    L.push('='.repeat(W));
+
+    lineItems.forEach((i, n) => {
+      L.push((n + 1) + '. ' + i.productName);
+      L.push('   ' + i.height + i.unit + ' x ' + i.width + i.unit +
+             (i.quantity > 1 ? '   ' + i.quantity + ' off' : ''));
+      i.addons.forEach(a => {
+        L.push('   + ' + a.name + (a.charge === 'lm' ? '  (' + a.qty.toFixed(2) + ' m)' : ''));
+      });
+      L.push(row('', money(i.total)));
+      L.push('');
+    });
+
+    L.push('='.repeat(W));
+    if (lineItems.length) L.push(row('Subtotal', money(T.subtotal)));
+    if (discountPct > 0) {
+      L.push(row('Discount ' + discountPct + '%', '-' + money(T.discountAmount)));
+      L.push(row('After discount', money(T.afterDiscount)));
+    }
+    extras.forEach(x => L.push(row(x.label, money(x.amount))));
+    L.push(row('VAT 20%', money(T.vat)));
+    if (cardFee) L.push(row('Card surcharge 2%', money(T.cardAmount)));
+    L.push('-'.repeat(W));
+    L.push(row('TOTAL', money(T.grandTotal)));
+    L.push('');
+    L.push('Valid for 30 days.');
+    L.push('Thank you for choosing Wilson\'s Glass.');
+    return L.join('\n');
+  };
+
+  const exportQuote = () => {
+    if (!hasContent) { flash('Add something to the quote first.'); return; }
+    const blob = new Blob([buildQuoteText()], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'Quote_' + activeRef + '.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  /* ---------- email ---------- */
+  const defaultMessage = () =>
+    'Hi' + (customerName ? ' ' + customerName.split(' ')[0] : '') + ',\n\n' +
+    'Thanks for your enquiry. Your quote is below.\n\n' +
+    'If you would like to go ahead, or if anything needs changing, just reply to this ' +
+    'email or give us a call on 01708 224215.\n\n' +
+    'Kind regards,\nWilson\'s Glass';
+
+  const openEmailPanel = () => {
+    if (!hasContent) { flash('Add something to the quote first.'); return; }
+    setEmailTo(emailTo || customerEmail);
+    setEmailSubject('Quote ' + activeRef + " from Wilson's Glass");
+    if (!emailMessage.trim()) setEmailMessage(defaultMessage());
+    setShowEmail(true);
+  };
+
+  const emailBody = () => emailMessage.trim() + '\n\n' + buildQuoteText();
+
+  const links = composeLinks(emailTo, emailSubject, emailBody());
+  const bodyTooLong = links.length > 1800;
+  const emailReady = /\S+@\S+\.\S+/.test(emailTo);
+
+  const openIn = which => {
+    if (!emailReady) { flash('Enter a customer email address.'); return; }
+    const href = which === 'gmail' ? links.gmail : which === 'outlook' ? links.outlook : links.mailto;
+    if (which === 'mailto') {
+      window.location.href = href;
+    } else {
+      window.open(href, '_blank', 'noopener');
+    }
+    flash('Opened in ' + (which === 'mailto' ? 'your mail app' : which === 'gmail' ? 'Gmail' : 'Outlook'));
+  };
+
+  const copyEmail = async () => {
+    const text = emailBody();
+    try {
+      await navigator.clipboard.writeText(text);
+      flash('Copied — paste it into an email');
+    } catch (err) {
+      flash('Could not copy automatically — select the preview and copy it');
+    }
+  };
+
+  const markSent = () => {
+    if (!editingId) { flash('Save the quote first, then mark it as sent.'); return; }
+    const today = new Date().toLocaleDateString('en-GB');
+    persist(savedQuotes.map(q => q.id === editingId ? Object.assign({}, q, { sent: today }) : q));
+    flash('Marked as sent');
+  };
+
+  /* ---------- search ---------- */
+  const term = search.trim().toLowerCase();
+  const visibleQuotes = savedQuotes.slice().reverse()
+    .filter(q => !term || quoteHaystack(q).indexOf(term) !== -1);
+
+  /* ---------- style tokens ---------- */
+  const card    = 'bg-slate-800 rounded-xl border border-slate-700';
+  const pad     = 'p-4';
+  const input   = 'w-full px-2.5 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-400';
+  const label   = 'block text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1';
+  const heading = 'text-sm font-bold uppercase tracking-wider text-amber-500/90';
+  const colBox  = 'space-y-4 xl:h-[calc(100vh-7.5rem)] xl:overflow-y-auto xl:pr-1 scroll';
+
+  const categories  = [...new Set(PRODUCTS.map(p => p.category))];
+  const addonGroups = [...new Set(ADDONS.map(a => a.group))];
+
+  return e('div', { className:'min-h-screen bg-slate-900 text-slate-100' },
+
+    e('header', { className:'bg-slate-950 border-b border-slate-700 sticky top-0 z-40' },
+      e('div', { className:'max-w-[1600px] mx-auto px-4 py-2.5 flex items-center justify-between gap-3' },
+        e('div', { className:'flex items-center gap-2.5' },
+          e('div', { className:'w-8 h-8 bg-amber-500 rounded-lg grid place-items-center font-black text-slate-900 text-sm' }, 'W'),
+          e('div', null,
+            e('div', { className:'font-bold text-sm leading-tight' }, "Wilson's Glass"),
+            e('div', { className:'text-[11px] text-slate-400 leading-tight' }, 'Quote calculator'))),
+        e('div', { className:'flex gap-2' },
+          e('button', { onClick:() => setShowPrices(!showPrices),
+            className:'px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium' },
+            showPrices ? 'Hide rates' : 'Show rates'),
+          e('button', { onClick:() => setShowAdjust(!showAdjust),
+            className:'px-3 py-1.5 rounded-lg text-xs font-medium ' +
+              (showAdjust ? 'bg-amber-500 text-slate-900'
+               : adjPct !== 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
+               : 'bg-slate-800 hover:bg-slate-700') },
+            adjPct !== 0 ? 'Prices ' + (adjPct > 0 ? '+' : '') + adjPct + '%' : 'Prices'),
+          e('button', { onClick:() => setShowQuotes(!showQuotes),
+            className:'px-3 py-1.5 rounded-lg text-xs font-medium ' +
+              (showQuotes ? 'bg-amber-500 text-slate-900' : 'bg-slate-800 hover:bg-slate-700') },
+            'Saved · ' + savedQuotes.length)))),
+
+    toast && e('div', { className:'fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-950 border border-amber-500/60 text-amber-300 text-sm px-4 py-2 rounded-lg shadow-lg' }, toast),
+
+    e('div', { className:'max-w-[1600px] mx-auto px-4 py-4 pb-24 xl:pb-4' },
+
+      showAdjust && e('div', { className: card + ' ' + pad + ' mb-4' },
+        e('div', { className:'flex items-center justify-between mb-3' },
+          e('h2', { className: heading }, 'Adjust all prices'),
+          e('button', { onClick:() => setShowAdjust(false),
+            className:'text-xs text-slate-400 hover:text-amber-400' }, 'Close')),
+        e('p', { className:'text-xs text-slate-400 mb-3 leading-relaxed max-w-2xl' },
+          'The price list holds what you actually charge — no hidden multiplier. Use this to shift every glass and add-on rate at once, for example when the supplier puts prices up. Quotes already saved keep the prices they were quoted at.'),
+        e('div', { className:'flex flex-wrap items-end gap-2 mb-3' },
+          e('div', { className:'w-32' },
+            e('label', { className: label }, 'Change by %'),
+            e('input', { type:'number', inputMode:'decimal', step:'0.5', value:adjust,
+              onChange:ev => setAdjustment(ev.target.value), className: input })),
+          [['0','Reset'],['5','+5%'],['10','+10%'],['15','+15%'],['-5','−5%']].map(pair =>
+            e('button', { key:pair[0], onClick:() => setAdjustment(pair[0]),
+              className:'px-3 py-2 rounded-lg text-xs font-semibold ' +
+                (adjust === pair[0] ? 'bg-amber-500 text-slate-900' : 'bg-slate-900 hover:bg-slate-700') },
+              pair[1]))),
+        e('div', { className:'bg-slate-900 rounded-lg border border-slate-700 p-3' },
+          e('div', { className:'text-[10px] uppercase tracking-wide text-slate-500 mb-2' }, 'Effect on a few lines'),
+          e('div', { className:'grid sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-1' },
+            ['c6mm','t6mm','m4mm','dgclear'].map(id => {
+              const p = PRODUCTS.find(x => x.id === id);
+              return e('div', { key:id, className:'flex justify-between text-xs' },
+                e('span', { className:'text-slate-400 truncate pr-2' }, p.name),
+                e('span', { className:'tabular-nums whitespace-nowrap' },
+                  adjPct === 0
+                    ? money(p.price)
+                    : e(Fragment, null,
+                        e('span', { className:'text-slate-500 line-through mr-1' }, money(p.price)),
+                        e('span', { className:'text-amber-400 font-semibold' }, money(rate(p.price))))));
+            })))),
+
+      showEmail && e('div', { className: card + ' ' + pad + ' mb-4' },
+        e('div', { className:'flex items-center justify-between mb-3' },
+          e('h2', { className: heading }, 'Send quote ' + activeRef),
+          e('button', { onClick:() => setShowEmail(false),
+            className:'text-xs text-slate-400 hover:text-amber-400' }, 'Close')),
+
+        e('div', { className:'grid lg:grid-cols-2 gap-4' },
+
+          e('div', null,
+            e('div', { className:'mb-2' },
+              e('label', { className: label }, 'To'),
+              e('input', { type:'email', className: input, placeholder:'customer@example.com',
+                value:emailTo, onChange:ev => setEmailTo(ev.target.value) }),
+              emailTo && !emailReady && e('p', { className:'text-[10px] text-amber-400 mt-1' },
+                'That does not look like an email address.')),
+            e('div', { className:'mb-2' },
+              e('label', { className: label }, 'Subject'),
+              e('input', { className: input, value:emailSubject,
+                onChange:ev => setEmailSubject(ev.target.value) })),
+            e('div', null,
+              e('div', { className:'flex items-center justify-between mb-1' },
+                e('label', { className: label + ' mb-0' }, 'Covering message'),
+                e('button', { onClick:() => setEmailMessage(defaultMessage()),
+                  className:'text-[10px] text-slate-500 underline hover:text-amber-400' }, 'reset wording')),
+              e('textarea', { className: input, rows:7, value:emailMessage,
+                onChange:ev => setEmailMessage(ev.target.value) })),
+            e('p', { className:'text-[10px] text-slate-500 mt-1' },
+              'The quote itself is added below your message automatically.')),
+
+          e('div', null,
+            e('label', { className: label }, 'What the customer sees'),
+            e('pre', { className:'bg-slate-900 border border-slate-700 rounded-lg p-3 text-[11px] leading-snug text-slate-300 overflow-auto max-h-72 whitespace-pre scroll' },
+              emailBody()))),
+
+        e('div', { className:'mt-4 pt-3 border-t border-slate-700' },
+
+          e('div', { className:'text-[10px] uppercase tracking-wide text-slate-500 mb-1.5' },
+            'Open it in your mail app, filled in and ready to send'),
+
+          e('div', { className:'grid grid-cols-2 sm:grid-cols-4 gap-2' },
+            e('button', { onClick:() => openIn('outlook'),
+              className:'py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-bold' },
+              'Outlook web'),
+            e('button', { onClick:() => openIn('gmail'),
+              className:'py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-semibold' }, 'Gmail'),
+            e('button', { onClick:() => openIn('mailto'),
+              className:'py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-semibold' },
+              bodyTooLong ? 'Default app ⚠' : 'Default mail app'),
+            e('button', { onClick:copyEmail,
+              className:'py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-semibold' }, 'Copy text')),
+
+          bodyTooLong && e('p', { className:'text-[11px] text-amber-400 mt-2 leading-snug' },
+            'This quote runs to ' + links.length + ' characters. Outlook web and Gmail handle that fine, but a desktop mail app opened with the Default button may cut it short — check the bottom line is there, or use Copy text instead.'),
+
+          e('p', { className:'text-[11px] text-slate-500 mt-2 leading-snug' },
+            'You press Send in your own mail app, so the quote goes out from the shop address and replies come straight back to you.'),
+
+          e('div', { className:'flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-slate-700' },
+            e('button', { onClick:exportQuote,
+              className:'text-[11px] text-slate-400 underline hover:text-amber-400' }, 'Download as a file to attach'),
+            editingId
+              ? e('button', { onClick:markSent,
+                  className:'text-[11px] text-slate-400 underline hover:text-amber-400' }, 'Mark as sent')
+              : e('span', { className:'text-[11px] text-slate-600' }, 'Save the quote to track when it was sent')))),
+
+      showQuotes && e('div', { className: card + ' ' + pad + ' mb-4' },
+        e('div', { className:'flex items-center justify-between gap-3 mb-3' },
+          e('h2', { className: heading }, 'Saved quotes'),
+          e('button', { onClick:() => setShowQuotes(false),
+            className:'text-xs text-slate-400 hover:text-amber-400' }, 'Close')),
+
+        !STORAGE_OK && e('div', { className:'mb-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/40 rounded-lg px-3 py-2' },
+          'This browser is blocking local storage, so quotes will only last until you close the tab. Download anything you need to keep.'),
+
+        e('div', { className:'relative mb-3' },
+          e('input', { type:'search', value:search, onChange:ev => setSearch(ev.target.value),
+            placeholder:'Search by reference, customer, glass type or extra cost',
+            className: input + ' pl-8' }),
+          e('span', { className:'absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm' }, '⌕'),
+          search && e('button', { onClick:() => setSearch(''),
+            className:'absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-amber-400' }, 'clear')),
+
+        savedQuotes.length === 0
+          ? e('p', { className:'text-slate-500 text-sm py-6 text-center' },
+              'Nothing saved yet. Build a quote and press Save.')
+          : visibleQuotes.length === 0
+            ? e('p', { className:'text-slate-500 text-sm py-6 text-center' },
+                'No quotes match "' + search + '".')
+            : e(Fragment, null,
+                term && e('div', { className:'text-[11px] text-slate-500 mb-2' },
+                  visibleQuotes.length + ' of ' + savedQuotes.length + ' quotes'),
+                e('div', { className:'grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2' },
+                  visibleQuotes.map(q =>
+                    e('div', { key:q.id,
+                      className:'bg-slate-900 rounded-lg p-3 border ' +
+                        (q.id === editingId ? 'border-amber-500' : 'border-slate-700') },
+                      e('div', { className:'flex items-center gap-2' },
+                        e('span', { className:'font-semibold text-sm' }, q.ref),
+                        q.id === editingId && e('span', { className:'text-[9px] px-1.5 py-0.5 rounded bg-amber-500 text-slate-900 font-bold uppercase' }, 'editing')),
+                      e('div', { className:'text-xs text-slate-400 truncate' }, q.customerName),
+                      e('div', { className:'text-[11px] text-slate-500 mb-2' },
+                        q.date + (q.edited ? ' · edited ' + q.edited : '') +
+                        ' · ' + q.items.length + ' item' + (q.items.length === 1 ? '' : 's') +
+                        (q.extras.length ? ' + ' + q.extras.length + ' extra' + (q.extras.length === 1 ? '' : 's') : '')),
+                      q.sent && e('div', { className:'text-[10px] text-emerald-400 font-semibold mb-1' },
+                        'Sent ' + q.sent),
+                      e('div', { className:'text-sm font-bold text-amber-400 mb-2 tabular-nums' },
+                        money(q.totals.grandTotal)),
+                      e('div', { className:'flex gap-1.5' },
+                        e('button', { onClick:() => editQuote(q),
+                          className:'flex-1 py-1.5 rounded bg-amber-600 hover:bg-amber-500 text-xs font-medium' }, 'Edit'),
+                        e('button', { onClick:() => { if (confirm('Delete ' + q.ref + '?')) deleteQuote(q.id); },
+                          className:'px-2.5 py-1.5 rounded bg-slate-700 hover:bg-red-800 text-xs' }, 'Delete'))))))),
+
+      e('div', { className:'grid gap-4 lg:grid-cols-2 xl:grid-cols-12 xl:items-start' },
+
+        e('div', { className: colBox + ' xl:col-span-3' },
+
+          e('div', { className: card + ' ' + pad },
+            e('h2', { className: heading + ' mb-3' }, 'Size'),
+            e('div', { className:'grid grid-cols-4 gap-1 mb-3' },
+              ['mm','cm','inches','feet'].map(u =>
+                e('button', { key:u, onClick:() => setUnit(u),
+                  className:'py-1.5 rounded-md text-[11px] font-semibold ' +
+                    (unit === u ? 'bg-amber-500 text-slate-900' : 'bg-slate-900 text-slate-300 hover:bg-slate-700') }, u))),
+            e('div', { className:'grid grid-cols-3 gap-2 mb-3' },
+              e('div', null, e('label', { className: label }, 'Height'),
+                e('input', { type:'number', inputMode:'decimal', value:height, className: input,
+                  placeholder:'1000', onChange:ev => setHeight(ev.target.value) })),
+              e('div', null, e('label', { className: label }, 'Width'),
+                e('input', { type:'number', inputMode:'decimal', value:width, className: input,
+                  placeholder:'800', onChange:ev => setWidth(ev.target.value) })),
+              e('div', null, e('label', { className: label }, 'Qty'),
+                e('input', { type:'number', inputMode:'numeric', min:'1', value:quantity, className: input,
+                  onChange:ev => setQuantity(ev.target.value) }))),
+            rawArea > 0 && e('div', { className:'grid grid-cols-3 gap-2 bg-slate-900 rounded-lg p-2.5 mb-3 border border-slate-700 text-center' },
+              e('div', null,
+                e('div', { className:'text-[9px] uppercase tracking-wide text-slate-500' }, 'Actual'),
+                e('div', { className:'font-bold text-xs tabular-nums' }, rawArea.toFixed(3))),
+              e('div', null,
+                e('div', { className:'text-[9px] uppercase tracking-wide text-slate-500' }, 'Charged m²'),
+                e('div', { className:'font-bold text-xs text-amber-400 tabular-nums' }, totalArea.toFixed(3))),
+              e('div', null,
+                e('div', { className:'text-[9px] uppercase tracking-wide text-slate-500' }, 'Perimeter'),
+                e('div', { className:'font-bold text-xs tabular-nums' }, totalPerim.toFixed(2) + 'm'))),
+            rawArea > 0 && rawArea < minArea &&
+              e('p', { className:'text-[11px] text-amber-400/90 mb-3 leading-snug' },
+                'Rounded up to the ' + minArea + ' m² minimum for ' + product.category.toLowerCase() + '.'),
+            e('div', { className:'grid grid-cols-2 gap-1' },
+              PRESETS.map(p =>
+                e('button', { key:p.label,
+                  onClick:() => { setHeight(String(p.height)); setWidth(String(p.width)); setUnit('mm'); },
+                  className:'py-1.5 bg-slate-900 hover:bg-slate-700 rounded-md text-[11px] font-medium' }, p.label)))),
+
+          e('div', { className: card + ' ' + pad },
+            e('div', { className:'flex items-baseline justify-between mb-2' },
+              e('h2', { className: heading }, 'Add-ons'),
+              activeAddons.length > 0 && e('span', { className:'text-[11px] text-amber-400 font-semibold' },
+                activeAddons.length + ' on')),
+            e('p', { className:'text-[11px] text-slate-500 mb-3 leading-snug' },
+              'Edgework defaults to the full perimeter — edit the metres if only some edges are worked.'),
+            addonGroups.map(group =>
+              e('div', { key:group, className:'mb-3' },
+                e('h3', { className:'text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1' }, group),
+                ADDONS.filter(a => a.group === group).map(a => {
+                  const on = activeAddons.includes(a.id);
+                  return e('div', { key:a.id,
+                    className:'rounded-lg mb-1 ' + (on ? 'bg-amber-500/10 border border-amber-500/50' : 'border border-transparent hover:bg-slate-700/40') },
+                    e('label', { className:'flex items-start gap-2 px-2 py-1.5 cursor-pointer' },
+                      e('input', { type:'checkbox', checked:on, onChange:() => toggleAddon(a.id),
+                        className:'mt-0.5 accent-amber-500' }),
+                      e('span', { className:'flex-1 min-w-0' },
+                        e('span', { className:'block text-[13px] font-medium leading-tight' }, a.name),
+                        a.detail && e('span', { className:'block text-[10px] text-slate-500 leading-tight' }, a.detail)),
+                      showPrices && e('span', { className:'text-[11px] text-slate-400 tabular-nums whitespace-nowrap' },
+                        money(rate(a.price)) + (a.charge === 'lm' ? '/m' : a.charge === 'm2' ? '/m²' : ' ea'))),
+                    on && a.charge === 'lm' && e('div', { className:'px-2 pb-2 flex items-center gap-1.5' },
+                      e('input', { type:'number', inputMode:'decimal', step:'0.01', 'aria-label':'Metres',
+                        value: addonMetres[a.id] !== undefined ? addonMetres[a.id] : (totalPerim ? totalPerim.toFixed(2) : ''),
+                        onChange:ev => setAddonMetres(Object.assign({}, addonMetres, { [a.id]: ev.target.value })),
+                        className:'w-16 px-1.5 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white focus:outline-none focus:border-amber-400' }),
+                      e('span', { className:'text-[10px] text-slate-500' }, 'm'),
+                      e('button', { onClick:() => { const m = Object.assign({}, addonMetres); delete m[a.id]; setAddonMetres(m); },
+                        className:'text-[10px] text-slate-500 underline hover:text-amber-400' }, 'reset'),
+                      showPrices && e('span', { className:'ml-auto text-[11px] font-semibold text-amber-400 tabular-nums' },
+                        money(addonCost(a)))),
+                    on && a.charge !== 'lm' && showPrices &&
+                      e('div', { className:'px-2 pb-1.5 text-[11px] text-amber-400 font-semibold text-right tabular-nums' },
+                        money(addonCost(a))));
+                })))),
+
+          e('button', { onClick:addLineItem,
+            className:'hidden xl:block w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg font-bold text-sm' },
+            rawArea > 0 && showPrices ? 'Add to quote · ' + money(linePreview) : 'Add to quote')),
+
+        e('div', { className: colBox + ' xl:col-span-3' },
+          e('div', { className: card + ' ' + pad },
+            e('div', { className:'flex items-baseline justify-between mb-3' },
+              e('h2', { className: heading }, 'Glass'),
+              adjPct !== 0 && e('span', { className:'text-[10px] text-amber-400 font-semibold' },
+                (adjPct > 0 ? '+' : '') + adjPct + '% applied')),
+            e('div', { className:'max-h-[52vh] xl:max-h-[calc(100vh-16rem)] overflow-y-auto scroll pr-1' },
+              categories.map(cat =>
+                e('div', { key:cat, className:'mb-3' },
+                  e('h3', { className:'text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1' }, cat),
+                  PRODUCTS.filter(p => p.category === cat).map(p =>
+                    e('label', { key:p.id,
+                      className:'flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer ' +
+                        (productId === p.id ? 'bg-amber-500/15 border border-amber-500/60' : 'border border-transparent hover:bg-slate-700/50') },
+                      e('input', { type:'radio', name:'glass', checked:productId === p.id,
+                        onChange:() => setProductId(p.id), className:'accent-amber-500 shrink-0' }),
+                      e('span', { className:'flex-1 text-[13px] leading-tight' }, p.name),
+                      showPrices && e('span', { className:'text-[11px] text-slate-400 tabular-nums whitespace-nowrap' },
+                        money(rate(p.price)))))))),
+            e('p', { className:'text-[10px] text-slate-500 mt-2 pt-2 border-t border-slate-700 leading-snug' },
+              'Rates are per m². Horticultural is sold per piece — ' +
+              HORTICULTURAL.map(h => h.name + ' ' + money(rate(h.price))).join(', ') + '.'))),
+
+        e('div', { className: colBox + ' lg:col-span-2 xl:col-span-6' },
+          e('div', { className: card + ' ' + pad },
+
+            e('div', { className:'flex items-center justify-between gap-2 mb-3' },
+              e('h2', { className: heading }, 'Quote'),
+              editingQuote && e('div', { className:'flex items-center gap-2' },
+                e('span', { className:'text-[11px] text-amber-400 font-semibold' }, 'Editing ' + editingQuote.ref),
+                e('button', { onClick:() => { if (confirm('Discard changes and start a new quote?')) resetBuilder(); },
+                  className:'text-[11px] text-slate-500 hover:text-amber-400 underline' }, 'new quote'))),
+
+            e('div', { className:'grid sm:grid-cols-2 gap-2 mb-2' },
+              e('input', { className: input, placeholder:'Customer name',
+                value:customerName, onChange:ev => setCustomerName(ev.target.value) }),
+              e('input', { className: input, type:'email', placeholder:'Customer email',
+                value:customerEmail, onChange:ev => setCustomerEmail(ev.target.value) })),
+            e('textarea', { className: input, rows:2, placeholder:'Internal notes',
+              value:notes, onChange:ev => setNotes(ev.target.value) }),
+            e('p', { className:'text-[10px] text-slate-500 mb-3 mt-1' },
+              'Notes stay in the app — they are not printed on the customer quote.'),
+
+            e('div', { className:'space-y-1.5 mb-3 max-h-[30vh] overflow-y-auto scroll' },
+              lineItems.length === 0
+                ? e('p', { className:'text-slate-500 text-sm py-6 text-center' },
+                    'No glass yet. Set a size, pick the glass, tick any add-ons, then press Add to quote.')
+                : lineItems.map(i =>
+                    e('div', { key:i.key, className:'bg-slate-900 rounded-lg p-2.5 border border-slate-700' },
+                      e('div', { className:'flex justify-between items-start gap-2' },
+                        e('div', { className:'min-w-0' },
+                          e('div', { className:'font-semibold text-[13px] text-amber-300 truncate' }, i.productName),
+                          e('div', { className:'text-[11px] text-slate-400' },
+                            i.height + i.unit + ' × ' + i.width + i.unit + ' · ×' + i.quantity + ' · ' + i.totalArea.toFixed(2) + ' m²')),
+                        e('button', { onClick:() => removeLine(i.key),
+                          className:'text-slate-500 hover:text-red-400 text-[11px] shrink-0' }, 'Remove')),
+                      showPrices && e('div', { className:'mt-1.5 pt-1.5 border-t border-slate-700/60 space-y-0.5' },
+                        e('div', { className:'text-[11px] flex justify-between text-slate-400' },
+                          e('span', null, 'Glass'), e('span', { className:'tabular-nums' }, money(i.glassCost))),
+                        i.addons.map(a =>
+                          e('div', { key:a.id, className:'text-[11px] flex justify-between text-slate-400' },
+                            e('span', { className:'truncate pr-2' },
+                              '+ ' + a.name + (a.charge === 'lm' ? ' (' + a.qty.toFixed(2) + 'm)' : '')),
+                            e('span', { className:'tabular-nums' }, money(a.cost)))),
+                        e('div', { className:'text-[13px] font-bold text-amber-400 text-right pt-0.5 tabular-nums' },
+                          money(i.total)))))),
+
+            e('div', { className:'bg-slate-900/60 rounded-lg border border-slate-700 p-3 mb-3' },
+              e('div', { className:'flex items-baseline justify-between mb-2' },
+                e('h3', { className:'text-[11px] font-bold uppercase tracking-wider text-slate-400' }, 'Extra costs'),
+                extras.length > 0 && e('span', { className:'text-[11px] text-amber-400 font-semibold tabular-nums' },
+                  money(T.extrasTotal))),
+
+              extras.length > 0 && e('div', { className:'space-y-1 mb-2' },
+                extras.map(x =>
+                  e('div', { key:x.id, className:'flex items-center gap-2 text-[13px] bg-slate-900 rounded px-2.5 py-1.5 border border-slate-700' },
+                    e('span', { className:'flex-1 truncate' }, x.label),
+                    e('span', { className:'tabular-nums font-semibold text-amber-300' }, money(x.amount)),
+                    e('button', { onClick:() => removeExtra(x.id),
+                      className:'text-slate-500 hover:text-red-400 text-[11px]' }, '✕')))),
+
+              e('div', { className:'flex gap-1.5 mb-2' },
+                e('input', { className: input + ' flex-1', placeholder:'Labour, delivery, fitting…',
+                  value:extraLabel, onChange:ev => setExtraLabel(ev.target.value),
+                  onKeyDown:ev => { if (ev.key === 'Enter') addExtra(); } }),
+                e('div', { className:'relative w-24' },
+                  e('span', { className:'absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 text-sm' }, '£'),
+                  e('input', { type:'number', inputMode:'decimal', step:'0.01', placeholder:'0.00',
+                    value:extraAmount, onChange:ev => setExtraAmount(ev.target.value),
+                    onKeyDown:ev => { if (ev.key === 'Enter') addExtra(); },
+                    className: input + ' pl-5' })),
+                e('button', { onClick:addExtra,
+                  className:'px-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-semibold' }, 'Add')),
+
+              e('div', { className:'flex flex-wrap gap-1' },
+                EXTRA_PRESETS.map(p =>
+                  e('button', { key:p, onClick:() => setExtraLabel(p),
+                    className:'px-2 py-1 rounded bg-slate-900 hover:bg-slate-700 text-[10px] font-medium text-slate-400' }, p))),
+
+              e('p', { className:'text-[10px] text-slate-500 mt-2 leading-snug' },
+                'Added after any discount, before VAT — so a trade discount comes off the glass but not the labour.')),
+
+            e('div', { className:'flex gap-2 mb-3' },
+              e('div', { className:'flex-1' },
+                e('label', { className: label }, 'Discount %'),
+                e('input', { type:'number', inputMode:'decimal', min:'0', max:'100', value:discount,
+                  onChange:ev => setDiscount(ev.target.value), className: input })),
+              e('div', { className:'flex items-end gap-1.5' },
+                e('button', { onClick:() => setDiscount('15'),
+                  className:'px-2.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-700 text-[11px] font-semibold' }, 'Account 15%'),
+                e('button', { onClick:() => setDiscount('25'),
+                  className:'px-2.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-700 text-[11px] font-semibold' }, 'Trade 25%'))),
+
+            e('label', { className:'flex items-center gap-2 mb-3 text-xs text-slate-300 cursor-pointer' },
+              e('input', { type:'checkbox', checked:cardFee, onChange:() => setCardFee(!cardFee),
+                className:'accent-amber-500' }),
+              'Paying by card (adds 2%)'),
+
+            hasContent && e('div', { className:'bg-slate-900 rounded-lg p-3 border border-slate-700 space-y-1 text-[13px] mb-3' },
+              lineItems.length > 0 && e('div', { className:'flex justify-between text-slate-500 text-[11px]' },
+                e('span', null, 'Area'), e('span', { className:'tabular-nums' }, T.totalM2.toFixed(2) + ' m²')),
+              T.totalLm > 0 && e('div', { className:'flex justify-between text-slate-500 text-[11px]' },
+                e('span', null, 'Edgework'), e('span', { className:'tabular-nums' }, T.totalLm.toFixed(2) + ' m')),
+              lineItems.length > 0 && e('div', { className:'flex justify-between pt-1 border-t border-slate-700 text-slate-300' },
+                e('span', null, 'Glass subtotal'), e('span', { className:'tabular-nums' }, money(T.subtotal))),
+              discountPct > 0 && e(Fragment, null,
+                e('div', { className:'flex justify-between text-emerald-400' },
+                  e('span', null, 'Discount ' + discountPct + '%'),
+                  e('span', { className:'tabular-nums' }, '−' + money(T.discountAmount))),
+                e('div', { className:'flex justify-between text-slate-300' },
+                  e('span', null, 'After discount'), e('span', { className:'tabular-nums' }, money(T.afterDiscount)))),
+              extras.map(x =>
+                e('div', { key:x.id, className:'flex justify-between text-slate-300' },
+                  e('span', { className:'truncate pr-2' }, x.label),
+                  e('span', { className:'tabular-nums' }, money(x.amount)))),
+              e('div', { className:'flex justify-between text-slate-300' },
+                e('span', null, 'VAT 20%'), e('span', { className:'tabular-nums' }, money(T.vat))),
+              cardFee && e('div', { className:'flex justify-between text-slate-300' },
+                e('span', null, 'Card 2%'), e('span', { className:'tabular-nums' }, money(T.cardAmount))),
+              e('div', { className:'flex justify-between text-lg font-bold text-amber-400 pt-1.5 border-t border-slate-700' },
+                e('span', null, 'Total'), e('span', { className:'tabular-nums' }, money(T.grandTotal)))),
+
+            hasContent && e('div', { className:'grid grid-cols-3 gap-2' },
+              e('button', { onClick:() => saveQuote(false),
+                className:'py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold text-sm' },
+                editingQuote ? 'Update' : 'Save'),
+              e('button', { onClick:exportQuote,
+                className:'py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold text-sm' },
+                'Download'),
+              e('button', { onClick:openEmailPanel,
+                className:'py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg font-semibold text-sm' },
+                'Email')),
+
+            hasContent && editingQuote && e('button', { onClick:() => saveQuote(true),
+              className:'w-full mt-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-700 text-xs font-semibold' },
+              'Save as a separate quote'),
+
+            hasContent && e('button', {
+              onClick:() => { if (confirm(editingQuote ? 'Clear the builder? The saved quote stays as it is.' : 'Clear this quote?')) resetBuilder(); },
+              className:'w-full mt-1.5 py-1.5 text-[11px] text-slate-500 hover:text-red-400' },
+              editingQuote ? 'Stop editing' : 'Clear quote')),
+
+          e('div', { className: card + ' p-3 text-[11px] text-slate-500 leading-relaxed' },
+            'Emailed and downloaded quotes show item and extra-cost totals only — no per-m² or per-metre rates, and no internal notes. Minimum charge 0.3 m² on double glazed units, 0.2 m² on toughened, 0.1 m² on everything else.'))),
+
+      e('div', { className:'xl:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur border-t border-slate-700 px-4 py-2.5 flex items-center gap-3' },
+        rawArea > 0 && showPrices && e('div', { className:'min-w-0' },
+          e('div', { className:'text-[10px] text-slate-500 leading-tight' }, 'This item'),
+          e('div', { className:'text-base font-bold text-amber-400 tabular-nums leading-tight' }, money(linePreview))),
+        e('button', { onClick:addLineItem,
+          className:'flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg font-bold text-sm' },
+          'Add to quote'))
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(e(Calculator));
+</script>
+</body>
+</html>
