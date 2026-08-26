@@ -1,50 +1,510 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wilson's Glass — Quote Calculator</title>
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wilson's Glass — Job Book</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  *{-webkit-tap-highlight-color:transparent}
-  input[type=number]{-moz-appearance:textfield}
-  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-  .scroll::-webkit-scrollbar{width:6px}
-  .scroll::-webkit-scrollbar-track{background:#1e293b;border-radius:3px}
-  .scroll::-webkit-scrollbar-thumb{background:#475569;border-radius:3px}
-  .scroll::-webkit-scrollbar-thumb:hover{background:#64748b}
-  :focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:root{
+  --pane:#EDF1EF; --white:#FBFDFC; --ink:#16262B; --ink2:#54696F;
+  --silver:#C6D0CD; --silver2:#DFE6E3;
+  --float:#2F6B57; --float-l:#DEEBE4; --float-d:#204C3D;
+  --amber:#A65A0B; --amber-l:#FBEEDC;
+  --blue:#2C5A80; --blue-l:#E4EEF6;
+  --red:#98302F; --r:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Archivo',system-ui,sans-serif;background:var(--pane);color:var(--ink);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--float);outline-offset:2px}
+
+header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--white);padding:10px 16px;display:flex;gap:10px;align-items:center}
+.brand{font-weight:700;letter-spacing:.14em;font-size:12px;text-transform:uppercase;white-space:nowrap}
+.brand span{color:#8FBCA9}
+@media(max-width:620px){.brand{display:none}}
+.searchwrap{flex:1;min-width:110px}
+#search{width:100%;padding:9px 12px;background:#233A40;border:1px solid #35545C;border-radius:var(--r);color:var(--white);font-size:15px}
+#search::placeholder{color:#7E999F}
+.hbtn{padding:9px 13px;border-radius:var(--r);font-weight:600;font-size:14px;white-space:nowrap}
+.hbtn.primary{background:#4E9E7E;color:#05201A}
+.hbtn.ghost{border:1px solid #35545C;color:#B9CDCB}
+#storeTag{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;padding:4px 8px;border-radius:2px;white-space:nowrap}
+@media(max-width:760px){#storeTag{display:none}}
+.st-shop{background:#1E4D3E;color:#8FD9BC}
+.st-device{background:#5A3D10;color:#F0C687}
+.st-none{background:#5A1E1D;color:#F0A9A7}
+.menuwrap{position:relative}
+.menu{position:absolute;right:0;top:100%;margin-top:6px;background:var(--white);border:1px solid var(--silver);border-radius:var(--r);box-shadow:0 8px 24px rgba(12,30,34,.2);min-width:200px;display:none;overflow:hidden;z-index:45}
+.menu.on{display:block}
+.menu button{display:block;width:100%;text-align:left;padding:11px 14px;font-size:14px;color:var(--ink);border-bottom:1px solid var(--silver2)}
+.menu button:last-child{border-bottom:none}
+.menu button:hover{background:var(--float-l)}
+
+.rail{position:sticky;top:56px;z-index:30;background:var(--white);border-bottom:1px solid var(--silver);display:flex;overflow-x:auto;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.chip{padding:11px 15px;border-right:1px solid var(--silver2);white-space:nowrap;display:flex;gap:8px;align-items:baseline;color:var(--ink2);font-size:13px;font-weight:500;border-bottom:3px solid transparent}
+.chip b{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--ink)}
+.chip.on{color:var(--ink);border-bottom-color:var(--float);background:var(--float-l)}
+.chip.alert b{color:var(--amber)}
+
+main{max-width:1000px;margin:0 auto;padding:16px 12px 100px}
+.banner{padding:11px 14px;border-radius:var(--r);margin-bottom:14px;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:var(--amber-l);border:1px solid #E8C99A;border-left:4px solid var(--amber)}
+.banner b{color:var(--amber)}
+.banner button{font-weight:600;color:var(--amber);text-decoration:underline;text-underline-offset:2px}
+
+.job{background:var(--white);border:1px solid var(--silver);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.job.flag{border-left:4px solid var(--amber)}
+.jobtop{display:flex;gap:12px;padding:12px 14px 10px;align-items:flex-start;cursor:pointer}
+.ticket{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;background:var(--ink);color:var(--white);padding:3px 6px;border-radius:2px;flex-shrink:0}
+.who{flex:1;min-width:0}
+.who h3{font-size:17px;font-weight:600;line-height:1.25;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tag{font-size:9.5px;font-weight:700;letter-spacing:.1em;background:var(--float-l);color:var(--float-d);padding:2px 5px;border-radius:2px;text-transform:uppercase}
+.meta{font-size:13px;color:var(--ink2);margin-top:2px}
+.stat{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:5px 9px;border-radius:2px;white-space:nowrap;flex-shrink:0}
+.s-quote{background:#EDE7F6;color:#5B3E96}
+.s-lost{background:#EFEFEF;color:#8A8A8A}
+.s-pricing{background:#FBE9E7;color:#9C4221}
+.s-measure{background:#E7F0F6;color:#2C5A80}
+.src-price{background:#FBE9E7;color:#9C4221}
+.ev-mea{background:#FBE9E7;color:#9C4221}
+.costin{width:92px;padding:7px 8px;border:1px solid var(--silver);border-radius:2px;font-family:'IBM Plex Mono',monospace;text-align:right;font-size:14px}
+.wsrow .costwrap{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.wsrow .costwrap label{font-size:9.5px;margin:0;letter-spacing:.06em}
+@media(max-width:520px){.wsrow .costwrap{display:none}}
+.profit{margin-top:12px;padding-top:10px;border-top:1px solid #35545C}
+.profit .calcrow b{color:#8FD9BC}
+.s-order{background:var(--amber-l);color:var(--amber)}
+.s-cut{background:var(--blue-l);color:var(--blue)}
+.s-ready{background:var(--float-l);color:var(--float-d)}
+.s-done{background:#EDEFEE;color:#7C8B8A}
+
+.docket{padding:0 14px 12px}
+.ditem{padding:7px 0;border-top:1px solid var(--silver2);display:flex;gap:10px;align-items:flex-start}
+.ditem:first-child{border-top:none}
+.ditem .body{flex:1;min-width:0}
+.src{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 6px;border-radius:2px;white-space:nowrap;margin-top:3px}
+.src-cut{background:var(--blue-l);color:var(--blue)}
+.src-order{background:var(--amber-l);color:var(--amber)}
+.src-in{background:var(--float-l);color:var(--float-d)}
+.src-done{background:var(--float-l);color:var(--float-d)}
+button.src{cursor:pointer;border:1px solid transparent}
+button.src:hover{border-color:currentColor}
+
+.prod{font-size:13.5px;font-weight:500;color:var(--ink2)}
+.size{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:500;display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+.size .x{color:var(--silver);font-weight:400}
+.size .qty{font-size:13px;color:var(--float-d);background:var(--float-l);padding:1px 5px;border-radius:2px;font-weight:600}
+.addons{font-size:12.5px;color:var(--float-d);margin-top:2px}
+.note{font-size:13.5px;color:var(--ink2);margin-top:8px;padding-left:10px;border-left:2px solid var(--silver);white-space:pre-wrap}
+.jobfoot{border-top:1px solid var(--silver2);padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;background:#F6F9F7}
+.money{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600}
+.sub{font-size:12px;color:var(--ink2)}
+.owed{color:var(--red);font-size:13px;font-weight:600;margin-left:8px}
+.paid{color:var(--float);font-size:13px;font-weight:600;margin-left:8px}
+.acts{display:flex;gap:7px;flex-wrap:wrap}
+.act{padding:7px 12px;border:1px solid var(--silver);background:var(--white);border-radius:var(--r);font-size:13px;font-weight:600;line-height:1.2}
+.act:hover{border-color:var(--float);color:var(--float-d)}
+.act.go{background:var(--float);color:var(--white);border-color:var(--float)}
+.act.go:hover{background:var(--float-d);color:var(--white)}
+.act.warn{background:var(--amber);color:var(--white);border-color:var(--amber)}
+.act.warn:hover{background:#8B4A08;color:var(--white)}
+.act.blue{background:var(--blue);color:var(--white);border-color:var(--blue)}
+.act.blue:hover{background:#1F4260;color:var(--white)}
+.empty{text-align:center;padding:60px 20px;color:var(--ink2)}
+.empty h3{font-size:19px;color:var(--ink);margin-bottom:6px;font-weight:600}
+
+
+/* ---------- full-screen sheets ---------- */
+.sheet{position:fixed;inset:0;z-index:51;background:var(--pane);overflow-y:auto;display:none}
+.sheet.on{display:block}
+.sheethead{position:sticky;top:0;background:var(--ink);color:var(--white);padding:13px 16px;display:flex;justify-content:space-between;align-items:center;z-index:5;gap:12px}
+.sheethead h2{font-size:15px;font-weight:600}
+.sheetbody{max-width:1080px;margin:0 auto;padding:16px 16px 140px}
+.sheetgrid{display:block}
+@media(min-width:920px){
+  .sheetgrid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:20px;align-items:start}
+  .sheetgrid .right{position:sticky;top:74px}
+}
+.fgroup{margin-bottom:14px}
+label{display:block;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink2);margin-bottom:5px}
+.inp{width:100%;padding:10px 11px;background:var(--white);border:1px solid var(--silver);border-radius:var(--r);font-size:15px}
+.inp:focus{border-color:var(--float);outline:none;box-shadow:0 0 0 3px var(--float-l)}
+.row{display:flex;gap:9px}
+.row>*{flex:1;min-width:0}
+.card{background:var(--white);border:1px solid var(--silver);border-radius:var(--r);padding:14px;margin-bottom:14px}
+.card>h4{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--float-d);margin-bottom:11px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.item{border:1px solid var(--silver);border-radius:var(--r);padding:12px;margin-bottom:10px;background:var(--white)}
+.item.ordered{border-left:3px solid var(--amber)}
+.item.cutting{border-left:3px solid var(--blue)}
+.ihead{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;gap:8px}
+.inum{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink2)}
+.idel{color:var(--ink2);font-size:19px;line-height:1;padding:2px 6px}
+.dims{display:flex;gap:6px;align-items:center}
+.dims .inp{font-family:'IBM Plex Mono',monospace;text-align:center;font-size:17px;padding:9px 4px}
+.dims .times{color:var(--silver);font-family:'IBM Plex Mono',monospace;flex-shrink:0}
+.srcpick{display:flex;border:1px solid var(--silver);border-radius:var(--r);overflow:hidden;margin-bottom:9px}
+.srcpick button{flex:1;padding:8px;font-size:13px;font-weight:600;background:var(--white);color:var(--ink2)}
+.srcpick button.on[data-v="cut"]{background:var(--blue);color:var(--white)}
+.srcpick button.on[data-v="order"]{background:var(--amber);color:var(--white)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ac{padding:6px 10px;border:1px solid var(--silver);border-radius:14px;font-size:12.5px;font-weight:600;color:var(--ink2);background:var(--white)}
+.ac.on{background:var(--float-l);border-color:var(--float);color:var(--float-d)}
+.lmwrap{display:flex;gap:7px;align-items:center;margin-top:8px;font-size:12.5px;color:var(--ink2)}
+.lmwrap input{width:82px;padding:6px 8px;border:1px solid var(--silver);border-radius:2px;font-family:'IBM Plex Mono',monospace;text-align:right}
+.iline{display:flex;justify-content:space-between;margin-top:9px;padding-top:8px;border-top:1px solid var(--silver2);font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink2)}
+.iline b{color:var(--ink);font-size:15px}
+.addbtn{width:100%;padding:11px;border:1.5px dashed var(--silver);border-radius:var(--r);font-weight:600;color:var(--float-d);font-size:14px}
+.addbtn:hover{border-color:var(--float);background:var(--float-l)}
+.calc{background:var(--ink);color:var(--white);border-radius:var(--r);padding:14px}
+.calc h4{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#8FBCA9;margin-bottom:10px;font-weight:700}
+.calcrow{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:13px;padding:3px 0;color:#C3D5D3;gap:10px}
+.calcrow.tot{border-top:1px solid #35545C;margin-top:8px;padding-top:9px;font-size:21px;font-weight:600;color:var(--white)}
+.calchint{font-size:12px;color:#7E999F;margin-top:8px;line-height:1.4}
+.split{margin-top:12px;padding-top:10px;border-top:1px solid #35545C;font-size:12px;color:#8FBCA9;line-height:1.5}
+.suggest{position:relative}
+.slist{position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--float);border-top:none;max-height:230px;overflow-y:auto;z-index:6}
+.sitem{padding:9px 11px;cursor:pointer;border-bottom:1px solid var(--silver2);font-size:14px}
+.sitem:hover{background:var(--float-l)}
+.sitem .sm{font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace}
+.sheetfoot{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--silver);padding:12px 16px;z-index:6}
+.footinner{max-width:1080px;margin:0 auto;display:flex;gap:9px}
+.footinner button{flex:1;padding:13px;border-radius:var(--r);font-weight:600;font-size:15px}
+.save{background:var(--float);color:var(--white)}
+.cancel{border:1px solid var(--silver);color:var(--ink2);flex:0 0 92px}
+.danger{color:var(--red);flex:0 0 auto;padding:13px 13px;font-size:13px}
+.toggle{display:flex;border:1px solid var(--silver);border-radius:var(--r);overflow:hidden;flex-wrap:wrap}
+.toggle button{flex:1;padding:9px;font-size:13.5px;font-weight:600;background:var(--white);color:var(--ink2);min-width:90px}
+.toggle button.on{background:var(--float);color:var(--white)}
+.ptbl{width:100%;border-collapse:collapse;font-size:14px}
+.ptbl td{padding:5px 0;border-bottom:1px solid var(--silver2)}
+.ptbl td.c{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--float-d);padding-top:14px;border:none}
+.ptbl input{width:92px;padding:6px 8px;border:1px solid var(--silver);border-radius:2px;font-family:'IBM Plex Mono',monospace;text-align:right}
+.ptbl td:nth-child(2),.ptbl td:nth-child(3){width:100px;text-align:right}
+pre.preview{background:var(--white);border:1px solid var(--silver);border-radius:var(--r);padding:12px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:340px;overflow-y:auto}
+.sendrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.sendrow button{flex:1 1 auto;min-width:118px;padding:11px;border-radius:var(--r);font-weight:600;font-size:14px;border:1px solid var(--silver);background:var(--white)}
+.sendrow button.pri{background:var(--float);color:var(--white);border-color:var(--float)}
+.warnbox{background:var(--amber-l);border:1px solid #E8C99A;border-radius:var(--r);padding:10px 12px;font-size:13px;margin-top:10px;color:var(--amber)}
+
+/* ---------- worksheets ---------- */
+.wshead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.wshead h2{font-size:19px;font-weight:600;line-height:1.2}
+.wsmeta{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink2);margin-top:2px}
+.wsbtns{display:flex;gap:7px;flex-wrap:wrap}
+.wsbtns button{padding:8px 13px;border:1px solid var(--silver);background:var(--white);border-radius:var(--r);font-weight:600;font-size:13px}
+.wsbtns button.pri{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.suphead{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--ink);color:#B9CDCB;padding:8px 12px;margin-top:16px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:var(--r) var(--r) 0 0}
+.suphead button{color:#8FD9BC;font-size:12px;font-weight:600;text-decoration:underline;text-underline-offset:2px;text-transform:none;letter-spacing:0}
+.wslist{border:1px solid var(--silver);border-radius:0 0 var(--r) var(--r);overflow:hidden;margin-bottom:4px}
+.wslist.solo{border-radius:var(--r)}
+.wsrow{display:flex;gap:12px;align-items:center;background:var(--white);padding:10px 12px;border-top:1px solid var(--silver2)}
+.wsrow:first-child{border-top:none}
+.wsrow.late{background:#FFF9F4}
+.tick{width:36px;height:36px;min-width:36px;border:2px solid var(--silver);border-radius:var(--r);color:transparent;font-size:17px;font-weight:700;line-height:1}
+.tick:hover{border-color:var(--float);color:var(--float);background:var(--float-l)}
+.wsrow .info{flex:1;min-width:0;text-align:left}
+.wsrow .ref{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink2)}
+.wsrow .dim{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;line-height:1.25}
+.wsrow .pn{font-size:13px;color:var(--ink2)}
+.wsrow .ex{font-size:12.5px;color:var(--float-d)}
+.wsrow .flagtxt{font-size:12px;color:var(--amber)}
+.wsrow .due{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink2);text-align:right;white-space:nowrap}
+.wsrow.late .due{color:var(--red);font-weight:600}
+@media(max-width:520px){.wsrow .due{display:none}}
+
+/* ---------- diary ---------- */
+.dtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.dtop h2{font-size:19px;font-weight:600}
+.dnav{display:flex;gap:6px}
+.dnav button{padding:7px 12px;border:1px solid var(--silver);background:var(--white);border-radius:var(--r);font-weight:600;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--silver);border:1px solid var(--silver);border-radius:var(--r);overflow:hidden}
+.gh{background:var(--ink);color:#B9CDCB;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:7px 4px;text-align:center}
+.cell{background:var(--white);min-height:88px;padding:5px 5px 6px;text-align:left;display:block;width:100%}
+.cell.out{background:#F4F6F5}
+.cell.today{background:var(--float-l)}
+.cell.sel{outline:2px solid var(--float);outline-offset:-2px}
+.cell .dn{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--ink2);display:block;margin-bottom:3px}
+.cell.today .dn{color:var(--float-d)}
+.cell .ev{display:block;font-size:10.5px;line-height:1.35;padding:2px 4px;border-radius:2px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-fit{background:#EDE7F6;color:#4A3080}
+.ev-del{background:var(--blue-l);color:var(--blue)}
+.cell .more{font-size:10px;color:var(--ink2)}
+@media(max-width:620px){.cell{min-height:66px}.cell .ev{font-size:9.5px}}
+.daypanel{margin-top:14px}
+.slot{display:flex;gap:10px;align-items:flex-start;background:var(--white);border:1px solid var(--silver);border-radius:var(--r);padding:11px 13px;margin-bottom:8px}
+.slot .tm{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;white-space:nowrap}
+.slot .dur{font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace;font-weight:400}
+.unsched{background:var(--white);border:1px dashed var(--silver);border-radius:var(--r);padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:var(--white);padding:11px 18px;border-radius:var(--r);font-size:14px;z-index:99;transition:transform .22s ease;max-width:90vw}
+#toast.on{transform:translateX(-50%) translateY(0)}
+#toast.bad{background:var(--red)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+#printarea{display:none}
+@media print{
+  header,.rail,.banner,.jobfoot,.sheet,#toast,main{display:none!important}
+  #printarea{display:block}
+  body{background:#fff;font-size:12px}
+  .pjob{border-bottom:1.5px solid #000;padding:8px 0;page-break-inside:avoid}
+  .phead{display:flex;justify-content:space-between;font-weight:700;font-size:13px}
+  .psize{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500}
+  .pprod{font-size:11px;font-style:italic}
+  .ptitle{font-size:17px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border-bottom:3px solid #000;padding-bottom:6px;margin:0 0 8px}
+  .psup{font-size:14px;font-weight:700;background:#eee;padding:4px 6px;margin-top:12px}
+}
 </style>
 </head>
-<body class="bg-slate-900">
-<div id="app"></div>
+<body>
+
+<header>
+  <div class="brand">Wilson's <span>Glass</span></div>
+  <div class="searchwrap"><input id="search" placeholder="Search name, phone or job no." autocomplete="off"></div>
+  <span id="storeTag" class="st-none">…</span>
+  <button class="hbtn primary" id="newBtn">+ New job</button>
+  <div class="menuwrap">
+    <button class="hbtn ghost" id="menuBtn">More</button>
+    <div class="menu" id="menu">
+      <button id="viewCut">Cutting list</button>
+      <button id="viewOrder">Order list</button>
+      <button id="printCut">Print cutting list</button>
+      <button id="printOrder">Print order list</button>
+      <button id="printDiary">Print diary</button>
+      <button id="expBtn">Back up / export</button>
+      <button id="rateBtn">Prices &amp; suppliers</button>
+    </div>
+  </div>
+</header>
+
+<div class="rail" id="rail"></div>
+<main><div id="banner"></div><div id="list"></div></main>
+
+<!-- ============ JOB ============ -->
+<div class="sheet" id="jobSheet">
+  <div class="sheethead"><h2 id="sheetTitle">New job</h2><button class="hbtn ghost" id="closeJob">Close</button></div>
+  <div class="sheetbody"><div class="sheetgrid">
+    <div class="left">
+      <div class="card">
+        <h4>Customer</h4>
+        <div class="fgroup suggest">
+          <label for="fName">Name</label>
+          <input class="inp" id="fName" autocomplete="off" placeholder="Start typing…">
+          <div id="sugg"></div>
+        </div>
+        <div class="row fgroup">
+          <div><label for="fPhone">Phone</label><input class="inp mono" id="fPhone" inputmode="tel" autocomplete="off"></div>
+          <div><label for="fEmail">Email</label><input class="inp" id="fEmail" inputmode="email" autocomplete="off" placeholder="for sending updates"></div>
+        </div>
+        <div class="fgroup"><label>Account</label>
+          <div class="toggle"><button id="tRetail" class="on">Retail</button><button id="tTrade">Trade</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4><span>Glass</span><span id="unitPick"></span></h4>
+        <div id="items"></div>
+        <button class="addbtn" id="addItem">+ Add another piece</button>
+        <p class="sub" style="margin-top:9px">No sizes yet? Tick <b>needs measuring first</b> under Handover and save — the job goes in the diary to be measured, and you add the sizes afterwards.</p>
+      </div>
+
+      <div class="card">
+        <h4>Extras and labour</h4>
+        <div id="extras"></div>
+        <button class="addbtn" id="addExtra">+ Add an extra</button>
+        <div class="row" style="margin-top:12px">
+          <div><label for="fDisc">Discount %</label><input class="inp mono" id="fDisc" inputmode="decimal" placeholder="0"></div>
+          <div><label for="fDep">Deposit £</label><input class="inp mono" id="fDep" inputmode="decimal" placeholder="0"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink);margin-top:12px">
+          <input type="checkbox" id="fCard" style="width:17px;height:17px"> Paying by card (adds 2%)
+        </label>
+      </div>
+
+      <div class="card">
+        <h4>What it costs us</h4>
+        <div id="costs"></div>
+        <button class="addbtn" id="addCost">+ Add a cost</button>
+        <p class="sub" style="margin-top:9px">Supplier prices you enter on the order list come in here automatically. Add labour, delivery or anything else you pay out.</p>
+      </div>
+
+      <div class="card">
+        <h4>Handover</h4>
+        <div class="fgroup"><label>How is it going out?</label>
+          <div class="toggle" id="hoPick">
+            <button data-h="collection" class="on">Collection</button>
+            <button data-h="delivery">Delivery</button>
+            <button data-h="fitting">Fitting</button>
+          </div>
+        </div>
+        <div class="fgroup" id="addrWrap" style="display:none"><label for="fAddr">Address</label><input class="inp" id="fAddr" placeholder="e.g. 209 Warren Drive, RM12 4PL"></div>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink);margin-bottom:14px">
+          <input type="checkbox" id="fMeasure" style="width:17px;height:17px"> Needs measuring first
+        </label>
+        <div class="fgroup" id="apptWrap"></div>
+        <div class="fgroup"><label for="fWanted">Wanted by</label><input class="inp" id="fWanted" type="date"></div>
+        <div class="fgroup"><label for="fNote">Notes</label><textarea class="inp" id="fNote" rows="3" placeholder="Anything the workshop or counter needs to know"></textarea></div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="calc"><h4>Price</h4><div id="calcRows"></div><div class="calchint" id="calcHint"></div><div class="split" id="calcSplit"></div></div>
+    </div>
+  </div></div>
+  <div class="sheetfoot"><div class="footinner">
+    <button class="cancel" id="cancelJob">Cancel</button>
+    <button class="save" id="saveJob">Save job</button>
+    <button class="danger" id="delJob" style="display:none">Delete</button>
+  </div></div>
+</div>
+
+<!-- ============ EMAIL ============ -->
+<div class="sheet" id="mailSheet">
+  <div class="sheethead"><h2 id="mailTitle">Send</h2><button class="hbtn ghost" id="closeMail">Close</button></div>
+  <div class="sheetbody"><div class="sheetgrid">
+    <div class="left">
+      <div class="card">
+        <h4>Message</h4>
+        <div class="fgroup"><label for="mTo">To</label><input class="inp" id="mTo" inputmode="email" placeholder="name@example.com"></div>
+        <div class="fgroup"><label for="mSubj">Subject</label><input class="inp" id="mSubj"></div>
+        <div class="fgroup"><label>What are you sending?</label><div class="toggle" id="mKind">
+          <button data-k="quote">Quote</button><button data-k="confirm">Order taken</button><button data-k="ready" class="on">Ready</button><button data-k="balance">Balance</button>
+        </div></div>
+        <div class="fgroup"><label for="mMsg">Covering note</label><textarea class="inp" id="mMsg" rows="8"></textarea></div>
+        <div id="mWarn"></div>
+      </div>
+    </div>
+    <div class="right">
+      <div class="card">
+        <h4>Preview</h4>
+        <pre class="preview" id="mPrev"></pre>
+        <div class="sendrow">
+          <button class="pri" id="mMail">Mail app</button>
+          <button id="mGmail">Gmail</button>
+          <button id="mOutlook">Outlook</button>
+          <button id="mCopy">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <div class="sheetfoot"><div class="footinner">
+    <button class="cancel" id="mBack">Back</button>
+    <button class="save" id="mTold">Mark customer told</button>
+  </div></div>
+</div>
+
+<!-- ============ DIARY BOOKING ============ -->
+<div class="sheet" id="bookSheet">
+  <div class="sheethead"><h2 id="bookTitle">Book into the diary</h2><button class="hbtn ghost" id="closeBook">Close</button></div>
+  <div class="sheetbody" style="max-width:580px">
+    <div class="card">
+      <h4>Which job?</h4>
+      <div id="bookPick"></div>
+    </div>
+    <div class="card" id="bookWhen">
+      <h4>When</h4>
+      <div class="fgroup"><label>What sort of visit?</label>
+        <div class="toggle" id="bKind">
+          <button data-bk="measure">Measure</button><button data-bk="fit" class="on">Fit</button><button data-bk="deliver">Deliver</button>
+        </div>
+      </div>
+      <div class="row fgroup">
+        <div><label for="bDate">Date</label><input class="inp" id="bDate" type="date"></div>
+        <div><label for="bTime">Start</label><input class="inp mono" id="bTime" type="time" value="09:00"></div>
+      </div>
+      <div class="fgroup"><label for="bMins">How long?</label>
+        <select class="inp" id="bMins">
+          <option value="30">30 minutes</option><option value="60" selected>1 hour</option>
+          <option value="90">1½ hours</option><option value="120">2 hours</option>
+          <option value="180">3 hours</option><option value="240">Half day (4 hours)</option>
+          <option value="360">6 hours</option><option value="480">Full day (8 hours)</option>
+        </select>
+      </div>
+      <div id="bMove"></div>
+      <div id="bClash"></div>
+    </div>
+  </div>
+  <div class="sheetfoot"><div class="footinner">
+    <button class="cancel" id="bCancel">Cancel</button>
+    <button class="save" id="bSave">Put in the diary</button>
+  </div></div>
+</div>
+
+<!-- ============ BACKUP ============ -->
+<div class="sheet" id="expSheet">
+  <div class="sheethead"><h2>Back up the job book</h2><button class="hbtn ghost" id="closeExp">Close</button></div>
+  <div class="sheetbody" style="max-width:760px">
+    <div class="card">
+      <h4>Take a copy</h4>
+      <div id="expStatus"></div>
+      <div class="sendrow">
+        <button class="pri" id="expJson">Full backup (.json)</button>
+        <button id="expJobs">Jobs for Excel (.csv)</button>
+        <button id="expPieces">Every piece (.csv)</button>
+      </div>
+      <p class="sub" style="margin-top:12px">The <b>full backup</b> is the one that matters — it is the only file that can be put back if the job book is ever lost. The two spreadsheets are for reading and totalling in Excel; they cannot be restored from.</p>
+      <p class="sub">Both spreadsheets repeat the job details on every row, so sorting and filtering work properly. That is the one thing the old cutting list could never do.</p>
+    </div>
+    <div class="card">
+      <h4>Put a backup back</h4>
+      <input class="inp" type="file" id="expFile" accept=".json,application/json">
+      <p class="sub" style="margin-top:9px">Choose a <b>.json</b> backup file. You will be asked to confirm before anything is overwritten.</p>
+      <div id="expRestore"></div>
+    </div>
+    <div class="card" id="expFallbackWrap" style="display:none">
+      <h4>Downloads are blocked here — copy it instead</h4>
+      <textarea class="inp mono" id="expText" rows="10" style="font-size:11px"></textarea>
+      <button class="act" id="expCopy" style="margin-top:9px">Copy to clipboard</button>
+      <p class="sub" style="margin-top:9px">Paste into a text file and save it with the filename shown above.</p>
+    </div>
+  </div>
+  <div class="sheetfoot"><div class="footinner"><button class="cancel" id="expBack">Back</button></div></div>
+</div>
+
+<!-- ============ PRICES ============ -->
+<div class="sheet" id="rateSheet">
+  <div class="sheethead"><h2>Prices &amp; suppliers</h2><button class="hbtn ghost" id="closeRate">Close</button></div>
+  <div class="sheetbody">
+    <div class="card">
+      <h4>Move all prices at once</h4>
+      <div style="max-width:220px"><label for="fAdj">Adjustment %</label><input class="inp mono" id="fAdj" inputmode="decimal"></div>
+      <p style="font-size:13px;color:var(--ink2);margin-top:8px">Applies on top of every price below, glass and edgework alike. Leave at 0 to charge the list price.</p>
+    </div>
+    <div class="card"><h4>Glass — £ per m², before VAT</h4><table class="ptbl" id="pTbl"></table></div>
+    <div class="card"><h4>Edgework and extras</h4><table class="ptbl" id="aTbl"></table></div>
+    <div class="card"><h4>Suppliers</h4><div id="supTbl"></div></div>
+    <div class="card"><h4>Working out profit</h4>
+      <div style="max-width:300px"><label for="fCutPct">Glass we cut costs us roughly</label>
+        <div class="row"><input class="inp mono" id="fCutPct" inputmode="decimal" style="flex:0 0 90px"><span style="align-self:center;font-size:14px;color:var(--ink2)">% of what we charge</span></div></div>
+      <p style="font-size:13px;color:var(--ink2);margin-top:8px">Only an estimate, used when you have not typed a real cost against a piece. Leave at 0 to ignore it. Bought-in glass always uses the supplier's actual price.</p>
+    </div>
+  </div>
+  <div class="sheetfoot"><div class="footinner"><button class="save" id="saveRates">Save</button></div></div>
+</div>
+
+<div id="toast"></div>
+<div id="printarea"></div>
 
 <script>
-const e = React.createElement;
-const { useState, useEffect, Fragment } = React;
-
 /* ============================================================
-   PRICE LIST
-   These are the current selling prices per m² (or per linear
-   metre for edgework). What you see is what is charged — no
-   hidden multiplier. To move prices across the board, use the
-   Prices panel in the header rather than editing every line.
+   PRICE LIST — lifted from the Wilson's Glass price calculator
+   so both apps agree to the penny.
    ============================================================ */
+const num = v => (typeof v === 'number' && isFinite(v)) ? v : (parseFloat(v) || 0);
 
 const VAT_RATE  = 0.20;
 const CARD_FEE  = 0.02;
-const STORE_KEY = 'wilsons_glass_quotes';
-const ADJ_KEY   = 'wilsons_glass_price_adjust';
 
-/* Minimum chargeable area by category */
 const MIN_AREA = {
   'Double Glazed Units': 0.3,
   'Toughened':           0.2,
   'DEFAULT':             0.1,
 };
+
 
 const PRODUCTS = [
   { id:'c2mm',    name:'2 MM GLASS',                      category:'Clear Float Glass',   price:51.61 },
@@ -102,13 +562,14 @@ const PRODUCTS = [
   { id:'dglowelt',name:'Low E leaded toughened',          category:'Double Glazed Units', price:203.50 },
 ];
 
+
 const HORTICULTURAL = [
   { id:'h1', name:'610 × 457',  price:8.80  },
   { id:'h2', name:'610 × 610',  price:9.90  },
   { id:'h3', name:'1207 × 703', price:25.85 },
 ];
 
-/* charge: 'lm' per linear metre (defaults to perimeter) | 'm2' per m² | 'each' per unit */
+
 const ADDONS = [
   { id:'pol-std', name:'Polished edges',         detail:'Rectangles, up to 8 MM',   charge:'lm', price:5.50,  group:'Edgework' },
   { id:'pol-10',  name:'Polished edges — 10 MM', detail:'Thicker glass rate',       charge:'lm', price:9.90,  group:'Edgework' },
@@ -118,896 +579,1901 @@ const ADDONS = [
   { id:'obsunit', name:'Obscure glass in unit',  detail:'Double-glazed units only', charge:'m2', price:11.00, group:'Unit options' },
 ];
 
-const PRESETS = [
-  { label:'1000 × 800',  height:1000, width:800  },
-  { label:'1200 × 1200', height:1200, width:1200 },
-  { label:'1500 × 800',  height:1500, width:800  },
-  { label:'900 × 600',   height:900,  width:600  },
+/* Horticultural stock sizes are charged per pane, not per m². */
+const HORT_PRODUCTS = HORTICULTURAL.map(h => (
+  { id:h.id, name:h.name, category:'Horticultural (stock sizes)', price:h.price, each:true }
+));
+const ALL_PRODUCTS = PRODUCTS.concat(HORT_PRODUCTS);
+
+
+const SHOP={ name:"Wilson's Glass", addr:"6 St Mary's Lane, Upminster, Essex",
+             tel:'01708 224215', email:'wilsons.glass@outlook.com' };
+
+/* Products the shop does not cut itself — these get ordered in.
+   Every piece can be switched either way when the job is taken. */
+const ORDER_IN=new Set([
+  't4mm','t6mm','t4o','t6o','t8mm','t10mm','t6tint','t6sb',
+  'dgclear','dglead','dgtuf','dglam','dgleadt','dglowe','dglowet','dglowel','dglowelt',
+  'w-ps','w-cast','s64w','s730','pimg','pral','sb4mm','sb6mm',
+  'c8mm','c10mm','m4b','m6b','m6a','o4oriel'
+]);
+
+/* Looked up from each supplier's own website — editable under Prices. */
+const SUPPLIER_SEED=[
+  {name:'Firmans', email:'sales@firmanglass.com',       tel:'01708 374534', addr:'19 Bates Rd, Romford RM3 0JH'},
+  {name:'Simply',  email:'debbie@simplyglassltd.co.uk', tel:'01277 676666', addr:'14 Prospect Way, Hutton, Brentwood CM13 1XA'},
+  {name:'WOW',     email:'seeus@wowglass.co.uk',        tel:'',             addr:'Unit 3 Bridge Connections, Coldharbour Lane, Rainham RM13 9YB'},
+  {name:'STG',     email:'sales@stglass.co.uk',         tel:'01603 263130', addr:'Rackheath Industrial Estate, Norwich NR13 6PR', check:1},
+  {name:'Other',   email:'', tel:'', addr:''}
 ];
+let SUPPLIERS=SUPPLIER_SEED.map(s=>Object.assign({},s));
+const supOf=n=>SUPPLIERS.find(s=>s.name===n)||{name:n||'Supplier',email:'',tel:'',addr:''};
+const supNames=()=>SUPPLIERS.map(s=>s.name);
+let SETTINGS={cutCostPct:0};
+const defaultSrc=pid=>ORDER_IN.has(pid)?'order':'cut';
 
-/* ---------- helpers ---------- */
-const num = v => (typeof v === 'number' && isFinite(v)) ? v : (parseFloat(v) || 0);
-const money = n => '£' + num(n).toFixed(2);
+/* ============================================================
+   STORAGE — shared shop book, then this browser, then nothing.
+   ============================================================ */
+const KEY_JOBS='wg:jobs:v4', KEY_PRICES='wg:prices:v4', KEY_SUP='wg:suppliers:v1', KEY_EXP='wg:lastexport:v1';
+let STORE='none', MEM={};
 
-const STORAGE_OK = (() => {
-  try {
-    localStorage.setItem('__wg_probe', '1');
-    localStorage.removeItem('__wg_probe');
-    return true;
-  } catch (err) { return false; }
-})();
-
-/* Totals. Extras (labour, delivery and so on) are added AFTER any
-   discount, so a trade discount applies to the glass but not to
-   labour. Move extrasTotal above the discount line if you'd rather
-   discount everything. */
-function computeTotals(items, discountPct, cardFee, extras) {
-  const list           = Array.isArray(extras) ? extras : [];
-  const subtotal       = items.reduce((s, i) => s + num(i.total), 0);
-  const pct            = num(discountPct);
-  const discountAmount = subtotal * (pct / 100);
-  const afterDiscount  = subtotal - discountAmount;
-  const extrasTotal    = list.reduce((s, x) => s + num(x.amount), 0);
-  const net            = afterDiscount + extrasTotal;
-  const vat            = net * VAT_RATE;
-  const beforeCard     = net + vat;
-  const cardAmount     = cardFee ? beforeCard * CARD_FEE : 0;
-  return {
-    subtotal, discountAmount, afterDiscount, extrasTotal, net, vat, cardAmount,
-    grandTotal: beforeCard + cardAmount,
-    totalM2: items.reduce((s, i) => s + num(i.totalArea), 0),
-    totalLm: items.reduce((s, i) => s +
-      (i.addons || []).filter(a => a.charge === 'lm').reduce((t, a) => t + num(a.qty), 0), 0),
-  };
+async function initStore(){
+  if(typeof window!=='undefined' && window.storage && typeof window.storage.set==='function'){
+    try{ await window.storage.set('wg:probe','1',true); STORE='shop'; return; }catch(e){}
+  }
+  try{ window.localStorage.setItem('wg:probe','1'); window.localStorage.removeItem('wg:probe'); STORE='device'; return; }catch(e){}
+  STORE='none';
+}
+async function sGet(k){
+  try{
+    if(STORE==='shop'){ const r=await window.storage.get(k,true); return (r&&r.value)||null; }
+    if(STORE==='device'){ return window.localStorage.getItem(k); }
+  }catch(e){ return null; }
+  return MEM[k]||null;
+}
+async function sSet(k,v){
+  if(STORE==='shop'){ await window.storage.set(k,v,true); return; }
+  if(STORE==='device'){ window.localStorage.setItem(k,v); return; }
+  MEM[k]=v;
 }
 
-/* Older builds used different field names and had no extras array.
-   Normalise everything on the way in so one stale record can't take
-   the panel down. */
-function normaliseQuote(q) {
-  if (!q || typeof q !== 'object') return null;
+const STATUSES=[
+  {k:'measure',label:'To measure',cls:'s-measure'},
+  {k:'quote',  label:'Quote',    cls:'s-quote'},
+  {k:'pricing',label:'Pricing',  cls:'s-pricing'},
+  {k:'order',  label:'On order', cls:'s-order'},
+  {k:'cut',    label:'To cut',   cls:'s-cut'},
+  {k:'ready',  label:'Ready',    cls:'s-ready'},
+  {k:'done',   label:'Done',     cls:'s-done'},
+  {k:'lost',   label:'Not proceeding',cls:'s-lost'}
+];
+const stat=k=>STATUSES.find(s=>s.k===k)||STATUSES[0];
+const DURS={30:'30 min',60:'1 hr',90:'1½ hr',120:'2 hr',180:'3 hr',240:'Half day',360:'6 hr',480:'Full day'};
 
-  const items = (Array.isArray(q.items) ? q.items : []).map((i, idx) => {
-    const area  = num(i.totalArea);
-    const glass = num(i.glassCost !== undefined ? i.glassCost : i.markedUpPrice);
-    const addons = (Array.isArray(i.addons) ? i.addons : []).map(a => ({
-      id: a.id || 'addon', name: a.name || 'Add-on',
-      charge: a.charge || 'm2', rate: num(a.rate),
-      qty: num(a.qty), cost: num(a.cost),
-    }));
-    return {
-      key: i.key || i.id || (Date.now() + idx),
-      productName: i.productName || 'Glass',
-      category: i.category || '',
-      height: num(i.height), width: num(i.width), unit: i.unit || 'mm',
-      quantity: num(i.quantity) || 1,
-      totalArea: area,
-      totalPerim: num(i.totalPerim),
-      glassRate: num(i.glassRate !== undefined ? i.glassRate : (area ? glass / area : 0)),
-      glassCost: glass,
-      addons,
-      total: num(i.total !== undefined ? i.total : glass + addons.reduce((s, a) => s + a.cost, 0)),
-    };
+let JOBS=[], CUSTOMERS=[], PRICES={}, ADJ=0, filter='all', editing=null, mailJob=null, mailKind='ready';
+let items=[], extras=[], costs=[], isTrade=false, handover='collection', unit='mm';
+let diaryMonth=new Date(), selDay=null, listView='sheet';
+let lastFull=null, lastAny=null, nagDismissed='';
+
+CUSTOMERS=`Oliver|07738376025||94|2026-08-20|4mm mirror par|1
+Minde|07943857006||72|2026-07-23|4mm mirror par|1
+Max|07507703313||69|2026-08-10|4mm mirror par|
+paul|07920811897||56|2026-08-21|6mm float par|1
+Rob|07883466567||40|2026-08-05|6mm float par|1
+Dave|07734078017||31|2025-05-12|3mm horti|
+Vic VRM|07512923037||31|2024-08-06|4mm safety backed mirrors|
+bas acad|07728373335||31|2024-06-14|7.2 pyroguard|1
+vic|07512923037||23|2026-08-10|4mm safety backed mirror|
+Brian|07985495639||22|2026-07-22|6mm mirror par|
+Steve|07932713590||22|2026-08-05|6mm float par|
+Darren|07921191183||21|2026-01-14|4mm mirror clean cut|
+David|07891224916||21|2026-01-22|6mm float arrised edges|
+Laurence|07957555388||21|2023-09-01|6mm mirror par|
+James|07833658334||20|2024-07-03|6mm float par|
+Tom|07976444041||20|2026-08-03|6mm mirror par|1
+Tony|07976312678||18|2024-09-02|4mm mirror par|1
+john|07710037129||18|2026-05-22|6mm float par|
+Mark|07532277255||17|2026-04-13|6mm float par|
+Kevin|01708456565||15|2024-03-14|6mm float par|
+Richard|07887633557||15|2026-07-16|6mm float par|
+Chris|07398939139||14|2026-04-13|6mm float par|
+Gary|07774269771||14|2024-09-13|6mm float par|
+Ian|07715701944||13|2024-09-12|6mm float par|
+Oliver Prestige|||13|2025-09-09|4mm mirror par|
+lee|07730349316||13|2026-08-18|6mm par|1
+Terry|07864643640||12|2023-01-19|6.4 lamianted|
+coopers|07740901297||12|2024-09-18|6.4 laminated|
+Lawrence|07772463040||11|2026-05-20|4mm mirror par|
+peter|07960554488||11|2024-01-12|6mm float par|
+Alan|07879681038||10|2025-08-22|6mm float par|
+Jamie|07990075153||9|2024-09-11|6mm mirror par|
+Jason|07919050212||9|2024-08-27|6mm mirror par|
+Mike|07881780804||9|2025-12-01|4mm float|
+Dean|07976362156||8|2024-03-19|6mm float par|
+Eddie|07971836065||8|2024-01-16|6mm mirror par|
+Michael|07814898504||8|2024-05-24|6mm float par|
+Nancy|07967793916||8|2025-09-16|6mm float par|
+Neil|07944634565||8|2024-09-20|4mm mirror par|
+Nicky|07980619636||8|2024-07-03|4mm mirror par|
+Sue|07419357196||8|2025-09-09|6mm float par|
+Andy|01708444355||7|2023-10-20|4mm float|
+Angela|01708709078||7|2026-04-30|6mm flaot par|
+Daniel|07958271478||7|2026-05-20|6mm float cut edge|
+Debbie|07795675044||7|2023-04-28|6mm float par|
+Julie|07773656506||7|2026-04-20|6mm float par|
+Kelvin|07831492100||7|2023-07-20|6mm float par|
+Laura|07711031830||7|2026-07-27|6mm float par|
+Matt|07788710470||7|2025-07-16|6mm float par|
+Nick|07535855931||7|2026-04-13|6mm mirrors par|
+andrew|07912480689||7|2025-09-02|6mm float par|
+brad|07774109298||7|2024-09-02|6mm float par|
+lee brewis|07909630862||7|2026-03-13|6mm float glazed|
+Colin|01708222751||6|2023-06-14|4mm flaot par|
+Craig|07715526823||6|2026-07-24|4mm mirror cut edge|
+Dan|07930483570||6|2023-04-27|6.4 laminated|
+Danny|07957315674||6|2024-07-17|6mm float par|
+Diane|07734956253||6|2026-04-10|6.4 laminated|
+Les|07709235676||6|2022-02-04|replace glass in traditional lead |
+Robert|07747036103||6|2026-04-30|6 mm bev mirror and grab|
+Sean|07946889799||6|2025-07-21|6mm flaot par|
+Sharon|07708761529||6|2026-05-21|6mm float par|
+Stubbers|07958705434||6|2026-04-22|6mm mirror par|
+bob|07939255401||6|2024-09-02|10mm toughened par - rectangle|1
+Dave at MK Memorials|07734078017||5|2025-07-21|3mm|
+Hannah|07791341173||5|2022-08-23|4mm mirror par|
+Indoors|07321191183||5|2023-10-02|4mm float cut edge 15mm radius cor|
+Isil|07763687862||5|2024-01-31|paperwork on bench for mirrors wit|
+Jeff|07769790850||5|2024-07-22|6mm flaot par|
+Joe|07593741101||5|2024-09-11|4mm float clear|
+Keith|07710309167||5|2023-08-01|6mm float par|
+Lucy|07717884062||5|2025-05-07|4mm mirror par|
+Martin|07739855621||5|2026-06-22|4mm float|
+Natalie|07779290344||5|2022-11-18|4mm mirror par|
+Rob Westbury Joinery|07904019418||5|2022-04-26|4mm float|
+Sarah|07947854449||5|2024-08-31|4mm mirror par to fit to wardrobe |
+kim|07963600795||5|2026-04-29|6 mm clear tuff par dubbed corners|
+Amanda|07930545619||4|2026-06-04|6mm float par|
+Bobby|07956313025||4|2023-05-22|6.4 laminated|
+Brian Suprema|07985495639||4|2024-04-10|6mm mirror par|
+Clare|01708913844||4|2023-10-30|6mm float polished edges|
+Daren|||4|2025-07-31|4mm float clean cut with the round|
+David Carter|07984690560||4|2026-05-01|6mm float harrised edges|
+Donna|07903925686||4|2025-05-07|6mm float par|
+Graham|07733364846||4|2026-08-03|6mm float par|
+Jenny|07939178305||4|2023-06-14|4mm mirrors par|
+Jo|07515082540||4|2024-07-23|6mm float par|
+Lisa|07710992411||4|2026-07-17|6mm float with polished edges to t|
+Malc|07896240598||4|2022-03-02|2mm|
+Nicki|07980619636||4|2023-07-26|6mm float par|
+Phil|07940151630||4|2024-05-21|4mm float clean cut|
+Ray|07483820081||4|2024-02-06|6.4 laminated|
+Scott|07517662164||4|2022-07-12|4mm mirror cut edge|
+Steven|07903958938||4|2022-03-25|4mm clean cut|
+Stewart|07545983536||4|2023-10-12|3mm horti|
+Susan|01708446969||4|2026-07-09|3mm hortti to fit monday morning|
+Tim|07966580918||4|2024-02-21|6mm float par|
+adrian|07881630230||4|2024-06-14|6mm par|
+jack|07525932401||4|2024-07-09|6mm float par|
+jim|01277219140||4|2022-08-04|6mm float par|
+mat|07788710470||4|2024-03-15|6mm float|
+suprema|07990075153||4|2021-12-16|6mm mirror par|
+Ashley|07740799572||3|2023-07-25|6.4 lam|
+AtW carpentry|07704436754||3||4mm mirror par|
+Barry|07717378459||3|2024-01-23|6mm float par|
+Beth|07761562368||3|2021-11-27|black splash back|
+Bill|07773891106||3|2022-05-13|6mm float par|
+Brian at Suprema|07985495639||3|2021-07-13|6mm mirror par|1
+Chris at RSF|07539379854||3|2022-02-24|6mm mirror par|
+Claire|07949105739||3|2026-05-05|6mm float par to template|
+Costin|07730532306||3|2024-05-20|6.4 laminated|
+Emerson Park School|01708475285||3|2021-05-28|gwpps|1
+Emma|07875160822||3|2023-08-02|6mm float polished edges|
+Gareth|07866411568||3|2024-07-24|2mm to picture frame provided on b|
+Hall Lane site|||3||6mm mirror par|
+Heather|07956206663||3|2022-07-22|6mm mirror cut edge|
+Jackie|07931853346||3|2025-07-10|6mm mirror with polished edges|
+Jamie Suprema|07990075153||3|2023-02-20|6mm mirror par|1
+Jean|07850404888||3|2022-06-27|6mm mirror par|
+Karen|07467064739||3|2021-04-27|4 mm float cut edge|
+Khal|07929248743||3|2022-10-12|4mm float with diamond leads|
+Lewisham|||3|2026-07-17|4mm float for hack out sight size|
+Michelle|07584486251||3|2023-04-12|4mm mirror par|1
+Pete|07866636391||3|2022-08-02|6mm float p a r|
+Ricky|07865078632||3|2025-07-01|6mm float par|
+Russel|01708448543||3|2022-08-02|3mm horti|
+Sally|07768394597||3|2024-01-03|4mm mirror with par|
+Sam|07713219090||3|2026-07-16|6mm mirror par with 4 holes|
+Sandra|07889690906||3|2022-07-28|6.4 lamianted|
+Simon|07973721310||3|2025-05-12|6.4 lam|
+Stuart|07960193318||3|2022-11-30|6.4 laminated|1
+Teresa|07722907262||3|2022-06-27|gwpps|
+Terri|07825077825||3|2022-08-24|1no 10 mm tuff par to be fitted in|
+The Red Co|07395359617||3|2023-12-05|6mm float cut edge|1
+Theresa|07943346829||3||6mm grey mirror tinted par|
+Vanessa|07866898938||3|2025-08-20|6mm float par|
+alan bird|07504295511||3|2024-09-09|4mm mirror par|
+alex|07967738290||3|2022-01-25|6mm mirror par|
+george|01708229800||3|2022-01-14|4mm mirrorpar|
+lesley|07738415151||3|2022-11-08|6mm float par|
+tracey|07729903373||3||6mm float par|
+Aimee|07400939989||2|2026-08-05|6mm float par|
+Al|07725830015||2||6mm float par|
+Alison|07906815837||2|2023-07-20|6mm float par|
+Anita|02085971811||2|2021-11-11|6mm mirror par 4 holes in each|
+Ben|07411449378||2|2022-08-23|6mm toughened with polished edges|
+Billy|07958368220||2|2022-10-12|2 no georgian grid units|
+Branfil|||2|2023-07-31|4mm float|
+Brian (Suprema)|07985495639||2|2023-07-27|6mm mirror par|
+Carl (Coates Bros)|||2|2023-08-15|4mm float cut edge|
+Cheryl|07932638980||2|2024-06-07|6mm mirror par|
+Chloe|07852522511||2|2021-01-05|6mm float par|
+Chris RSF|07398939139||2|2025-07-01|6mm float par|
+Clive|07841143020||2|2023-07-21|6mm flaot par|
+Coats Bro|||2|2024-01-19|6.4 lamainted|
+Daniel at WKD|01375892696||2|2021-11-30|6.4 laminated|1
+Daren Green|||2||6mm float par|
+Dave wilson|07551954418||2|2022-03-15|8mm float par|
+David Smith|07469970030||2|2022-10-06|4mm float par|
+Elliot|07809226912||2|2024-06-12|6.4 lam|1
+Elliott|07814684756||2|2026-05-21|4mm mirror par|
+Fred|07802723324||2|2022-08-23|4mm float cut edge|
+Gloria|07837042737||2|2022-07-12|6mm float par|
+Harry|07864071281||2|2021-08-09|6mm float par|
+JTB Duncan|07930373862||2|2023-10-05|4mm float cut edge|
+Jackie Plant|07931853346||2|2024-08-20|4mm mirror par|
+Jake|07905130396||2|2025-07-30|6mm float for door provided (dont |
+Jane|07779593674||2|2024-01-26|6mmfloat par|
+Jill|07932556388||2|2022-11-23|6mm float par|
+Kenny|07960988581||2|2022-07-20|6mm satin par|
+Kerri|07780880379||2||4mm clear float to doors provided |
+Kerry|07535134459||2||6mm float par|
+Kevin Allen Ford|07939265581||2|2022-05-18|6.4 laminated|
+Laurence Interiors Direct|||2|2024-08-02|6mm mirror par|
+Linda|07539468623||2|2023-01-05|6mm mirror par to top of box provi|
+Lisa Wilson|07986790786||2|2022-08-31|4mm float|
+Liz|07884063904||2|2025-09-01|4mm mirror (circular)|
+Louise|07837040665||2|2021-05-12|6.4 laminated with polished edges|
+Lynette|07880865540||2|2024-06-10|grey tuff mirror par fitted|
+Margret|07932775528||2|2021-03-24|leaded units|
+Maria|07939645668||2|2026-03-31|6mm float par|
+Marion|07872436509||2|2024-05-10|4mm mirror par|
+Mr Auger|07966276099||2|2025-10-01|2mm|
+Mr Byron|01708226904||2|2022-07-28|4-6-4 brown bar units|
+Mr Joseph|07877350264||2||6.4 lam|
+Mr Maloney|07821015080||2|2022-08-23|6mm mirror par|
+Mr Peterson|07833658334||2|2021-06-18|6.4 laminated|
+Mr Tate|01708630991||2|2022-05-31|4mm safety backed mirror|
+Mr White|07979280257||2|2022-03-08|6.4 clear lam|
+Mr fall|01708224327||2|2021-11-27|4mm tough sup and fit|
+Mrs Brown|07791411321||2|2026-06-17|4mm mirror arrised edges|
+Mrs Reed|01708222989||2|2023-07-17|4mm mirror par|
+Noelle|07523708583||2|2021-11-27|dgu sup and fit|
+Oliver at Prestige|07738376025||2|2022-09-22|4mm cut edge mirror|
+Pat|07738004001||2|2021-01-26|4mm mirror harrased edges|
+Patrick|07960001049||2|2024-01-15|6mm float par|
+RSF Bathrooms|01708444355||2|2021-07-22|6mm float par|
+Red Co|||2|2023-09-13|gwpps|
+Reg|07515349005||2|2021-11-30|4mm tough minster supply|
+Ren|07708355827||2|2022-12-22|6mm float par|
+Rich|||2|2023-11-01|4mm toughened reeded/fluted to be |
+Roy|07961444995||2|2022-07-27|6mm float par|
+Ryan|07946375116||2|2024-06-05|6mmfloat par|
+Shelia|07970440896||2|2022-11-14|4mm cut to shape provided with a h|
+Shirley|07932654923||2|2022-01-10|6mm mirror par|
+Shirley Smith|07932654923||2|2022-05-18|10mm tuff shelves|1
+Sophie|07519601478||2|2024-01-11|flat 7 nelmes court, rm11 2ql|
+St Francis Hospice|||2||to fit monday 6.4 laminated|
+Stephen|07740795359||2|2021-01-20|mirror in cabnet|
+The Red Company|07395359617||2|2023-09-06|4mm mirror par|
+Val|07730656735||2|2024-03-08|6mm mirror par|
+Vicky|07983649862||2|2022-08-30|6mm float|1
+WKD|||2|2021-11-27|any 6mm obscured pattern|1
+Warren|07947620244||2||6mm mirror par|
+Wayne|07813848442||2|2021-08-11|6mm mirror par|
+Yvonne|07898279306||2||6mm float par|
+Zoe|07988888708||2|2026-04-22|6mm clear float par|
+andy.. rsf|07854159969||2|2026-06-29|6mm float par|
+dan wkd|01375892696||2|2023-07-12|6mm mirror par|
+hall lane plot 6|||2|2026-04-13|4mm mirror par|
+jason furn wk shop|07824556603||2|2022-06-18|4mm par|
+jordon|07545236580||2|2021-11-30|4mm float|
+ken lee|01708724804||2|2021-12-01|6.4 lamianted sup only|
+malcome|07896240598||2|2022-08-23|3mm|
+paul verve|07985110007||2|2022-08-31|4mm mirror par|
+tim o sullivan|07958206837||2|2022-06-29|dg unit supply only 4.20.4 silver |
+victoria|07973941372||2|2021-11-16|tuff units 4-16-4 silver bar|
+wkd daniel|01375892696||2|2026-03-06|4mm float|
+.|07984690560||1|2021-05-13|4 mm clear par|
+88 coniston|07799333294||1||sup and fit|
+ACW|07305374674||1|2024-05-17|4mm mirror par|
+AMH Builders||amh_builders@hotmail.co.uk|1|2024-07-16|4mm mirror par|
+Abigail|07900562030||1|2026-08-21|6mm flaot par|
+Acacia Drive|07875755439||1|2022-08-26|4no 10mm for balastrades 16 brushe|
+Adam and Mac|07971480147||1|2022-08-26|tuff low e units|
+Aegir|07923039810||1|2021-12-17|6mm tuff par|
+Alan Bucley|07740167361||1|2022-06-10|10mm glass balastrades|
+Alan Jee|01708221288||1|2024-05-16|6.4 laminated|
+Alan Loding|07854677918||1||4mm float par and coprners (check |
+Alan Wilson|01708471101||1|2023-07-25|7mm gwc|
+Alf|07860410026||1|2021-11-08|6mm clear toughend polishededges a|
+Andy (RSF bathrooms)|07854159969||1|2023-09-08|6mm mirror par|
+Andy (bains)|07854722343||1|2021-02-17|6mm float par|
+Andy Robinson|07952115057||1|2023-03-10|6mm float par|
+Angela Cook|07792817883||1|2022-08-04|76 hacton lane|
+Ankit|07828843328||1|2022-07-05|dgus|
+Anna|01708446711||1|2022-11-15|6.4 laminated|
+Anne|07957246322||1||4mm float par with dubbed corners|
+Anne Marie|07825408075||1|2021-06-01|6mm float par|
+Anne Rudd|07999530165||1|2024-06-05|6mm float par and dubbed corners|
+Anne Wingfield|07931735177||1|2022-09-12|305mm side hung low stack (have to|
+Annie|07713396989||1|2022-08-02|6mm float par|
+Anthony|07538561560||1|2022-07-13|2no raised bevel stipolyte units|
+Arnie|07877174158||1|2023-05-05|6mm mirror par|
+Artur|07545596379||1|2026-04-29|6mm float par|
+Austin|07947581161||1|2022-02-24|float dgu|
+Avril|07837618939||1|2026-05-11|6mm float par|
+B&L Upholstery|07930483570||1|2024-09-03|6mm float par|
+Barbara Forrest|07846913024||1|2024-02-22|cut bottom off mirror, polish and |
+Barbers|07877174158||1|2024-05-09|6mm mirror cut edge|
+Barrie|07885248222||1|2023-12-11|6mm mirror par with 2 holes *see d|
+Barry Webb|07908633580||1|2025-09-22|6mm float par|
+Bernie|07706739763||1||4mm float|
+Brendon|07909981703||1|2025-08-19|6mm float par|
+Brian Woolnough|07860275407||1|2023-03-07|6mm mirror par|
+Brian from suprema|07985495639||1|2022-05-30|6mm mirror par|1
+Bruce Gardener|07794230306||1||4mm mirror par delivered to|
+Carol Smith|01708450991||1|2024-02-13|3mm horti|
+Caroline|07923440778||1|2022-09-05|6mm float par|
+Caroline Scales|01708949909||1|2022-06-09|10mm toughened circle par|
+Casilda|07939083883||1|2023-10-26|4mm mirror in frame provided|
+Cathy|07714126681||1|2022-04-22|mottled antique splashbacks|
+Cathy Newman|07918020596||1|2022-06-07|6mm bronze toughened mirror with p|1
+Char|07460300879||1||4mm mirror par|
+Cherri|07775903372||1|2022-08-23|6mm mirror par|
+Chris (RSF Bathrooms)|07398939139||1|2023-04-27|6mm float par|
+Chris Ct Joinery|07932151603||1|2023-05-16|4mm mirror par to match board on b|
+Christina|07761038606||1|2024-01-12|upvc door panel|
+Claudia|07956047815||1|2022-03-24|6 mnm mirror par|
+Clive Nichols|07850768862||1|2024-07-24|6mm float par|
+Colin and Yasmin|07940761693||1|2022-08-22|12no float fan lights|
+Danny/Chas|07905927402||1|2022-02-09|6.4 lam fitted dagenham|
+Darren (Indoors)|07921191183||1|2023-04-26|4mm clean cut with 15mm radius cor|1
+Darren (in doors)|07921191183||1|2024-06-06|6mm float par (urgent)|
+Darren at Indoors|07921191183||1|2022-07-05|4mm clear clean cut with 15mm radi|
+Dave (MK Memorials)|07734078017||1|2022-10-10|3mm horti|
+Dave Smith|07774256303||1|2022-07-07|shaped 10mm for balastrade|
+Dave Ward|07783862221||1|2023-08-02|6mm float par|
+David Day|07807024398||1|2024-04-17|1no 420 x 848 4-20-4 silver bar lo|
+David Fog|07960074453||1|2022-01-18|6mm mirror par|
+Dawn|07773685698||1|2024-08-20|6mm float par|
+Deana|07577024832||1|2022-11-08|6mm toughened par|
+Deborah|07962129329||1|2021-04-16|6mm float par|
+Denise Moyes|07816137677||1|2023-03-09|6mm float par|
+Derrick|01708447059||1|2022-04-25|6mm float par|
+Devinds|07818453519||1|2021-11-17|6mm painted black toughened par|1
+Devon|07493101818||1|2021-11-22|6mm low iron tuff par and painted |
+Dima|07885825138||1|2024-09-17|4mm grey tinted float|
+Don|07940560526||1||4mm float|
+Donna Leach|07930660606||1||6mm float par|
+Dorain|07827763360||1|2023-11-09|do templates for balastrades|
+Doug Crick|07780672397||1||6mm float par|
+Dr|07405372615||1||6mm flaot apr to go with units we |
+Dunbavin|01708441105||1|2022-05-10|4mm float par|
+Dzhait|07449342124||1|2026-07-22|6.4 lamainated|
+Eamon|07970259581||1|2022-08-26|267 wingltye lane, rm11 3bt|
+Eddie Wright|07801705975||1|2024-08-09|6mm mirror par|
+Eissa|07876829468||1|2021-04-07|stippolyte to match exisiting one |
+Elaine|07966160310||1|2022-06-07|4mm tuff soft coat/18mm black bar/|
+Elisabeth|07906108121||1|2026-01-19|6mm float par|
+Elliot The red company|07809226912||1|2023-05-31|4mm mirrors par to go with the pli|
+Emerson School|07464345127||1|2021-09-13|georgian wired polished plate|
+English|01708530683||1|2021-10-13|ballastrades as photos|
+Enver|07467565333||1||4mm float|
+Esther|07773282124||1|2022-06-23|6mm mirror 5 mm bevel all round|
+Farrell|01708458685||1|2021-06-08|6mm float ready for friday|
+Fay|07939636422||1|2022-05-12|6mm float par|
+Fiona|07763358191||1|2022-02-03|10 units supp and fit|
+Gamester|07851161912||1|2021-08-11|4mm float|
+Gary Purvis|07718491562||1||6mm float par|
+Gemma|07726105483||1|2021-07-26|4mm mirror par to go on board prov|
+Gemma Henderson|07951725686||1|2022-01-28|6mm tuff par rounded front corners|
+Geoff|07454584929||1|2021-11-23|4mm float par|
+Geraldine|07722079616||1||6mm float par|
+Grant|07920485331||1|2021-01-05|4mm grey tinted float p.a.r|
+Harvey|07736476366||1|2022-12-19|6mm mirror cut edge 4holes|
+Hassan|07780722581||1|2022-11-02|6mm low iron painted to a ral colo|
+Haveringh Cnservative Club|07958715936||1||6mm float par|
+Hazel Atkins|07970926643||1|2023-06-06|6mm float par|
+Ian Nichol|07860641111||1|2022-04-07|all 2mm|
+Ike|07715553080||1|2024-06-12|8mm toughend into balastrades|1
+Irvon|07440191364||1||comp door and frame|
+Ivin|07963523241||1|2024-06-24|6mm bronze mirror|
+J Duncan|07930373862||1|2023-04-24|4mm float clean cut|
+JHB Duncan|07930373862||1|2024-01-16|4mm float clean cut|
+JTP Duncan|07930373862||1|2023-03-08|4mm float clean cut|
+JTStone Masons|07930373862||1|2022-08-02|4mm float arrised edges|
+Jackie - St Georgies Church|01708441571||1|2022-11-18|4mm float|
+Jackson|07905130396||1||6.4 lam|
+Jacqueline|07768105416||1|2021-10-11|4mm mirror par|
+Jade|07958109900||1|2022-06-29|2 no 10 mm ballastades sup and fit|
+Jamie (suprema)|07990075153||1|2022-07-07|6mm mirror par|1
+Jamiew Suprema|07990075153||1|2022-10-11|6mm mirror par|
+Janet|01708438748||1|2022-04-21|flemish which ever way it goes wit|
+Jannan|07894715900||1||6mm floar par|
+Jaqualine|07768105416||1|2022-03-28|tuf soft coat units|
+Jason / Caterina|07807007504||1|2021-01-12|4mm float par|
+Jay|07425787701||1||4mm mirror par|
+Jayne Bree|07884004811||1|2026-06-15|6mm float par|
+Jen|07507890427||1|2021-07-16|6mm float par|
+Jeremiah|07840363378||1|2024-06-28|6mm mirror par|
+Jerry|07727201274||1|1901-01-21|6mm mirror par|
+Joan/Darren|01708854584||1|2021-10-14|6mm float par|
+Joann|07842445865||1|2022-07-07|6mm toughened par with holes and c|
+Joanne|07804909187||1|2026-06-17|6mm flaot par|
+John at Prestige|07860271568||1|2021-10-18|6mm mirror par|
+John c|07760451049||1|2022-06-06|6 mm toughend par with 60mm hole c|
+John helliar|07729421164||1|2021-11-27|6 mm float par|
+Johnny|07459005093||1|2025-06-04|4mm mirror par|
+Johny|07872972144||1|2021-02-19|6mm mirror par hanging hooks|
+Jonathan Ward|07794333420||1||4mm safety mirrors|
+Josh|07305680645||1|2022-09-27|6mm costwold|
+Josie|07949581744||1|2022-07-28|6mm float|
+Julia|01708452036||1|2022-03-15|6mm mirror par|
+Julias|07817426632||1|2023-12-06|4mm float cut edge|
+Julie and Doug|07967284395||1|2024-02-13|6mm mirror par|
+Juliet|07823773955||1|2023-10-26|4mm clear float glass cut edge|
+June|07960484678||1|2021-05-04|6mm mirror with polished edges|
+Justin|07738376025||1|2021-06-28|4mm safety backed mirror cut edge|
+KC kesick|07909522223||1|2022-06-13|4mm float|
+Karan|07882277816||1|2022-07-01|6mm grey tinted par toughened poli|1
+Kate|07753438779||1|2024-06-04|6mm otughened par|1
+Katherine|07725188610||1|2022-05-06|6mm float par|
+Kathy|07941243068||1|2023-11-15|6mm float par|
+Katie|07956343383||1|2024-06-04|6mm toughened par circle with hole|
+Kay Eaton|07933188700||1|2022-11-14|6mm float par|
+Kealie|07733011235||1|2022-07-16|6mm tuff par hole in centre|
+Ken|07889084914||1|2021-08-12|6mm float par|
+Kevin at Allen Ford|07939265581||1|2021-03-01|6.4 lamianted|
+Kirk|07926258883||1|2022-05-05|float units|
+LILLAN|07841480656||1|2021-02-15|4 mm mirror par|
+Lascelles|02085972090||1|2023-10-10|6mm float par|
+Laurence (Interiors Direct)|07957555388||1|2022-07-25|4mm mirror par|
+Laurence Interiros Diectr|07957555388||1|2022-09-22|4mm mirror par|
+Laurenece|07957555388||1|2021-11-19|6mm mirror par|
+Lawrence Interiors Direct|07957555388||1|2024-04-30|6mm mirror par|
+Leanne|07825397807||1|2022-04-11|6mm float par|
+Lee/ Teresa|07957481374||1|2022-05-30|4mm mirror par|
+Lena/ john|07967580381||1|2021-11-30|6mm mirror par sup and fit|
+Lenny|07950211897||1|2022-05-17|4mm tuff stipolyte leaded both sid|
+Linsdey|07909758172||1|2024-04-16|4mm mirror par|
+Little express Shop|07400383353||1|2023-11-15|6.4 lamianted|
+Lynda|07809110698||1||6mm float par|
+MR Carr|07808172976||1|2021-03-02|dgus of various sizes|
+MR Skinsley|07720832240||1|2024-01-30|6mm float par and dubbed corners|
+MRs Lockwood|07973266982||1|2022-11-29|2mm into picture frame provided|
+Malocolm|07741492807||1|2023-10-06|6.4 lam|
+Margaret Brown|07522061912||1|2026-05-19|2mm into frame provided|
+Margaret Cole|07702134123||1|2026-06-30|4mm mirror par|
+Marios|07454266133||1||4mm float clean cut|`.trim().split('\n').filter(Boolean).map(l=>{
+  const p=l.split('|');
+  return {name:p[0],phone:p[1]||'',email:p[2]||'',orders:+p[3]||0,last:p[4]||'',usual:p[5]||'',trade:p[6]==='1'};
+});
+
+/* ---------- pricing (mirrors the calculator exactly) ---------- */
+const clone=o=>JSON.parse(JSON.stringify(o));
+const gbp=n=>'£'+(num(n)).toFixed(2);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const prodOf=id=>ALL_PRODUCTS.find(x=>x.id===id)||ALL_PRODUCTS[0];
+const priceOf=id=>{const p=ALL_PRODUCTS.find(x=>x.id===id);return PRICES[id]!==undefined?PRICES[id]:(p?p.price:0);};
+const addonPrice=id=>{const a=ADDONS.find(x=>x.id===id);return PRICES['a:'+id]!==undefined?PRICES['a:'+id]:(a?a.price:0);};
+const rate=p=>p*(1+num(ADJ)/100);
+const toMm=(v,u)=>{const n=parseFloat(v); if(!n) return 0; u=u||unit;
+  return u==='mm'?n:u==='cm'?n*10:u==='inches'?n*25.4:n*304.8;};
+
+function priceItem(it,u){
+  const p=prodOf(it.pid);
+  const q=Math.max(1,parseInt(it.q)||1);
+  if(p.each){const c=rate(priceOf(p.id))*q;return {p,area:0,perim:0,glass:c,addons:[],total:c};}
+  const h=toMm(it.h,u), w=toMm(it.w,u);
+  const raw=(h*w)/1000000;
+  const minA=MIN_AREA[p.category]!==undefined?MIN_AREA[p.category]:MIN_AREA.DEFAULT;
+  const area=raw>0?Math.max(raw,minA)*q:0;
+  const perim=(h&&w)?((h*2+w*2)/1000)*q:0;
+  const glass=rate(priceOf(p.id))*area;
+  const addons=(it.addons||[]).map(a=>{
+    const A=ADDONS.find(x=>x.id===a.id); if(!A) return null;
+    const r=rate(addonPrice(A.id));
+    const qty=A.charge==='lm'?((a.m===undefined||a.m==='')?perim:(parseFloat(a.m)||0)):A.charge==='m2'?area:q;
+    return {id:A.id,name:A.name,charge:A.charge,rate:r,qty,cost:r*qty};
+  }).filter(Boolean);
+  return {p,area,perim,glass,addons,total:glass+addons.reduce((s,a)=>s+a.cost,0)};
+}
+function totals(its,exs,discPct,card,u){
+  const priced=its.map(i=>priceItem(i,u));
+  const subtotal=priced.reduce((s,i)=>s+i.total,0);
+  const discountAmount=subtotal*(num(discPct)/100);
+  const extrasTotal=(exs||[]).reduce((s,x)=>s+num(x.amount),0);
+  const net=subtotal-discountAmount+extrasTotal;
+  const vat=net*VAT_RATE;
+  const beforeCard=net+vat;
+  const cardAmount=card?beforeCard*CARD_FEE:0;
+  return {priced,subtotal,discountAmount,extrasTotal,net,vat,cardAmount,
+          grand:beforeCard+cardAmount,area:priced.reduce((s,i)=>s+i.area,0)};
+}
+const jobTotals=j=>totals(j.items||[],j.extras||[],j.discountPct,j.cardFee,j.unit);
+
+/* ---------- status derives from the pieces ----------
+   A job can be waiting on a supplier AND have glass to cut at the
+   same time. The headline status shows the furthest-back thing, but
+   the worklists are built from the pieces themselves, so cutting
+   never waits on a delivery. */
+const ost=i=>i.ostate||(i.arrived?'arrived':'toprice');
+const toPrice     =j=>(j.items||[]).filter(i=>i.src==='order'&&ost(i)==='toprice');
+const pendingOrder=j=>(j.items||[]).filter(i=>i.src==='order'&&ost(i)==='ordered');
+const notArrived  =j=>(j.items||[]).filter(i=>i.src==='order'&&ost(i)!=='arrived');
+const pendingCut  =j=>(j.items||[]).filter(i=>i.src==='cut'&&!i.cut);
+const isLive=j=>j.status!=='done'&&j.status!=='lost';
+const isWorking=j=>isLive(j)&&j.confirmed&&!measureOnly(j);
+/* a measure visit is booked before anyone has confirmed anything */
+const bookable=j=>isLive(j)&&(j.confirmed||measureOnly(j));
+
+const measureOnly=j=>!(j.items||[]).length;
+function autoStatus(j){
+  if(j.status==='done'||j.status==='lost') return j.status;
+  if(measureOnly(j)) return 'measure';      // nothing to price until it's been measured
+  if(!j.confirmed) return 'quote';
+  if(toPrice(j).length) return 'pricing';
+  if(pendingOrder(j).length) return 'order';
+  if(pendingCut(j).length) return 'cut';
+  return 'ready';
+}
+function applyStatus(j){
+  const was=j.status;
+  j.status=autoStatus(j);
+  if(j.status==='ready'&&was!=='ready') j.readyAt=new Date().toISOString();
+  return j;
+}
+function waitingSuppliers(j){
+  const m={};
+  notArrived(j).forEach(i=>{const s=i.supplier||'Supplier'; m[s]=(m[s]||0)+1;});
+  return m;
+}
+
+/* ---------- what it costs us, and what we make ---------- */
+function itemCost(j,it){
+  if(it.cost!==undefined&&it.cost!=='') return num(it.cost);
+  if(it.src==='cut'&&num(SETTINGS.cutCostPct)>0)
+    return priceItem(it,j.unit).total*num(SETTINGS.cutCostPct)/100;
+  return 0;
+}
+function costBreakdown(j){
+  const glass=(j.items||[]).reduce((s,it)=>s+itemCost(j,it),0);
+  const other=(j.costs||[]).reduce((s,c)=>s+num(c.amount),0);
+  const known=(j.items||[]).every(it=>it.src!=='order'||(it.cost!==undefined&&it.cost!==''));
+  return {glass,other,total:glass+other,known};
+}
+function profitOf(j){
+  const t=jobTotals(j), c=costBreakdown(j);
+  const profit=t.net-c.total;
+  return {net:t.net,cost:c.total,profit,margin:t.net>0?profit/t.net*100:0,known:c.known,c};
+}
+
+/* ---------- appointments ---------- */
+const APPT={measure:{label:'Measure',cls:'ev-mea'},fit:{label:'Fit',cls:'ev-fit'},deliver:{label:'Deliver',cls:'ev-del'}};
+const apptsOf=j=>(j.appts||[]);
+const hasAppt=(j,k)=>apptsOf(j).some(a=>a.kind===k);
+function neededAppts(j){
+  const n=[];
+  if((j.needsMeasure||measureOnly(j))&&!hasAppt(j,'measure')) n.push('measure');
+  if(j.handover==='fitting'&&!hasAppt(j,'fit')) n.push('fit');
+  if(j.handover==='delivery'&&!hasAppt(j,'deliver')) n.push('deliver');
+  return n;
+}
+const nextAppt=j=>apptsOf(j).slice().sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0];
+
+/* Old records predate the quote step, per-piece ticks and appointments. */
+function normalise(j){
+  if(j.confirmed===undefined) j.confirmed = j.status!=='quote';
+  if(!j.handover) j.handover = j.deliver?'delivery':'collection';
+  if(!j.costs) j.costs=[];
+  if(j.needsMeasure===undefined) j.needsMeasure=false;
+  (j.items||[]).forEach(i=>{
+    if(!i.src) i.src=defaultSrc(i.pid);
+    if(i.src==='cut'&&i.cut===undefined) i.cut=!!j.cutDone;
+    if(i.src==='order'&&!i.ostate) i.ostate=i.arrived?'arrived':'toprice';
   });
-
-  const extras = (Array.isArray(q.extras) ? q.extras : []).map((x, idx) => ({
-    id: x.id || (Date.now() + idx),
-    label: x.label || 'Extra cost',
-    amount: num(x.amount),
-  }));
-
-  const discountPct = num(q.discountPct !== undefined ? q.discountPct : q.discountPercent);
-  const cardFee = !!q.cardFee;
-
-  return {
-    id: q.id || Date.now(),
-    ref: q.ref || q.quoteNumber || 'Q------',
-    date: q.date || new Date().toLocaleDateString('en-GB'),
-    edited: q.edited || '',
-    sent: q.sent || '',
-    customerName: q.customerName || 'No name given',
-    customerEmail: q.customerEmail || '',
-    notes: q.notes || '',
-    items, extras, discountPct, cardFee,
-    totals: computeTotals(items, discountPct, cardFee, extras),
-  };
+  if(!j.appts){
+    j.appts = j.schedDate
+      ? [{kind:j.handover==='fitting'?'fit':'deliver',date:j.schedDate,time:j.schedTime||'',mins:+j.durMins||60}]
+      : [];
+  }
+  return j;
+}
+const handoverLabel=j=>j.handover==='fitting'?'Fitting':j.handover==='delivery'?'Delivery':'Collection';
+const doneVerb=j=>j.handover==='fitting'?'Fitted':j.handover==='delivery'?'Delivered':'Collected';
+const fmtDate=d=>d?new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function endTime(t,mins){
+  if(!t) return '';
+  const p=t.split(':'), d=new Date(2000,0,1,+p[0],+p[1]);
+  d.setMinutes(d.getMinutes()+(+mins||60));
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 }
 
-/* Text a search box should match against */
-const quoteHaystack = q => [
-  q.ref, q.customerName, q.customerEmail, q.notes, q.date,
-  ...q.items.map(i => i.productName + ' ' + i.category),
-  ...q.extras.map(x => x.label),
-].join(' ').toLowerCase();
+const $=id=>document.getElementById(id);
+const fmtPhone=p=>{const d=String(p||'').replace(/\D/g,'');
+  return d.length===11?d.slice(0,5)+' '+d.slice(5,8)+' '+d.slice(8):(p||'');};
+function toast(m,bad){const t=$('toast');t.textContent=m;t.className=bad?'on bad':'on';
+  clearTimeout(t._x);t._x=setTimeout(()=>t.className='',3200);}
+const daysAgo=iso=>iso?Math.floor((Date.now()-new Date(iso))/864e5):0;
 
-/* Common extras, offered as one-tap labels */
-const EXTRA_PRESETS = ['Labour', 'Fitting', 'Delivery', 'Waste removal', 'Survey'];
+/* ---------- list ---------- */
+function matches(j,q){
+  if(!q) return true; q=q.toLowerCase().trim();
+  const digits=q.replace(/\D/g,'');
+  return (j.name||'').toLowerCase().includes(q)
+      || (j.email||'').toLowerCase().includes(q)
+      || (digits.length>=3 && String(j.phone||'').replace(/\D/g,'').includes(digits))
+      || String(j.no||'').includes(q)
+      || (j.items||[]).some(i=>prodOf(i.pid).name.toLowerCase().includes(q)||(i.supplier||'').toLowerCase().includes(q));
+}
+function bucket(f){
+  if(f==='all')     return JOBS.filter(isLive);
+  if(f==='measure') return JOBS.filter(j=>isLive(j)&&measureOnly(j));
+  if(f==='quote')  return JOBS.filter(j=>j.status==='quote');
+  if(f==='pricing')return JOBS.filter(j=>isWorking(j)&&toPrice(j).length);
+  if(f==='order')  return JOBS.filter(j=>isWorking(j)&&pendingOrder(j).length);
+  if(f==='cut')    return JOBS.filter(j=>isWorking(j)&&pendingCut(j).length);
+  if(f==='ready')  return JOBS.filter(j=>j.status==='ready');
+  if(f==='told')   return JOBS.filter(j=>j.status==='ready'&&!j.called);
+  if(f==='closed') return JOBS.filter(j=>!isLive(j));
+  return [];
+}
+/* Nag on a Friday, or any day once a week has gone by. */
+function backupDue(){
+  if(!JOBS.length) return false;
+  if(nagDismissed===ymd(new Date())) return false;
+  const days = lastFull ? daysAgo(lastFull) : 9999;
+  return (new Date().getDay()===5 && days>=1) || days>=7;
+}
+function render(){
+  const q=$('search').value.trim();
+  const untold=bucket('told');
 
-const newRef = () => 'Q' + Date.now().toString().slice(-6);
+  $('rail').innerHTML=[
+    ['all','Live'],['measure','To measure'],['quote','Quotes'],['pricing','To price'],['order','On order'],['cut','To cut'],
+    ['ready','Ready'],['told','Not told'],['closed','Closed']
+  ].map(x=>`<button class="chip ${filter===x[0]?'on':''} ${x[0]==='told'&&untold.length?'alert':''}" data-f="${x[0]}">${x[1]} <b>${bucket(x[0]).length}</b></button>`).join('')
+   +`<button class="chip ${filter==='diary'?'on':''}" data-f="diary">Diary</button>`;
 
-/* ---------- email ----------
-   A file served from a static host has no server to send mail from,
-   so the quote is handed to whatever mail client the person already
-   uses, pre-filled and ready. They press Send, which means it leaves
-   from the shop's own address and replies come back there.
+  const stale=untold.filter(j=>daysAgo(j.readyAt)>=1);
+  const bars=[];
+  if(STORE==='none')
+    bars.push(`<div class="banner"><div><b>Nothing is being saved.</b> This browser is blocking storage, so jobs will vanish when you close the tab.</div></div>`);
+  if(backupDue())
+    bars.push(`<div class="banner"><div><b>${new Date().getDay()===5?'It is Friday — time to back up the job book.':'The job book has not been backed up for '+daysAgo(lastFull)+' days.'}</b>
+      ${lastFull?'Last full backup '+daysAgo(lastFull)+' days ago.':'It has never been backed up.'} ${JOBS.length} job${JOBS.length===1?'':'s'} would be lost.</div>
+      <span style="display:flex;gap:14px"><button data-backup="1">Back up now</button><button data-nag="1">Not today</button></span></div>`);
+  if(stale.length)
+    bars.push(`<div class="banner"><div><b>${stale.length} job${stale.length>1?'s are':' is'}</b> on the rack with nobody told.</div><button data-f="told">Show them</button></div>`);
+  $('banner').innerHTML=bars.join('');
 
-   Note on length: a desktop client opened via mailto: generally caps
-   pre-filled text near 2000 characters. The web compose URLs take far
-   more. composeLinks reports the encoded length so the UI can warn. */
-const composeLinks = (to, subject, body) => {
-  const t = encodeURIComponent(to || '');
-  const s = encodeURIComponent(subject || '');
-  const b = encodeURIComponent(body || '');
-  return {
-    mailto:  'mailto:' + t + '?subject=' + s + '&body=' + b,
-    outlook: 'https://outlook.live.com/mail/0/deeplink/compose?to=' + t + '&subject=' + s + '&body=' + b,
-    gmail:   'https://mail.google.com/mail/?view=cm&fs=1&to=' + t + '&su=' + s + '&body=' + b,
-    length:  b.length,
-  };
+  if(filter==='diary'&&!q){ renderDiary(); return; }
+  if((filter==='cut'||filter==='order'||filter==='pricing')&&!q&&listView==='sheet'){
+    renderSheet(filter==='pricing'?'toprice':filter); return; }
+
+  let show = q ? JOBS.filter(j=>matches(j,q)) : bucket(filter==='diary'?'all':filter);
+  const ord={measure:0,quote:1,pricing:2,order:3,cut:4,ready:5,done:6,lost:7};
+  show.sort((a,b)=>(ord[a.status]-ord[b.status])||(b.no-a.no));
+
+  if(!show.length){
+    $('list').innerHTML=q
+      ? `<div class="empty"><h3>Nothing matching &ldquo;${esc(q)}&rdquo;</h3><p>Try a name, part of a phone number, or a job number.</p></div>`
+      : `<div class="empty"><h3>Nothing here</h3><p>Press <b>+ New job</b> to quote the next one.</p></div>`;
+    return;
+  }
+  $('list').innerHTML=show.map(jobCard).join('');
+}
+function jobCard(j){
+  const s=stat(j.status), t=jobTotals(j);
+  const bal=t.grand-num(j.deposit);
+  const flag=j.status==='ready'&&!j.called;
+  const sup=waitingSuppliers(j);
+  const nCut=pendingCut(j).length;
+  const need=bookable(j)?neededAppts(j):[];
+  const p=profitOf(j);
+  const appt=nextAppt(j);
+  return `<article class="job ${flag?'flag':''}">
+    <div class="jobtop" data-open="${j.id}">
+      <div class="ticket">${j.no}</div>
+      <div class="who">
+        <h3>${esc(j.name)} ${j.trade?'<span class="tag">Trade</span>':''}</h3>
+        <div class="meta"><span class="mono">${esc(fmtPhone(j.phone))}</span>
+          &middot; ${handoverLabel(j)}${j.needsMeasure?' (measure first)':''}${appt?' &middot; '+APPT[appt.kind].label+' '+fmtDate(appt.date)+(appt.time?' '+appt.time:''):(j.wanted?' &middot; wanted '+fmtDate(j.wanted):'')}${j.called?' &middot; told '+(j.toldHow==='email'?'by email':'by phone'):''}</div>
+      </div>
+      <div class="stat ${s.cls}">${s.label}</div>
+    </div>
+    <div class="docket">
+      ${(j.items||[]).map((it,n)=>{
+        const pi=priceItem(it,j.unit);
+        const priced=it.cost!==undefined&&it.cost!=='';
+        const badge = it.src==='order'
+          ? (ost(it)==='arrived'?'<span class="src src-in" title="Arrived">In</span>'
+             :ost(it)==='ordered'?`<button class="src src-order" data-pa="${j.id}|${n}" title="Tick off when it arrives">On order</button>`
+             :`<span class="src src-price" title="${priced?'Priced — not ordered yet':'Waiting on a price'}">${priced?'Priced':'To price'}</span>`)
+          : (it.cut?'<span class="src src-done" title="Cut">Cut</span>'
+             :`<button class="src src-cut" data-pc="${j.id}|${n}" title="Tick off when it is cut">To cut</button>`);
+        return `<div class="ditem">${badge}<div class="body">
+          <div class="prod">${esc(pi.p.name)}${it.src==='order'&&it.supplier?' &middot; '+esc(it.supplier):''}${priced?' &middot; costs '+gbp(it.cost):''}</div>
+          ${pi.p.each?`<div class="size"><span class="qty">×${it.q||1}</span></div>`
+                     :`<div class="size">${esc(it.w)}<span class="x">×</span>${esc(it.h)}<span class="qty">×${it.q||1}</span></div>`}
+          ${pi.addons.length?`<div class="addons">+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}
+        </div></div>`;}).join('')}
+      ${measureOnly(j)?'<div class="sub">Waiting to be measured</div>'
+        :`<div class="sub mono" style="margin-top:7px">${t.area.toFixed(3)} m²${(j.extras||[]).length?' · '+j.extras.map(x=>esc(x.label)).join(', '):''}</div>`}
+      ${j.note?`<div class="note">${esc(j.note)}</div>`:''}
+      ${j.handover!=='collection'&&j.addr?`<div class="note">${handoverLabel(j)} — ${esc(j.addr)}</div>`:''}
+    </div>
+    <div class="jobfoot">
+      <div>${measureOnly(j)
+        ? `<span class="sub">No sizes yet — price once it has been measured</span>`
+        : `<span class="money">${gbp(t.grand)}</span><span class="sub"> inc VAT</span>
+           ${bal>0.005?`<span class="owed">${gbp(bal)} ${j.trade?'to invoice':'to pay'}</span>`:`<span class="paid">Paid</span>`}`}
+        ${p.cost?`<div class="sub mono">Cost ${gbp(p.cost)} · profit <b style="color:${p.profit>=0?'var(--float-d)':'var(--red)'}">${gbp(p.profit)}</b> (${p.margin.toFixed(0)}%)${p.known?'':' so far'}</div>`:''}</div>
+      <div class="acts">
+        ${j.status==='measure'?`<button class="act go" data-open="${j.id}">Add sizes</button>
+                                <button class="act" data-lost="${j.id}">Not going ahead</button>`:''}
+        ${j.status==='quote'?`<button class="act go" data-conf="${j.id}">Customer confirmed</button>
+                              <button class="act" data-lost="${j.id}">Not going ahead</button>`:''}
+        ${j.status==='lost'?`<button class="act" data-conf="${j.id}">Bring back</button>`:''}
+        ${isWorking(j)?Object.keys(sup).map(name=>`<button class="act warn" data-arr="${j.id}|${esc(name)}">${esc(name)} delivered</button>`).join(''):''}
+        ${isWorking(j)&&nCut?`<button class="act blue" data-cut="${j.id}">Cutting done (${nCut})</button>`:''}
+        ${need.length?`<button class="act blue" data-book="${j.id}">Book ${APPT[need[0]].label.toLowerCase()}</button>`:''}
+        ${flag?`<button class="act warn" data-call="${j.id}">Mark told</button>`:''}
+        ${j.status==='ready'?`<button class="act go" data-coll="${j.id}">${doneVerb(j)}</button>`:''}
+        <button class="act" data-mail="${j.id}">Email</button>
+        <button class="act" data-open="${j.id}">Edit</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+/* ---------- worksheets ----------
+   The lists that go to the printer, on screen and tickable.
+   Built from pieces, not jobs. */
+function overdue(j){ return j.wanted && j.wanted < ymd(new Date()); }
+function dueText(j){
+  const a=nextAppt(j);
+  if(a) return APPT[a.kind].label+' '+fmtDate(a.date);
+  return j.wanted?'wanted '+fmtDate(j.wanted):'';
+}
+function wsRow(j,it,n,kind){
+  const pi=priceItem(it,j.unit);
+  const rest = kind==='cut'&&notArrived(j).length
+    ? `<div class="flagtxt">Rest of this job is on order from ${esc(Object.keys(waitingSuppliers(j)).join(', '))}</div>` : '';
+  const priced=it.cost!==undefined&&it.cost!=='';
+  const costBox=`<div class="costwrap"><label>Their price £</label>
+      <input class="costin" data-cost="${j.id}|${n}" value="${priced?esc(it.cost):''}" inputmode="decimal" placeholder="—"></div>`;
+  const tickBox=`<button class="tick" data-${kind==='cut'?'pc':'pa'}="${j.id}|${n}" title="${kind==='cut'?'Tick off when it is cut':'Tick off when it arrives'}" aria-label="Tick off">&#10003;</button>`;
+  return `<div class="wsrow ${overdue(j)?'late':''}">
+    ${kind==='toprice'?'':tickBox}
+    <button class="info" data-open="${j.id}">
+      <div class="ref">${j.no} &middot; ${esc(j.name)}${j.trade?' (trade)':''}${kind==='toprice'&&dueText(j)?' &middot; '+esc(dueText(j)):''}</div>
+      <div class="dim">${pi.p.each?(it.q||1)+' off':esc(it.w)+' × '+esc(it.h)+' <span style="color:var(--silver)">×</span>'+(it.q||1)}</div>
+      <div class="pn">${esc(pi.p.name)}${!pi.p.each&&j.unit&&j.unit!=='mm'?' &middot; '+esc(j.unit):''}</div>
+      ${pi.addons.length?`<div class="ex">+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}
+      ${kind==='toprice'?`<div class="pn">We charge ${gbp(pi.total)}${priced?' · margin '+gbp(pi.total-num(it.cost)):''}</div>`:''}
+      ${j.note?`<div class="pn">${esc(j.note)}</div>`:''}
+      ${rest}
+    </button>
+    ${kind==='toprice'?costBox:`<div class="due">${esc(dueText(j))}</div>`}
+  </div>`;
+}
+function renderSheet(kind){
+  const pick = kind==='cut'?pendingCut : kind==='toprice'?toPrice : pendingOrder;
+  const rows=[];
+  JOBS.filter(isWorking).forEach(j=>{
+    pick(j).forEach(it=>rows.push({j,it,n:j.items.indexOf(it)}));
+  });
+  rows.sort((a,b)=>(a.j.wanted||'9999').localeCompare(b.j.wanted||'9999')||a.j.no-b.j.no);
+  const area=rows.reduce((s,r)=>s+priceItem(r.it,r.j.unit).area,0);
+  const late=rows.filter(r=>overdue(r.j)).length;
+  const title = kind==='cut'?'Cutting list' : kind==='toprice'?'Waiting on supplier prices' : 'Glass on order';
+
+  let body;
+  if(!rows.length){
+    body=`<div class="empty"><h3>${kind==='cut'?'Nothing waiting to be cut':kind==='toprice'?'Nothing waiting on a price':'Nothing on order'}</h3>
+      <p>${kind==='cut'?'Everything confirmed has been cut.':kind==='toprice'?'Every bought-in piece has been ordered.':'No bought-in glass outstanding.'}</p></div>`;
+  } else if(kind==='cut'){
+    body=`<div class="wslist solo">${rows.map(r=>wsRow(r.j,r.it,r.n,'cut')).join('')}</div>`;
+  } else {
+    const bySup={};
+    rows.forEach(r=>{ const s=r.it.supplier||'Supplier'; (bySup[s]=bySup[s]||[]).push(r); });
+    body=Object.keys(bySup).sort().map(s=>{
+      const g=bySup[s];
+      const priced=g.filter(r=>r.it.cost!==undefined&&r.it.cost!=='').length;
+      const acts = kind==='toprice'
+        ? `<button data-rfq="${esc(s)}">Email ${esc(s)} for prices</button><button data-po="${esc(s)}">Place order (${g.length})</button>`
+        : `<button data-arrall="${esc(s)}">Mark all delivered</button>`;
+      return `<div class="suphead"><span>${esc(s)} — ${g.length} piece${g.length>1?'s':''}${kind==='toprice'&&priced?', '+priced+' priced':''}</span>
+        <span style="display:flex;gap:12px">${acts}</span></div>
+       <div class="wslist">${g.map(r=>wsRow(r.j,r.it,r.n,kind)).join('')}</div>`;}).join('');
+  }
+
+  const cost=rows.reduce((s,r)=>s+num(r.it.cost),0);
+  $('list').innerHTML=`
+    <div class="wshead">
+      <div>
+        <h2>${title}</h2>
+        <div class="wsmeta">${rows.length} piece${rows.length===1?'':'s'}${area?' · '+area.toFixed(3)+' m²':''}${kind==='toprice'&&cost?' · '+gbp(cost)+' quoted so far':''}${late?' · '+late+' past the wanted-by date':''}</div>
+      </div>
+      <div class="wsbtns">
+        <button data-view="jobs">Show as jobs</button>
+        ${kind==='toprice'?'':`<button class="pri" data-print="${kind}">Print</button>`}
+      </div>
+    </div>${body}`;
+}
+
+/* ---------- diary ---------- */
+function allAppts(){
+  const out=[];
+  JOBS.filter(isLive).forEach(j=>apptsOf(j).forEach((a,i)=>out.push({j,a,i})));
+  return out;
+}
+function renderDiary(){
+  const first=new Date(diaryMonth.getFullYear(),diaryMonth.getMonth(),1);
+  const startPad=(first.getDay()+6)%7;
+  const grid=[]; const cur=new Date(first); cur.setDate(cur.getDate()-startPad);
+  for(let i=0;i<42;i++){ grid.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+  const byDay={};
+  allAppts().forEach(x=>{ (byDay[x.a.date]=byDay[x.a.date]||[]).push(x); });
+  Object.keys(byDay).forEach(k=>byDay[k].sort((p,q)=>(p.a.time||'').localeCompare(q.a.time||'')));
+  const today=ymd(new Date());
+
+  const cells=grid.map(d=>{
+    const key=ymd(d), out=d.getMonth()!==diaryMonth.getMonth(), evs=byDay[key]||[];
+    return `<button class="cell ${out?'out':''} ${key===today?'today':''} ${key===selDay?'sel':''}" data-day="${key}">
+      <span class="dn">${d.getDate()}</span>
+      ${evs.slice(0,2).map(x=>`<span class="ev ${APPT[x.a.kind].cls}">${x.a.time?x.a.time+' ':''}${esc(x.j.name)}</span>`).join('')}
+      ${evs.length>2?`<span class="more">+${evs.length-2} more</span>`:''}
+    </button>`;}).join('');
+
+  const waiting=JOBS.filter(j=>bookable(j)&&neededAppts(j).length);
+  const dayJobs=selDay?(byDay[selDay]||[]):[];
+  const mins=dayJobs.reduce((s,x)=>s+(+x.a.mins||0),0);
+
+  $('list').innerHTML=`
+    <div class="dtop">
+      <h2>${diaryMonth.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h2>
+      <div class="dnav"><button data-mv="-1">←</button><button data-mv="0">Today</button><button data-mv="1">→</button>
+        <button class="pri" data-print="diary" style="background:var(--ink);color:#fff;border-color:var(--ink)">Print</button></div>
+    </div>
+    <div class="grid">
+      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<div class="gh">${x}</div>`).join('')}
+      ${cells}
+    </div>
+    <div class="daypanel">
+      ${selDay?`<div class="dtop" style="margin:14px 0 9px">
+          <h4 style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)">
+            ${new Date(selDay).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}
+            ${mins?' — '+(mins/60).toFixed(mins%60?1:0)+' hours booked':''}</h4>
+          <button class="act go" data-bookday="${selDay}">+ Book this day</button></div>
+        ${dayJobs.length?dayJobs.map(x=>`<div class="slot">
+            <div class="tm">${x.a.time||'—'}<div class="dur">${DURS[x.a.mins]||((+x.a.mins||0)+' min')}${x.a.time?'<br>to '+endTime(x.a.time,x.a.mins):''}</div></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">${x.j.no} · ${esc(x.j.name)} <span class="tag ${APPT[x.a.kind].cls}">${APPT[x.a.kind].label}</span></div>
+              <div class="sub">${esc(x.j.addr||'No address')}${x.j.phone?' · '+esc(fmtPhone(x.j.phone)):''}</div>
+              <div class="sub">${stat(x.j.status).label}${toPrice(x.j).length?' · '+toPrice(x.j).length+' still to price':''}${pendingOrder(x.j).length?' · waiting on '+Object.keys(waitingSuppliers(x.j)).join(', '):''}${pendingCut(x.j).length?' · '+pendingCut(x.j).length+' still to cut':''}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button class="act" data-open="${x.j.id}">Open</button>
+              <button class="act" data-delappt="${x.j.id}|${x.i}">Remove</button>
+            </div>
+          </div>`).join(''):'<p class="sub">Nothing booked in.</p>'}`
+      :'<p class="sub" style="margin-top:14px">Pick a day to see what is booked, or to add something.</p>'}
+      ${waiting.length?`<h4 style="margin:18px 0 9px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--amber)">Needs a slot (${waiting.length})</h4>`+
+        waiting.map(j=>`<div class="unsched">
+          <div><b>${j.no} · ${esc(j.name)}</b> — needs ${neededAppts(j).map(k=>APPT[k].label.toLowerCase()).join(' and ')}
+            <div class="sub">${esc(j.addr||'No address')}${j.wanted?' · wanted by '+fmtDate(j.wanted):''}</div></div>
+          <button class="act go" data-book="${j.id}">Book</button></div>`).join(''):''}
+    </div>`;
+}
+
+/* ---------- booking ---------- */
+let bookJob=null, bookKind='fit';
+function openBook(j,date){
+  bookJob=j||null;
+  const need=j?neededAppts(j):[];
+  bookKind = need.length?need[0]:'fit';
+  $('bookTitle').textContent = j?`Book job ${j.no} — ${j.name}`:'Book a job in';
+  $('bDate').value = date||(j&&j.wanted?j.wanted:ymd(new Date()));
+  $('bTime').value='09:00'; $('bMins').value='60';
+  Array.prototype.forEach.call($('bKind').children,b=>b.classList.toggle('on',b.dataset.bk===bookKind));
+  drawBookPick(); drawClash(); drawMoveNotice();
+  showSheet($('bookSheet'));
+}
+function drawBookPick(){
+  if(bookJob){
+    $('bookPick').innerHTML=`<div class="unsched" style="margin:0">
+      <div><b>${bookJob.no} · ${esc(bookJob.name)}</b> — ${handoverLabel(bookJob)}
+        <div class="sub">${esc(bookJob.addr||'No address')}${bookJob.phone?' · '+esc(fmtPhone(bookJob.phone)):''}</div></div>
+      <button class="act" data-clearpick="1">Change</button></div>`;
+    $('bookWhen').style.display='';
+    return;
+  }
+  const cands=JOBS.filter(bookable).sort((a,b)=>(neededAppts(b).length-neededAppts(a).length)||b.no-a.no);
+  $('bookWhen').style.display='none';
+  $('bookPick').innerHTML=`<input class="inp" id="bSearch" placeholder="Search a job by name or number" autocomplete="off" style="margin-bottom:10px">
+    <div id="bResults">${cands.slice(0,8).map(j=>bookOption(j)).join('')||'<p class="sub">No live jobs.</p>'}</div>`;
+  $('bSearch').addEventListener('input',()=>{
+    const q=$('bSearch').value.trim();
+    const hits=(q?cands.filter(j=>matches(j,q)):cands).slice(0,8);
+    $('bResults').innerHTML=hits.map(j=>bookOption(j)).join('')||'<p class="sub">Nothing matching.</p>';
+  });
+}
+const bookOption=j=>{
+  const booked=apptsOf(j);
+  const need=neededAppts(j);
+  return `<div class="unsched" style="margin-bottom:6px">
+    <div><b>${j.no} · ${esc(j.name)}</b> — ${handoverLabel(j)}${need.length?' · <span style="color:var(--amber)">needs '+need.map(k=>APPT[k].label.toLowerCase()).join(' and ')+'</span>':''}
+      <div class="sub">${esc(j.addr||'No address')}</div>
+      ${booked.length?`<div class="sub">Already booked: ${booked.map(a=>APPT[a.kind].label.toLowerCase()+' '+fmtDate(a.date)).join(', ')}</div>`:''}</div>
+    <button class="act ${need.length?'go':''}" data-pickjob="${j.id}">${need.length?'Choose':'Reschedule'}</button></div>`;
+};
+/* the slot this booking would overwrite, if there is one */
+const existingSlot=()=>bookJob?apptsOf(bookJob).find(a=>a.kind===bookKind):null;
+function drawMoveNotice(){
+  const ex=existingSlot();
+  const moving = ex && (ex.date!==$('bDate').value || (ex.time||'')!==$('bTime').value);
+  $('bMove').innerHTML = ex
+    ? `<div class="warnbox">${esc(bookJob.name)} is already booked to ${APPT[bookKind].label.toLowerCase()} on
+        ${new Date(ex.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}${ex.time?' at '+ex.time:''}.
+        Saving will <b>move</b> it, not add a second visit.</div>`
+    : '';
+  $('bSave').textContent = ex ? (moving?'Move this visit':'Update this visit') : 'Put in the diary';
+}
+function drawClash(){
+  const d=$('bDate').value, t=$('bTime').value, m=+$('bMins').value;
+  if(!d){ $('bClash').innerHTML=''; return; }
+  /* only skip the slot we are about to overwrite — a job's other visits still clash */
+  const same=allAppts().filter(x=>x.a.date===d&&!(bookJob&&x.j.id===bookJob.id&&x.a.kind===bookKind));
+  const mins=same.reduce((s,x)=>s+(+x.a.mins||0),0)+m;
+  const overlap=same.filter(x=>x.a.time&&t&&x.a.time<endTime(t,m)&&endTime(x.a.time,x.a.mins)>t);
+  $('bClash').innerHTML = overlap.length
+    ? `<div class="warnbox">Overlaps ${overlap.map(x=>esc(x.j.name)+' at '+x.a.time).join(', ')}. That day would have ${(mins/60).toFixed(1)} hours booked.</div>`
+    : same.length ? `<p class="sub">${same.length} other visit${same.length>1?'s':''} that day — ${(mins/60).toFixed(1)} hours in total.</p>` : '';
+}
+['bDate','bTime','bMins'].forEach(id=>$(id).addEventListener('input',()=>{drawClash();drawMoveNotice();}));
+$('bKind').addEventListener('click',e=>{
+  const b=e.target.closest('[data-bk]'); if(!b) return;
+  bookKind=b.dataset.bk;
+  Array.prototype.forEach.call($('bKind').children,x=>x.classList.toggle('on',x===b));
+  drawClash(); drawMoveNotice();
+});
+$('closeBook').onclick=hideSheets; $('bCancel').onclick=hideSheets;
+$('bSave').onclick=async()=>{
+  if(!bookJob){ toast('Pick a job first',true); return; }
+  if(!$('bDate').value){ toast('Needs a date',true); return; }
+  const j=JOBS.find(x=>x.id===bookJob.id)||bookJob;
+  j.appts=apptsOf(j).filter(a=>a.kind!==bookKind);
+  j.appts.push({kind:bookKind,date:$('bDate').value,time:$('bTime').value,mins:+$('bMins').value});
+  if(await pushJob(j)){
+    hideSheets();
+    if(filter==='diary'){ selDay=$('bDate').value; diaryMonth=new Date($('bDate').value); }
+    render();
+    toast(APPT[bookKind].label+' booked for '+new Date($('bDate').value).toLocaleDateString('en-GB'));
+  }
 };
 
-function Calculator() {
-  const [height, setHeight]       = useState('');
-  const [width, setWidth]         = useState('');
-  const [quantity, setQuantity]   = useState('1');
-  const [unit, setUnit]           = useState('mm');
-  const [productId, setProductId] = useState('c6mm');
-
-  const [activeAddons, setActiveAddons] = useState([]);
-  const [addonMetres, setAddonMetres]   = useState({});
-
-  const [lineItems, setLineItems] = useState([]);
-  const [extras, setExtras]       = useState([]);
-  const [extraLabel, setExtraLabel]   = useState('');
-  const [extraAmount, setExtraAmount] = useState('');
-  const [discount, setDiscount]   = useState('0');
-  const [cardFee, setCardFee]     = useState(false);
-
-  const [customerName, setCustomerName]   = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [notes, setNotes]                 = useState('');
-
-  const [draftRef, setDraftRef] = useState(newRef);
-
-  const [savedQuotes, setSavedQuotes] = useState([]);
-  const [showQuotes, setShowQuotes]   = useState(false);
-  const [search, setSearch]           = useState('');
-  const [editingId, setEditingId]     = useState(null);
-
-  const [showEmail, setShowEmail]       = useState(false);
-  const [emailTo, setEmailTo]           = useState('');
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailMessage, setEmailMessage] = useState('');
-
-  const [showPrices, setShowPrices] = useState(true);
-  const [showAdjust, setShowAdjust] = useState(false);
-  const [adjust, setAdjust]         = useState('0');
-  const [toast, setToast]           = useState('');
-
-  useEffect(() => {
-    if (!STORAGE_OK) return;
-    let parsed = [];
-    try { parsed = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch (err) { parsed = []; }
-    if (!Array.isArray(parsed)) parsed = [];
-    const clean = parsed.map(normaliseQuote).filter(Boolean);
-    setSavedQuotes(clean);
-    if (clean.length) { try { localStorage.setItem(STORE_KEY, JSON.stringify(clean)); } catch (err) {} }
-    try {
-      const a = localStorage.getItem(ADJ_KEY);
-      if (a !== null) setAdjust(a);
-    } catch (err) {}
-  }, []);
-
-  const flash = msg => { setToast(msg); setTimeout(() => setToast(''), 2600); };
-
-  const persist = list => {
-    setSavedQuotes(list);
-    if (!STORAGE_OK) return false;
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); return true; }
-    catch (err) { return false; }
-  };
-
-  const setAdjustment = v => {
-    setAdjust(v);
-    if (STORAGE_OK) { try { localStorage.setItem(ADJ_KEY, v); } catch (err) {} }
-  };
-
-  /* ---------- price adjustment ---------- */
-  const adjPct = num(adjust);
-  const rate = p => p * (1 + adjPct / 100);
-
-  /* ---------- geometry ---------- */
-  const toMm = v => {
-    const n = parseFloat(v);
-    if (!n) return 0;
-    return unit === 'mm' ? n : unit === 'cm' ? n * 10 : unit === 'inches' ? n * 25.4 : n * 304.8;
-  };
-
-  const product    = PRODUCTS.find(p => p.id === productId);
-  const hMm        = toMm(height);
-  const wMm        = toMm(width);
-  const qty        = Math.max(1, parseInt(quantity) || 1);
-  const rawArea    = (hMm * wMm) / 1000000;
-  const minArea    = MIN_AREA[product.category] !== undefined ? MIN_AREA[product.category] : MIN_AREA.DEFAULT;
-  const totalArea  = rawArea > 0 ? Math.max(rawArea, minArea) * qty : 0;
-  const totalPerim = (hMm && wMm) ? ((hMm * 2 + wMm * 2) / 1000) * qty : 0;
-
-  const metresFor = id => {
-    const o = addonMetres[id];
-    return (o === undefined || o === '') ? totalPerim : (parseFloat(o) || 0);
-  };
-
-  const addonCost = a =>
-    a.charge === 'lm' ? rate(a.price) * metresFor(a.id)
-  : a.charge === 'm2' ? rate(a.price) * totalArea
-  :                     rate(a.price) * qty;
-
-  const toggleAddon = id =>
-    setActiveAddons(activeAddons.includes(id)
-      ? activeAddons.filter(x => x !== id)
-      : [...activeAddons, id]);
-
-  const glassCost   = rate(product.price) * totalArea;
-  const addonsCost  = activeAddons.reduce((s, id) => s + addonCost(ADDONS.find(a => a.id === id)), 0);
-  const linePreview = glassCost + addonsCost;
-
-  const addLineItem = () => {
-    if (!hMm || !wMm) { flash('Enter a height and a width first.'); return; }
-    const addons = activeAddons.map(id => {
-      const a = ADDONS.find(x => x.id === id);
-      return {
-        id: a.id, name: a.name, charge: a.charge, rate: rate(a.price),
-        qty: a.charge === 'lm' ? metresFor(a.id) : a.charge === 'm2' ? totalArea : qty,
-        cost: addonCost(a),
-      };
-    });
-    setLineItems([...lineItems, {
-      key: Date.now(),
-      productName: product.name, category: product.category,
-      height: parseFloat(height), width: parseFloat(width), unit,
-      quantity: qty, totalArea, totalPerim,
-      glassRate: rate(product.price),
-      glassCost, addons, total: linePreview,
-    }]);
-    setHeight(''); setWidth(''); setQuantity('1');
-    setActiveAddons([]); setAddonMetres({});
-  };
-
-  const removeLine = key => setLineItems(lineItems.filter(i => i.key !== key));
-
-  /* ---------- extra costs ---------- */
-  const addExtra = () => {
-    const amt = parseFloat(extraAmount);
-    if (!extraLabel.trim()) { flash('Give the extra cost a name.'); return; }
-    if (!isFinite(amt) || amt === 0) { flash('Enter an amount.'); return; }
-    setExtras([...extras, { id: Date.now(), label: extraLabel.trim(), amount: amt }]);
-    setExtraLabel(''); setExtraAmount('');
-  };
-
-  const removeExtra = id => setExtras(extras.filter(x => x.id !== id));
-
-  const discountPct = num(discount);
-  const T = computeTotals(lineItems, discountPct, cardFee, extras);
-  const hasContent = lineItems.length > 0 || extras.length > 0;
-
-  /* ---------- quote builder ---------- */
-  const resetBuilder = () => {
-    setLineItems([]); setExtras([]); setExtraLabel(''); setExtraAmount('');
-    setDiscount('0'); setCardFee(false);
-    setCustomerName(''); setCustomerEmail(''); setNotes('');
-    setEditingId(null);
-    setDraftRef(newRef());
-    setShowEmail(false);
-  };
-
-  const editingQuote = editingId ? savedQuotes.find(q => q.id === editingId) : null;
-
-  const saveQuote = (asNew) => {
-    if (!hasContent) { flash('Add something to the quote before saving.'); return; }
-    const today = new Date().toLocaleDateString('en-GB');
-
-    if (editingId && !asNew) {
-      const existing = savedQuotes.find(q => q.id === editingId);
-      const updated = savedQuotes.map(q => q.id === editingId ? Object.assign({}, q, {
-        customerName: customerName || 'No name given',
-        customerEmail, notes,
-        items: lineItems, extras, discountPct, cardFee, totals: T,
-        edited: today,
-      }) : q);
-      const ok = persist(updated);
-      flash(ok ? ('Updated ' + (existing ? existing.ref : '')) : 'Updated — this session only');
-      return;
-    }
-
-    const ref = draftRef;
-    const id = Date.now();
-    const ok = persist([...savedQuotes, {
-      id, ref, date: today, edited: '', sent: '',
-      customerName: customerName || 'No name given',
-      customerEmail, notes,
-      items: lineItems, extras, discountPct, cardFee, totals: T,
-    }]);
-    setEditingId(id);
-    flash(ok ? ('Saved as ' + ref) : ('Saved as ' + ref + ' — this session only'));
-  };
-
-  const editQuote = q => {
-    setLineItems(q.items);
-    setExtras(q.extras || []);
-    setDiscount(String(q.discountPct));
-    setCardFee(!!q.cardFee);
-    setCustomerName(q.customerName === 'No name given' ? '' : q.customerName);
-    setCustomerEmail(q.customerEmail || '');
-    setNotes(q.notes || '');
-    setEditingId(q.id);
-    setShowQuotes(false);
-    flash('Editing ' + q.ref);
-  };
-
-  const deleteQuote = id => {
-    persist(savedQuotes.filter(q => q.id !== id));
-    if (id === editingId) setEditingId(null);
-  };
-
-
-  /* The reference is pinned for the life of the builder, so the saved
-     quote, the downloaded file and the emailed copy all agree. */
-  const activeRef = editingQuote ? editingQuote.ref : draftRef;
-
-  /* Customer-facing quote text. Deliberately omits per-m² and per-metre
-     rates, the m² each item was charged on, and the internal notes. */
-  const buildQuoteText = () => {
-    const W = 52;
-    const row = (l, v) => l + ' '.repeat(Math.max(2, W - 10 - l.length)) + String(v).padStart(10);
-    const L = [];
-
-    L.push("WILSON'S GLASS");
-    L.push("6 St Mary's Lane, Upminster, Essex");
-    L.push('01708 224215   wilsons.glass@outlook.com');
-    L.push('');
-    L.push('QUOTE ' + activeRef);
-    L.push('Date: ' + new Date().toLocaleDateString('en-GB'));
-    if (customerName)  L.push('Customer: ' + customerName);
-    L.push('');
-    L.push('='.repeat(W));
-
-    lineItems.forEach((i, n) => {
-      L.push((n + 1) + '. ' + i.productName);
-      L.push('   ' + i.height + i.unit + ' x ' + i.width + i.unit +
-             (i.quantity > 1 ? '   ' + i.quantity + ' off' : ''));
-      i.addons.forEach(a => {
-        L.push('   + ' + a.name + (a.charge === 'lm' ? '  (' + a.qty.toFixed(2) + ' m)' : ''));
-      });
-      L.push(row('', money(i.total)));
-      L.push('');
-    });
-
-    L.push('='.repeat(W));
-    if (lineItems.length) L.push(row('Subtotal', money(T.subtotal)));
-    if (discountPct > 0) {
-      L.push(row('Discount ' + discountPct + '%', '-' + money(T.discountAmount)));
-      L.push(row('After discount', money(T.afterDiscount)));
-    }
-    extras.forEach(x => L.push(row(x.label, money(x.amount))));
-    L.push(row('VAT 20%', money(T.vat)));
-    if (cardFee) L.push(row('Card surcharge 2%', money(T.cardAmount)));
-    L.push('-'.repeat(W));
-    L.push(row('TOTAL', money(T.grandTotal)));
-    L.push('');
-    L.push('Valid for 30 days.');
-    L.push('Thank you for choosing Wilson\'s Glass.');
-    return L.join('\n');
-  };
-
-  const exportQuote = () => {
-    if (!hasContent) { flash('Add something to the quote first.'); return; }
-    const blob = new Blob([buildQuoteText()], { type: 'text/plain' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = 'Quote_' + activeRef + '.txt';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  /* ---------- email ---------- */
-  const defaultMessage = () =>
-    'Hi' + (customerName ? ' ' + customerName.split(' ')[0] : '') + ',\n\n' +
-    'Thanks for your enquiry. Your quote is below.\n\n' +
-    'If you would like to go ahead, or if anything needs changing, just reply to this ' +
-    'email or give us a call on 01708 224215.\n\n' +
-    'Kind regards,\nWilson\'s Glass';
-
-  const openEmailPanel = () => {
-    if (!hasContent) { flash('Add something to the quote first.'); return; }
-    setEmailTo(emailTo || customerEmail);
-    setEmailSubject('Quote ' + activeRef + " from Wilson's Glass");
-    if (!emailMessage.trim()) setEmailMessage(defaultMessage());
-    setShowEmail(true);
-  };
-
-  const emailBody = () => emailMessage.trim() + '\n\n' + buildQuoteText();
-
-  const links = composeLinks(emailTo, emailSubject, emailBody());
-  const bodyTooLong = links.length > 1800;
-  const emailReady = /\S+@\S+\.\S+/.test(emailTo);
-
-  const openIn = which => {
-    if (!emailReady) { flash('Enter a customer email address.'); return; }
-    const href = which === 'gmail' ? links.gmail : which === 'outlook' ? links.outlook : links.mailto;
-    if (which === 'mailto') {
-      window.location.href = href;
-    } else {
-      window.open(href, '_blank', 'noopener');
-    }
-    flash('Opened in ' + (which === 'mailto' ? 'your mail app' : which === 'gmail' ? 'Gmail' : 'Outlook'));
-  };
-
-  const copyEmail = async () => {
-    const text = emailBody();
-    try {
-      await navigator.clipboard.writeText(text);
-      flash('Copied — paste it into an email');
-    } catch (err) {
-      flash('Could not copy automatically — select the preview and copy it');
-    }
-  };
-
-  const markSent = () => {
-    if (!editingId) { flash('Save the quote first, then mark it as sent.'); return; }
-    const today = new Date().toLocaleDateString('en-GB');
-    persist(savedQuotes.map(q => q.id === editingId ? Object.assign({}, q, { sent: today }) : q));
-    flash('Marked as sent');
-  };
-
-  /* ---------- search ---------- */
-  const term = search.trim().toLowerCase();
-  const visibleQuotes = savedQuotes.slice().reverse()
-    .filter(q => !term || quoteHaystack(q).indexOf(term) !== -1);
-
-  /* ---------- style tokens ---------- */
-  const card    = 'bg-slate-800 rounded-xl border border-slate-700';
-  const pad     = 'p-4';
-  const input   = 'w-full px-2.5 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-400';
-  const label   = 'block text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1';
-  const heading = 'text-sm font-bold uppercase tracking-wider text-amber-500/90';
-  const colBox  = 'space-y-4 xl:h-[calc(100vh-7.5rem)] xl:overflow-y-auto xl:pr-1 scroll';
-
-  const categories  = [...new Set(PRODUCTS.map(p => p.category))];
-  const addonGroups = [...new Set(ADDONS.map(a => a.group))];
-
-  return e('div', { className:'min-h-screen bg-slate-900 text-slate-100' },
-
-    e('header', { className:'bg-slate-950 border-b border-slate-700 sticky top-0 z-40' },
-      e('div', { className:'max-w-[1600px] mx-auto px-4 py-2.5 flex items-center justify-between gap-3' },
-        e('div', { className:'flex items-center gap-2.5' },
-          e('div', { className:'w-8 h-8 bg-amber-500 rounded-lg grid place-items-center font-black text-slate-900 text-sm' }, 'W'),
-          e('div', null,
-            e('div', { className:'font-bold text-sm leading-tight' }, "Wilson's Glass"),
-            e('div', { className:'text-[11px] text-slate-400 leading-tight' }, 'Quote calculator'))),
-        e('div', { className:'flex gap-2' },
-          e('button', { onClick:() => setShowPrices(!showPrices),
-            className:'px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium' },
-            showPrices ? 'Hide rates' : 'Show rates'),
-          e('button', { onClick:() => setShowAdjust(!showAdjust),
-            className:'px-3 py-1.5 rounded-lg text-xs font-medium ' +
-              (showAdjust ? 'bg-amber-500 text-slate-900'
-               : adjPct !== 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
-               : 'bg-slate-800 hover:bg-slate-700') },
-            adjPct !== 0 ? 'Prices ' + (adjPct > 0 ? '+' : '') + adjPct + '%' : 'Prices'),
-          e('button', { onClick:() => setShowQuotes(!showQuotes),
-            className:'px-3 py-1.5 rounded-lg text-xs font-medium ' +
-              (showQuotes ? 'bg-amber-500 text-slate-900' : 'bg-slate-800 hover:bg-slate-700') },
-            'Saved · ' + savedQuotes.length)))),
-
-    toast && e('div', { className:'fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-950 border border-amber-500/60 text-amber-300 text-sm px-4 py-2 rounded-lg shadow-lg' }, toast),
-
-    e('div', { className:'max-w-[1600px] mx-auto px-4 py-4 pb-24 xl:pb-4' },
-
-      showAdjust && e('div', { className: card + ' ' + pad + ' mb-4' },
-        e('div', { className:'flex items-center justify-between mb-3' },
-          e('h2', { className: heading }, 'Adjust all prices'),
-          e('button', { onClick:() => setShowAdjust(false),
-            className:'text-xs text-slate-400 hover:text-amber-400' }, 'Close')),
-        e('p', { className:'text-xs text-slate-400 mb-3 leading-relaxed max-w-2xl' },
-          'The price list holds what you actually charge — no hidden multiplier. Use this to shift every glass and add-on rate at once, for example when the supplier puts prices up. Quotes already saved keep the prices they were quoted at.'),
-        e('div', { className:'flex flex-wrap items-end gap-2 mb-3' },
-          e('div', { className:'w-32' },
-            e('label', { className: label }, 'Change by %'),
-            e('input', { type:'number', inputMode:'decimal', step:'0.5', value:adjust,
-              onChange:ev => setAdjustment(ev.target.value), className: input })),
-          [['0','Reset'],['5','+5%'],['10','+10%'],['15','+15%'],['-5','−5%']].map(pair =>
-            e('button', { key:pair[0], onClick:() => setAdjustment(pair[0]),
-              className:'px-3 py-2 rounded-lg text-xs font-semibold ' +
-                (adjust === pair[0] ? 'bg-amber-500 text-slate-900' : 'bg-slate-900 hover:bg-slate-700') },
-              pair[1]))),
-        e('div', { className:'bg-slate-900 rounded-lg border border-slate-700 p-3' },
-          e('div', { className:'text-[10px] uppercase tracking-wide text-slate-500 mb-2' }, 'Effect on a few lines'),
-          e('div', { className:'grid sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-1' },
-            ['c6mm','t6mm','m4mm','dgclear'].map(id => {
-              const p = PRODUCTS.find(x => x.id === id);
-              return e('div', { key:id, className:'flex justify-between text-xs' },
-                e('span', { className:'text-slate-400 truncate pr-2' }, p.name),
-                e('span', { className:'tabular-nums whitespace-nowrap' },
-                  adjPct === 0
-                    ? money(p.price)
-                    : e(Fragment, null,
-                        e('span', { className:'text-slate-500 line-through mr-1' }, money(p.price)),
-                        e('span', { className:'text-amber-400 font-semibold' }, money(rate(p.price))))));
-            })))),
-
-      showEmail && e('div', { className: card + ' ' + pad + ' mb-4' },
-        e('div', { className:'flex items-center justify-between mb-3' },
-          e('h2', { className: heading }, 'Send quote ' + activeRef),
-          e('button', { onClick:() => setShowEmail(false),
-            className:'text-xs text-slate-400 hover:text-amber-400' }, 'Close')),
-
-        e('div', { className:'grid lg:grid-cols-2 gap-4' },
-
-          e('div', null,
-            e('div', { className:'mb-2' },
-              e('label', { className: label }, 'To'),
-              e('input', { type:'email', className: input, placeholder:'customer@example.com',
-                value:emailTo, onChange:ev => setEmailTo(ev.target.value) }),
-              emailTo && !emailReady && e('p', { className:'text-[10px] text-amber-400 mt-1' },
-                'That does not look like an email address.')),
-            e('div', { className:'mb-2' },
-              e('label', { className: label }, 'Subject'),
-              e('input', { className: input, value:emailSubject,
-                onChange:ev => setEmailSubject(ev.target.value) })),
-            e('div', null,
-              e('div', { className:'flex items-center justify-between mb-1' },
-                e('label', { className: label + ' mb-0' }, 'Covering message'),
-                e('button', { onClick:() => setEmailMessage(defaultMessage()),
-                  className:'text-[10px] text-slate-500 underline hover:text-amber-400' }, 'reset wording')),
-              e('textarea', { className: input, rows:7, value:emailMessage,
-                onChange:ev => setEmailMessage(ev.target.value) })),
-            e('p', { className:'text-[10px] text-slate-500 mt-1' },
-              'The quote itself is added below your message automatically.')),
-
-          e('div', null,
-            e('label', { className: label }, 'What the customer sees'),
-            e('pre', { className:'bg-slate-900 border border-slate-700 rounded-lg p-3 text-[11px] leading-snug text-slate-300 overflow-auto max-h-72 whitespace-pre scroll' },
-              emailBody()))),
-
-        e('div', { className:'mt-4 pt-3 border-t border-slate-700' },
-
-          e('div', { className:'text-[10px] uppercase tracking-wide text-slate-500 mb-1.5' },
-            'Open it in your mail app, filled in and ready to send'),
-
-          e('div', { className:'grid grid-cols-2 sm:grid-cols-4 gap-2' },
-            e('button', { onClick:() => openIn('outlook'),
-              className:'py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-bold' },
-              'Outlook web'),
-            e('button', { onClick:() => openIn('gmail'),
-              className:'py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-semibold' }, 'Gmail'),
-            e('button', { onClick:() => openIn('mailto'),
-              className:'py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-semibold' },
-              bodyTooLong ? 'Default app ⚠' : 'Default mail app'),
-            e('button', { onClick:copyEmail,
-              className:'py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-semibold' }, 'Copy text')),
-
-          bodyTooLong && e('p', { className:'text-[11px] text-amber-400 mt-2 leading-snug' },
-            'This quote runs to ' + links.length + ' characters. Outlook web and Gmail handle that fine, but a desktop mail app opened with the Default button may cut it short — check the bottom line is there, or use Copy text instead.'),
-
-          e('p', { className:'text-[11px] text-slate-500 mt-2 leading-snug' },
-            'You press Send in your own mail app, so the quote goes out from the shop address and replies come straight back to you.'),
-
-          e('div', { className:'flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-slate-700' },
-            e('button', { onClick:exportQuote,
-              className:'text-[11px] text-slate-400 underline hover:text-amber-400' }, 'Download as a file to attach'),
-            editingId
-              ? e('button', { onClick:markSent,
-                  className:'text-[11px] text-slate-400 underline hover:text-amber-400' }, 'Mark as sent')
-              : e('span', { className:'text-[11px] text-slate-600' }, 'Save the quote to track when it was sent')))),
-
-      showQuotes && e('div', { className: card + ' ' + pad + ' mb-4' },
-        e('div', { className:'flex items-center justify-between gap-3 mb-3' },
-          e('h2', { className: heading }, 'Saved quotes'),
-          e('button', { onClick:() => setShowQuotes(false),
-            className:'text-xs text-slate-400 hover:text-amber-400' }, 'Close')),
-
-        !STORAGE_OK && e('div', { className:'mb-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/40 rounded-lg px-3 py-2' },
-          'This browser is blocking local storage, so quotes will only last until you close the tab. Download anything you need to keep.'),
-
-        e('div', { className:'relative mb-3' },
-          e('input', { type:'search', value:search, onChange:ev => setSearch(ev.target.value),
-            placeholder:'Search by reference, customer, glass type or extra cost',
-            className: input + ' pl-8' }),
-          e('span', { className:'absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm' }, '⌕'),
-          search && e('button', { onClick:() => setSearch(''),
-            className:'absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-amber-400' }, 'clear')),
-
-        savedQuotes.length === 0
-          ? e('p', { className:'text-slate-500 text-sm py-6 text-center' },
-              'Nothing saved yet. Build a quote and press Save.')
-          : visibleQuotes.length === 0
-            ? e('p', { className:'text-slate-500 text-sm py-6 text-center' },
-                'No quotes match "' + search + '".')
-            : e(Fragment, null,
-                term && e('div', { className:'text-[11px] text-slate-500 mb-2' },
-                  visibleQuotes.length + ' of ' + savedQuotes.length + ' quotes'),
-                e('div', { className:'grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2' },
-                  visibleQuotes.map(q =>
-                    e('div', { key:q.id,
-                      className:'bg-slate-900 rounded-lg p-3 border ' +
-                        (q.id === editingId ? 'border-amber-500' : 'border-slate-700') },
-                      e('div', { className:'flex items-center gap-2' },
-                        e('span', { className:'font-semibold text-sm' }, q.ref),
-                        q.id === editingId && e('span', { className:'text-[9px] px-1.5 py-0.5 rounded bg-amber-500 text-slate-900 font-bold uppercase' }, 'editing')),
-                      e('div', { className:'text-xs text-slate-400 truncate' }, q.customerName),
-                      e('div', { className:'text-[11px] text-slate-500 mb-2' },
-                        q.date + (q.edited ? ' · edited ' + q.edited : '') +
-                        ' · ' + q.items.length + ' item' + (q.items.length === 1 ? '' : 's') +
-                        (q.extras.length ? ' + ' + q.extras.length + ' extra' + (q.extras.length === 1 ? '' : 's') : '')),
-                      q.sent && e('div', { className:'text-[10px] text-emerald-400 font-semibold mb-1' },
-                        'Sent ' + q.sent),
-                      e('div', { className:'text-sm font-bold text-amber-400 mb-2 tabular-nums' },
-                        money(q.totals.grandTotal)),
-                      e('div', { className:'flex gap-1.5' },
-                        e('button', { onClick:() => editQuote(q),
-                          className:'flex-1 py-1.5 rounded bg-amber-600 hover:bg-amber-500 text-xs font-medium' }, 'Edit'),
-                        e('button', { onClick:() => { if (confirm('Delete ' + q.ref + '?')) deleteQuote(q.id); },
-                          className:'px-2.5 py-1.5 rounded bg-slate-700 hover:bg-red-800 text-xs' }, 'Delete'))))))),
-
-      e('div', { className:'grid gap-4 lg:grid-cols-2 xl:grid-cols-12 xl:items-start' },
-
-        e('div', { className: colBox + ' xl:col-span-3' },
-
-          e('div', { className: card + ' ' + pad },
-            e('h2', { className: heading + ' mb-3' }, 'Size'),
-            e('div', { className:'grid grid-cols-4 gap-1 mb-3' },
-              ['mm','cm','inches','feet'].map(u =>
-                e('button', { key:u, onClick:() => setUnit(u),
-                  className:'py-1.5 rounded-md text-[11px] font-semibold ' +
-                    (unit === u ? 'bg-amber-500 text-slate-900' : 'bg-slate-900 text-slate-300 hover:bg-slate-700') }, u))),
-            e('div', { className:'grid grid-cols-3 gap-2 mb-3' },
-              e('div', null, e('label', { className: label }, 'Height'),
-                e('input', { type:'number', inputMode:'decimal', value:height, className: input,
-                  placeholder:'1000', onChange:ev => setHeight(ev.target.value) })),
-              e('div', null, e('label', { className: label }, 'Width'),
-                e('input', { type:'number', inputMode:'decimal', value:width, className: input,
-                  placeholder:'800', onChange:ev => setWidth(ev.target.value) })),
-              e('div', null, e('label', { className: label }, 'Qty'),
-                e('input', { type:'number', inputMode:'numeric', min:'1', value:quantity, className: input,
-                  onChange:ev => setQuantity(ev.target.value) }))),
-            rawArea > 0 && e('div', { className:'grid grid-cols-3 gap-2 bg-slate-900 rounded-lg p-2.5 mb-3 border border-slate-700 text-center' },
-              e('div', null,
-                e('div', { className:'text-[9px] uppercase tracking-wide text-slate-500' }, 'Actual'),
-                e('div', { className:'font-bold text-xs tabular-nums' }, rawArea.toFixed(3))),
-              e('div', null,
-                e('div', { className:'text-[9px] uppercase tracking-wide text-slate-500' }, 'Charged m²'),
-                e('div', { className:'font-bold text-xs text-amber-400 tabular-nums' }, totalArea.toFixed(3))),
-              e('div', null,
-                e('div', { className:'text-[9px] uppercase tracking-wide text-slate-500' }, 'Perimeter'),
-                e('div', { className:'font-bold text-xs tabular-nums' }, totalPerim.toFixed(2) + 'm'))),
-            rawArea > 0 && rawArea < minArea &&
-              e('p', { className:'text-[11px] text-amber-400/90 mb-3 leading-snug' },
-                'Rounded up to the ' + minArea + ' m² minimum for ' + product.category.toLowerCase() + '.'),
-            e('div', { className:'grid grid-cols-2 gap-1' },
-              PRESETS.map(p =>
-                e('button', { key:p.label,
-                  onClick:() => { setHeight(String(p.height)); setWidth(String(p.width)); setUnit('mm'); },
-                  className:'py-1.5 bg-slate-900 hover:bg-slate-700 rounded-md text-[11px] font-medium' }, p.label)))),
-
-          e('div', { className: card + ' ' + pad },
-            e('div', { className:'flex items-baseline justify-between mb-2' },
-              e('h2', { className: heading }, 'Add-ons'),
-              activeAddons.length > 0 && e('span', { className:'text-[11px] text-amber-400 font-semibold' },
-                activeAddons.length + ' on')),
-            e('p', { className:'text-[11px] text-slate-500 mb-3 leading-snug' },
-              'Edgework defaults to the full perimeter — edit the metres if only some edges are worked.'),
-            addonGroups.map(group =>
-              e('div', { key:group, className:'mb-3' },
-                e('h3', { className:'text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1' }, group),
-                ADDONS.filter(a => a.group === group).map(a => {
-                  const on = activeAddons.includes(a.id);
-                  return e('div', { key:a.id,
-                    className:'rounded-lg mb-1 ' + (on ? 'bg-amber-500/10 border border-amber-500/50' : 'border border-transparent hover:bg-slate-700/40') },
-                    e('label', { className:'flex items-start gap-2 px-2 py-1.5 cursor-pointer' },
-                      e('input', { type:'checkbox', checked:on, onChange:() => toggleAddon(a.id),
-                        className:'mt-0.5 accent-amber-500' }),
-                      e('span', { className:'flex-1 min-w-0' },
-                        e('span', { className:'block text-[13px] font-medium leading-tight' }, a.name),
-                        a.detail && e('span', { className:'block text-[10px] text-slate-500 leading-tight' }, a.detail)),
-                      showPrices && e('span', { className:'text-[11px] text-slate-400 tabular-nums whitespace-nowrap' },
-                        money(rate(a.price)) + (a.charge === 'lm' ? '/m' : a.charge === 'm2' ? '/m²' : ' ea'))),
-                    on && a.charge === 'lm' && e('div', { className:'px-2 pb-2 flex items-center gap-1.5' },
-                      e('input', { type:'number', inputMode:'decimal', step:'0.01', 'aria-label':'Metres',
-                        value: addonMetres[a.id] !== undefined ? addonMetres[a.id] : (totalPerim ? totalPerim.toFixed(2) : ''),
-                        onChange:ev => setAddonMetres(Object.assign({}, addonMetres, { [a.id]: ev.target.value })),
-                        className:'w-16 px-1.5 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white focus:outline-none focus:border-amber-400' }),
-                      e('span', { className:'text-[10px] text-slate-500' }, 'm'),
-                      e('button', { onClick:() => { const m = Object.assign({}, addonMetres); delete m[a.id]; setAddonMetres(m); },
-                        className:'text-[10px] text-slate-500 underline hover:text-amber-400' }, 'reset'),
-                      showPrices && e('span', { className:'ml-auto text-[11px] font-semibold text-amber-400 tabular-nums' },
-                        money(addonCost(a)))),
-                    on && a.charge !== 'lm' && showPrices &&
-                      e('div', { className:'px-2 pb-1.5 text-[11px] text-amber-400 font-semibold text-right tabular-nums' },
-                        money(addonCost(a))));
-                })))),
-
-          e('button', { onClick:addLineItem,
-            className:'hidden xl:block w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg font-bold text-sm' },
-            rawArea > 0 && showPrices ? 'Add to quote · ' + money(linePreview) : 'Add to quote')),
-
-        e('div', { className: colBox + ' xl:col-span-3' },
-          e('div', { className: card + ' ' + pad },
-            e('div', { className:'flex items-baseline justify-between mb-3' },
-              e('h2', { className: heading }, 'Glass'),
-              adjPct !== 0 && e('span', { className:'text-[10px] text-amber-400 font-semibold' },
-                (adjPct > 0 ? '+' : '') + adjPct + '% applied')),
-            e('div', { className:'max-h-[52vh] xl:max-h-[calc(100vh-16rem)] overflow-y-auto scroll pr-1' },
-              categories.map(cat =>
-                e('div', { key:cat, className:'mb-3' },
-                  e('h3', { className:'text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1' }, cat),
-                  PRODUCTS.filter(p => p.category === cat).map(p =>
-                    e('label', { key:p.id,
-                      className:'flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer ' +
-                        (productId === p.id ? 'bg-amber-500/15 border border-amber-500/60' : 'border border-transparent hover:bg-slate-700/50') },
-                      e('input', { type:'radio', name:'glass', checked:productId === p.id,
-                        onChange:() => setProductId(p.id), className:'accent-amber-500 shrink-0' }),
-                      e('span', { className:'flex-1 text-[13px] leading-tight' }, p.name),
-                      showPrices && e('span', { className:'text-[11px] text-slate-400 tabular-nums whitespace-nowrap' },
-                        money(rate(p.price)))))))),
-            e('p', { className:'text-[10px] text-slate-500 mt-2 pt-2 border-t border-slate-700 leading-snug' },
-              'Rates are per m². Horticultural is sold per piece — ' +
-              HORTICULTURAL.map(h => h.name + ' ' + money(rate(h.price))).join(', ') + '.'))),
-
-        e('div', { className: colBox + ' lg:col-span-2 xl:col-span-6' },
-          e('div', { className: card + ' ' + pad },
-
-            e('div', { className:'flex items-center justify-between gap-2 mb-3' },
-              e('h2', { className: heading }, 'Quote'),
-              editingQuote && e('div', { className:'flex items-center gap-2' },
-                e('span', { className:'text-[11px] text-amber-400 font-semibold' }, 'Editing ' + editingQuote.ref),
-                e('button', { onClick:() => { if (confirm('Discard changes and start a new quote?')) resetBuilder(); },
-                  className:'text-[11px] text-slate-500 hover:text-amber-400 underline' }, 'new quote'))),
-
-            e('div', { className:'grid sm:grid-cols-2 gap-2 mb-2' },
-              e('input', { className: input, placeholder:'Customer name',
-                value:customerName, onChange:ev => setCustomerName(ev.target.value) }),
-              e('input', { className: input, type:'email', placeholder:'Customer email',
-                value:customerEmail, onChange:ev => setCustomerEmail(ev.target.value) })),
-            e('textarea', { className: input, rows:2, placeholder:'Internal notes',
-              value:notes, onChange:ev => setNotes(ev.target.value) }),
-            e('p', { className:'text-[10px] text-slate-500 mb-3 mt-1' },
-              'Notes stay in the app — they are not printed on the customer quote.'),
-
-            e('div', { className:'space-y-1.5 mb-3 max-h-[30vh] overflow-y-auto scroll' },
-              lineItems.length === 0
-                ? e('p', { className:'text-slate-500 text-sm py-6 text-center' },
-                    'No glass yet. Set a size, pick the glass, tick any add-ons, then press Add to quote.')
-                : lineItems.map(i =>
-                    e('div', { key:i.key, className:'bg-slate-900 rounded-lg p-2.5 border border-slate-700' },
-                      e('div', { className:'flex justify-between items-start gap-2' },
-                        e('div', { className:'min-w-0' },
-                          e('div', { className:'font-semibold text-[13px] text-amber-300 truncate' }, i.productName),
-                          e('div', { className:'text-[11px] text-slate-400' },
-                            i.height + i.unit + ' × ' + i.width + i.unit + ' · ×' + i.quantity + ' · ' + i.totalArea.toFixed(2) + ' m²')),
-                        e('button', { onClick:() => removeLine(i.key),
-                          className:'text-slate-500 hover:text-red-400 text-[11px] shrink-0' }, 'Remove')),
-                      showPrices && e('div', { className:'mt-1.5 pt-1.5 border-t border-slate-700/60 space-y-0.5' },
-                        e('div', { className:'text-[11px] flex justify-between text-slate-400' },
-                          e('span', null, 'Glass'), e('span', { className:'tabular-nums' }, money(i.glassCost))),
-                        i.addons.map(a =>
-                          e('div', { key:a.id, className:'text-[11px] flex justify-between text-slate-400' },
-                            e('span', { className:'truncate pr-2' },
-                              '+ ' + a.name + (a.charge === 'lm' ? ' (' + a.qty.toFixed(2) + 'm)' : '')),
-                            e('span', { className:'tabular-nums' }, money(a.cost)))),
-                        e('div', { className:'text-[13px] font-bold text-amber-400 text-right pt-0.5 tabular-nums' },
-                          money(i.total)))))),
-
-            e('div', { className:'bg-slate-900/60 rounded-lg border border-slate-700 p-3 mb-3' },
-              e('div', { className:'flex items-baseline justify-between mb-2' },
-                e('h3', { className:'text-[11px] font-bold uppercase tracking-wider text-slate-400' }, 'Extra costs'),
-                extras.length > 0 && e('span', { className:'text-[11px] text-amber-400 font-semibold tabular-nums' },
-                  money(T.extrasTotal))),
-
-              extras.length > 0 && e('div', { className:'space-y-1 mb-2' },
-                extras.map(x =>
-                  e('div', { key:x.id, className:'flex items-center gap-2 text-[13px] bg-slate-900 rounded px-2.5 py-1.5 border border-slate-700' },
-                    e('span', { className:'flex-1 truncate' }, x.label),
-                    e('span', { className:'tabular-nums font-semibold text-amber-300' }, money(x.amount)),
-                    e('button', { onClick:() => removeExtra(x.id),
-                      className:'text-slate-500 hover:text-red-400 text-[11px]' }, '✕')))),
-
-              e('div', { className:'flex gap-1.5 mb-2' },
-                e('input', { className: input + ' flex-1', placeholder:'Labour, delivery, fitting…',
-                  value:extraLabel, onChange:ev => setExtraLabel(ev.target.value),
-                  onKeyDown:ev => { if (ev.key === 'Enter') addExtra(); } }),
-                e('div', { className:'relative w-24' },
-                  e('span', { className:'absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 text-sm' }, '£'),
-                  e('input', { type:'number', inputMode:'decimal', step:'0.01', placeholder:'0.00',
-                    value:extraAmount, onChange:ev => setExtraAmount(ev.target.value),
-                    onKeyDown:ev => { if (ev.key === 'Enter') addExtra(); },
-                    className: input + ' pl-5' })),
-                e('button', { onClick:addExtra,
-                  className:'px-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-semibold' }, 'Add')),
-
-              e('div', { className:'flex flex-wrap gap-1' },
-                EXTRA_PRESETS.map(p =>
-                  e('button', { key:p, onClick:() => setExtraLabel(p),
-                    className:'px-2 py-1 rounded bg-slate-900 hover:bg-slate-700 text-[10px] font-medium text-slate-400' }, p))),
-
-              e('p', { className:'text-[10px] text-slate-500 mt-2 leading-snug' },
-                'Added after any discount, before VAT — so a trade discount comes off the glass but not the labour.')),
-
-            e('div', { className:'flex gap-2 mb-3' },
-              e('div', { className:'flex-1' },
-                e('label', { className: label }, 'Discount %'),
-                e('input', { type:'number', inputMode:'decimal', min:'0', max:'100', value:discount,
-                  onChange:ev => setDiscount(ev.target.value), className: input })),
-              e('div', { className:'flex items-end gap-1.5' },
-                e('button', { onClick:() => setDiscount('15'),
-                  className:'px-2.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-700 text-[11px] font-semibold' }, 'Account 15%'),
-                e('button', { onClick:() => setDiscount('25'),
-                  className:'px-2.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-700 text-[11px] font-semibold' }, 'Trade 25%'))),
-
-            e('label', { className:'flex items-center gap-2 mb-3 text-xs text-slate-300 cursor-pointer' },
-              e('input', { type:'checkbox', checked:cardFee, onChange:() => setCardFee(!cardFee),
-                className:'accent-amber-500' }),
-              'Paying by card (adds 2%)'),
-
-            hasContent && e('div', { className:'bg-slate-900 rounded-lg p-3 border border-slate-700 space-y-1 text-[13px] mb-3' },
-              lineItems.length > 0 && e('div', { className:'flex justify-between text-slate-500 text-[11px]' },
-                e('span', null, 'Area'), e('span', { className:'tabular-nums' }, T.totalM2.toFixed(2) + ' m²')),
-              T.totalLm > 0 && e('div', { className:'flex justify-between text-slate-500 text-[11px]' },
-                e('span', null, 'Edgework'), e('span', { className:'tabular-nums' }, T.totalLm.toFixed(2) + ' m')),
-              lineItems.length > 0 && e('div', { className:'flex justify-between pt-1 border-t border-slate-700 text-slate-300' },
-                e('span', null, 'Glass subtotal'), e('span', { className:'tabular-nums' }, money(T.subtotal))),
-              discountPct > 0 && e(Fragment, null,
-                e('div', { className:'flex justify-between text-emerald-400' },
-                  e('span', null, 'Discount ' + discountPct + '%'),
-                  e('span', { className:'tabular-nums' }, '−' + money(T.discountAmount))),
-                e('div', { className:'flex justify-between text-slate-300' },
-                  e('span', null, 'After discount'), e('span', { className:'tabular-nums' }, money(T.afterDiscount)))),
-              extras.map(x =>
-                e('div', { key:x.id, className:'flex justify-between text-slate-300' },
-                  e('span', { className:'truncate pr-2' }, x.label),
-                  e('span', { className:'tabular-nums' }, money(x.amount)))),
-              e('div', { className:'flex justify-between text-slate-300' },
-                e('span', null, 'VAT 20%'), e('span', { className:'tabular-nums' }, money(T.vat))),
-              cardFee && e('div', { className:'flex justify-between text-slate-300' },
-                e('span', null, 'Card 2%'), e('span', { className:'tabular-nums' }, money(T.cardAmount))),
-              e('div', { className:'flex justify-between text-lg font-bold text-amber-400 pt-1.5 border-t border-slate-700' },
-                e('span', null, 'Total'), e('span', { className:'tabular-nums' }, money(T.grandTotal)))),
-
-            hasContent && e('div', { className:'grid grid-cols-3 gap-2' },
-              e('button', { onClick:() => saveQuote(false),
-                className:'py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold text-sm' },
-                editingQuote ? 'Update' : 'Save'),
-              e('button', { onClick:exportQuote,
-                className:'py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold text-sm' },
-                'Download'),
-              e('button', { onClick:openEmailPanel,
-                className:'py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg font-semibold text-sm' },
-                'Email')),
-
-            hasContent && editingQuote && e('button', { onClick:() => saveQuote(true),
-              className:'w-full mt-2 py-2 rounded-lg bg-slate-900 hover:bg-slate-700 text-xs font-semibold' },
-              'Save as a separate quote'),
-
-            hasContent && e('button', {
-              onClick:() => { if (confirm(editingQuote ? 'Clear the builder? The saved quote stays as it is.' : 'Clear this quote?')) resetBuilder(); },
-              className:'w-full mt-1.5 py-1.5 text-[11px] text-slate-500 hover:text-red-400' },
-              editingQuote ? 'Stop editing' : 'Clear quote')),
-
-          e('div', { className: card + ' p-3 text-[11px] text-slate-500 leading-relaxed' },
-            'Emailed and downloaded quotes show item and extra-cost totals only — no per-m² or per-metre rates, and no internal notes. Minimum charge 0.3 m² on double glazed units, 0.2 m² on toughened, 0.1 m² on everything else.'))),
-
-      e('div', { className:'xl:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur border-t border-slate-700 px-4 py-2.5 flex items-center gap-3' },
-        rawArea > 0 && showPrices && e('div', { className:'min-w-0' },
-          e('div', { className:'text-[10px] text-slate-500 leading-tight' }, 'This item'),
-          e('div', { className:'text-base font-bold text-amber-400 tabular-nums leading-tight' }, money(linePreview))),
-        e('button', { onClick:addLineItem,
-          className:'flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg font-bold text-sm' },
-          'Add to quote'))
-    )
-  );
+/* ---------- persistence ---------- */
+async function pushJob(job){
+  let cur=[]; const raw=await sGet(KEY_JOBS);
+  if(raw){ try{cur=JSON.parse(raw)||[];}catch(e){cur=[];} }
+  const i=cur.findIndex(j=>j.id===job.id);
+  if(i>=0) cur[i]=job; else cur.push(job);
+  try{ await sSet(KEY_JOBS,JSON.stringify(cur)); JOBS=cur; return true; }
+  catch(e){ toast('Could not save: '+(e&&e.message?e.message:'storage refused the write'),true); return false; }
+}
+async function dropJob(id){
+  let cur=[]; const raw=await sGet(KEY_JOBS);
+  if(raw){ try{cur=JSON.parse(raw)||[];}catch(e){} }
+  JOBS=cur.filter(j=>j.id!==id);
+  try{ await sSet(KEY_JOBS,JSON.stringify(JOBS)); return true; }
+  catch(e){ toast('Could not delete',true); return false; }
+}
+async function loadAll(){
+  const raw=await sGet(KEY_JOBS);
+  if(raw){ try{JOBS=(JSON.parse(raw)||[]).map(normalise);}catch(e){JOBS=[];} }
+  const p=await sGet(KEY_PRICES);
+  if(p){ try{const o=JSON.parse(p);PRICES=o.prices||{};ADJ=num(o.adj);}catch(e){} }
+  const ex=await sGet(KEY_EXP);
+  if(ex){ try{const o=JSON.parse(ex); lastFull=o.full||null; lastAny=o.any||null;}catch(e){} }
+  const sp=await sGet(KEY_SUP);
+  if(sp){ try{const o=JSON.parse(sp); if(o.suppliers&&o.suppliers.length) SUPPLIERS=o.suppliers;
+    if(o.settings) SETTINGS=Object.assign(SETTINGS,o.settings);}catch(e){} }
 }
 
-ReactDOM.createRoot(document.getElementById('app')).render(e(Calculator));
+/* ---------- list events ---------- */
+document.addEventListener('click',async e=>{
+  if(!e.target.closest('.menuwrap')) $('menu').classList.remove('on');
+  if(!e.target.closest('.suggest')) $('sugg').innerHTML='';
+
+  const f=e.target.closest('[data-f]');
+  if(f){ filter=f.dataset.f; listView='sheet'; $('search').value=''; render(); window.scrollTo({top:0}); return; }
+
+  const mv=e.target.closest('[data-mv]');
+  if(mv){ const d=+mv.dataset.mv;
+    if(d===0){ diaryMonth=new Date(); selDay=ymd(new Date()); }
+    else diaryMonth=new Date(diaryMonth.getFullYear(),diaryMonth.getMonth()+d,1);
+    renderDiary(); return; }
+  const day=e.target.closest('[data-day]');
+  if(day){ selDay=day.dataset.day; renderDiary(); return; }
+
+  const bu=e.target.closest('[data-backup]');
+  if(bu){ $('expBtn').click(); return; }
+  const ng=e.target.closest('[data-nag]');
+  if(ng){ nagDismissed=ymd(new Date()); render(); toast('Reminder hidden until tomorrow'); return; }
+  const rfq=e.target.closest('[data-rfq]');
+  if(rfq){ openSupplierMail(rfq.dataset.rfq,'rfq'); return; }
+  const po=e.target.closest('[data-po]');
+  if(po){ openSupplierMail(po.dataset.po,'po'); return; }
+  const bk=e.target.closest('[data-book]');
+  if(bk){ openBook(JOBS.find(x=>x.id===bk.dataset.book)); return; }
+  const cp=e.target.closest('[data-clearpick]');
+  if(cp){ bookJob=null; drawBookPick(); drawMoveNotice(); return; }
+  const pj=e.target.closest('[data-pickjob]');
+  if(pj){ bookJob=JOBS.find(x=>x.id===pj.dataset.pickjob);
+    const need=bookJob?neededAppts(bookJob):[];
+    bookKind=need.length?need[0]:'fit';
+    Array.prototype.forEach.call($('bKind').children,b=>b.classList.toggle('on',b.dataset.bk===bookKind));
+    drawBookPick(); drawClash(); drawMoveNotice(); return; }
+  const bd=e.target.closest('[data-bookday]');
+  if(bd){ openBook(null,bd.dataset.bookday); return; }
+  const ad=e.target.closest('[data-delappt]');
+  if(ad){
+    const q=ad.dataset.delappt.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    j.appts.splice(+q[1],1);
+    if(await pushJob(j)){ render(); toast('Taken out of the diary'); }
+    return;
+  }
+  const vw=e.target.closest('[data-view]');
+  if(vw){ listView=vw.dataset.view; render(); return; }
+  const pr=e.target.closest('[data-print]');
+  if(pr){ ({cut:$('printCut'),order:$('printOrder'),diary:$('printDiary')})[pr.dataset.print].click(); return; }
+  const aa=e.target.closest('[data-arrall]');
+  if(aa){
+    const name=aa.dataset.arrall; let n=0;
+    for(const j of JOBS.filter(isWorking)){
+      let hit=false;
+      j.items.forEach(i=>{ if(i.src==='order'&&ost(i)!=='arrived'&&(i.supplier||'Supplier')===name){i.ostate='arrived';i.arrived=true;i.arrivedAt=new Date().toISOString();hit=true;n++;} });
+      if(hit){ applyStatus(j); await pushJob(j); }
+    }
+    render(); toast(n+' piece'+(n===1?'':'s')+' booked in from '+name);
+    return;
+  }
+  const conf=e.target.closest('[data-conf]');
+  if(conf){
+    const j=JOBS.find(x=>x.id===conf.dataset.conf); if(!j) return;
+    j.confirmed=true; j.confirmedAt=new Date().toISOString();
+    if(j.status==='lost') j.status='quote';
+    applyStatus(j);
+    if(await pushJob(j)){ render(); toast('Job '+j.no+' confirmed — '+stat(j.status).label.toLowerCase()); }
+    return;
+  }
+  const lost=e.target.closest('[data-lost]');
+  if(lost){
+    const j=JOBS.find(x=>x.id===lost.dataset.lost); if(!j) return;
+    j.status='lost'; j.confirmed=false;
+    if(await pushJob(j)){ render(); toast('Quote '+j.no+' closed off'); }
+    return;
+  }
+  const pc=e.target.closest('[data-pc]');
+  if(pc){
+    const q=pc.dataset.pc.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    j.items[+q[1]].cut=true; applyStatus(j);
+    if(await pushJob(j)){ render(); toast('Piece cut — job '+j.no); }
+    return;
+  }
+  const pa=e.target.closest('[data-pa]');
+  if(pa){
+    const q=pa.dataset.pa.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const it=j.items[+q[1]]; it.ostate='arrived'; it.arrived=true; it.arrivedAt=new Date().toISOString();
+    applyStatus(j);
+    if(await pushJob(j)){ render(); toast('Piece booked in — job '+j.no); }
+    return;
+  }
+  const arr=e.target.closest('[data-arr]');
+  if(arr){
+    const parts=arr.dataset.arr.split('|'), id=parts[0], name=parts[1];
+    const j=JOBS.find(x=>x.id===id); if(!j) return;
+    j.items.forEach(i=>{ if(i.src==='order'&&ost(i)!=='arrived'&&(i.supplier||'Supplier')===name){ i.ostate='arrived'; i.arrived=true; i.arrivedAt=new Date().toISOString(); } });
+    applyStatus(j);
+    if(await pushJob(j)){ render(); toast(name+' glass booked in for job '+j.no); }
+    return;
+  }
+  const cut=e.target.closest('[data-cut]');
+  if(cut){
+    const j=JOBS.find(x=>x.id===cut.dataset.cut); if(!j) return;
+    (j.items||[]).forEach(i=>{ if(i.src==='cut') i.cut=true; });
+    applyStatus(j);
+    if(await pushJob(j)){ render(); toast('Job '+j.no+' on the rack'); }
+    return;
+  }
+  const coll=e.target.closest('[data-coll]');
+  if(coll){
+    const j=JOBS.find(x=>x.id===coll.dataset.coll); if(!j) return;
+    j.status='done'; j.doneAt=new Date().toISOString();
+    if(await pushJob(j)){ render(); toast('Job '+j.no+' closed off'); }
+    return;
+  }
+  const c=e.target.closest('[data-call]');
+  if(c){
+    const j=JOBS.find(x=>x.id===c.dataset.call); if(!j) return;
+    j.called=true; j.toldHow='phone'; j.calledAt=new Date().toISOString();
+    if(await pushJob(j)){ render(); toast(j.name+' marked as told'); }
+    return;
+  }
+  const m=e.target.closest('[data-mail]');
+  if(m){ openMail(JOBS.find(x=>x.id===m.dataset.mail)); return; }
+  const o=e.target.closest('[data-open]');
+  if(o){ openJob(JOBS.find(x=>x.id===o.dataset.open)); return; }
+});
+document.addEventListener('change',async e=>{
+  const c=e.target.closest('[data-cost]');
+  if(c){
+    const q=c.dataset.cost.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    j.items[+q[1]].cost=c.value.trim()===''?'':num(c.value);
+    if(await pushJob(j)) render();
+  }
+});
+$('search').addEventListener('input',render);
+$('menuBtn').onclick=()=>$('menu').classList.toggle('on');
+$('viewCut').onclick=()=>{filter='cut';listView='sheet';$('search').value='';$('menu').classList.remove('on');render();};
+$('viewOrder').onclick=()=>{filter='order';listView='sheet';$('search').value='';$('menu').classList.remove('on');render();};
+
+/* ---------- sheets ---------- */
+function showSheet(el){ document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on')); el.classList.add('on'); window.scrollTo({top:0}); }
+function hideSheets(){ document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on')); }
+$('closeJob').onclick=hideSheets; $('cancelJob').onclick=hideSheets;
+$('closeRate').onclick=hideSheets; $('closeMail').onclick=hideSheets; $('mBack').onclick=hideSheets;
+
+function productOptions(sel){
+  const cats=[];
+  ALL_PRODUCTS.forEach(p=>{let c=cats.find(x=>x.n===p.category);if(!c){c={n:p.category,items:[]};cats.push(c);}c.items.push(p);});
+  return cats.map(c=>`<optgroup label="${esc(c.n)}">`+
+    c.items.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${esc(p.name)} — ${gbp(rate(priceOf(p.id)))}${p.each?' each':'/m²'}</option>`).join('')+
+    `</optgroup>`).join('');
+}
+function drawItems(){
+  $('unitPick').innerHTML=`<select id="fUnit" style="border:1px solid var(--silver);border-radius:2px;padding:3px 5px;font-size:11px;text-transform:none;letter-spacing:0">
+    ${['mm','cm','inches','feet'].map(u=>`<option ${u===unit?'selected':''}>${u}</option>`).join('')}</select>`;
+  $('fUnit').onchange=ev=>{unit=ev.target.value;drawItems();drawCalc();};
+  $('items').innerHTML=items.map((it,i)=>{
+    const p=prodOf(it.pid), pi=priceItem(it);
+    return `<div class="item ${it.src==='order'?'ordered':'cutting'}">
+      <div class="ihead"><span class="inum">Piece ${i+1}</span>
+        ${items.length>1?`<button class="idel" data-rmi="${i}" aria-label="Remove piece">×</button>`:''}</div>
+      <select class="inp" data-pid="${i}" style="margin-bottom:9px">${productOptions(it.pid)}</select>
+      <div class="srcpick">
+        <button data-src="${i}:cut" data-v="cut" class="${it.src==='cut'?'on':''}">We cut it</button>
+        <button data-src="${i}:order" data-v="order" class="${it.src==='order'?'on':''}">Ordered in</button>
+      </div>
+      ${it.src==='order'?`<div class="fgroup"><label for="sup${i}">Supplier</label>
+        <select class="inp" id="sup${i}" data-sup="${i}">${supNames().map(s=>`<option ${s===it.supplier?'selected':''}>${esc(s)}</option>`).join('')}</select></div>`:''}
+      ${p.each
+        ? `<div class="dims"><span style="font-size:13px;color:var(--ink2);flex:1">Stock size, charged each</span>
+           <input class="inp" data-k="q" data-i="${i}" value="${esc(it.q)}" inputmode="numeric" style="flex:0 0 74px"></div>`
+        : `<div class="dims">
+             <input class="inp" data-k="w" data-i="${i}" value="${esc(it.w)}" inputmode="decimal" placeholder="width">
+             <span class="times">×</span>
+             <input class="inp" data-k="h" data-i="${i}" value="${esc(it.h)}" inputmode="decimal" placeholder="height">
+             <span class="times">×</span>
+             <input class="inp" data-k="q" data-i="${i}" value="${esc(it.q)}" inputmode="numeric" style="flex:0 0 66px">
+           </div>
+           <div class="chips">${ADDONS.map(a=>{
+             const on=(it.addons||[]).some(x=>x.id===a.id);
+             return `<button class="ac ${on?'on':''}" data-ad="${i}:${a.id}">${esc(a.name)}</button>`;}).join('')}</div>
+           ${(it.addons||[]).filter(a=>{const A=ADDONS.find(x=>x.id===a.id);return A&&A.charge==='lm';}).map(a=>
+             `<div class="lmwrap"><span>${esc((ADDONS.find(x=>x.id===a.id)||{}).name)} — metres</span>
+              <input data-lm="${i}:${a.id}" value="${a.m!==undefined&&a.m!==''?esc(a.m):''}" placeholder="${pi.perim.toFixed(2)}" inputmode="decimal"></div>`).join('')}`}
+      <div class="iline"><span>${pi.area?pi.area.toFixed(3)+' m²':'stock size'}${pi.perim?' · '+pi.perim.toFixed(2)+' lm':''}</span><b>${gbp(pi.total)}</b></div>
+    </div>`;}).join('');
+}
+$('items').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.k){ items[+t.dataset.i][t.dataset.k]=t.value; drawCalc(); refreshLines(); return; }
+  if(t.dataset.lm){ const parts=t.dataset.lm.split(':');
+    const a=items[+parts[0]].addons.find(x=>x.id===parts[1]); if(a) a.m=t.value; drawCalc(); refreshLines(); }
+});
+$('items').addEventListener('change',e=>{
+  if(e.target.dataset.pid!==undefined){
+    const i=+e.target.dataset.pid;
+    items[i].pid=e.target.value;
+    items[i].src=defaultSrc(e.target.value);
+    if(items[i].src==='order'&&!items[i].supplier) items[i].supplier=supNames()[0];
+    drawItems(); drawCalc(); return;
+  }
+  if(e.target.dataset.sup!==undefined){ items[+e.target.dataset.sup].supplier=e.target.value; drawCalc(); }
+});
+$('items').addEventListener('click',e=>{
+  const rm=e.target.closest('[data-rmi]');
+  if(rm){ items.splice(+rm.dataset.rmi,1); drawItems(); drawCalc(); return; }
+  const sc=e.target.closest('[data-src]');
+  if(sc){ const parts=sc.dataset.src.split(':'); const i=+parts[0];
+    items[i].src=parts[1];
+    if(parts[1]==='order'&&!items[i].supplier) items[i].supplier=supNames()[0];
+    drawItems(); drawCalc(); return; }
+  const ad=e.target.closest('[data-ad]');
+  if(ad){ const parts=ad.dataset.ad.split(':'); const it=items[+parts[0]];
+    it.addons=it.addons||[];
+    const at=it.addons.findIndex(x=>x.id===parts[1]);
+    if(at>=0) it.addons.splice(at,1); else it.addons.push({id:parts[1],m:''});
+    drawItems(); drawCalc(); }
+});
+function refreshLines(){
+  items.forEach((it,i)=>{
+    const pi=priceItem(it), el=$('items').children[i]; if(!el) return;
+    const line=el.querySelector('.iline');
+    if(line) line.innerHTML=`<span>${pi.area?pi.area.toFixed(3)+' m²':'stock size'}${pi.perim?' · '+pi.perim.toFixed(2)+' lm':''}</span><b>${gbp(pi.total)}</b>`;
+  });
+}
+$('addItem').onclick=()=>{
+  const last=items[items.length-1], pid=last?last.pid:'c4mm', src=defaultSrc(pid);
+  items.push({pid,w:'',h:'',q:'1',addons:[],src,supplier:src==='order'?supNames()[0]:'',arrived:false,cut:false});
+  drawItems(); drawCalc();
+};
+
+function drawExtras(){
+  $('extras').innerHTML=extras.map((x,i)=>
+    `<div class="row" style="margin-bottom:8px">
+      <input class="inp" data-xl="${i}" value="${esc(x.label)}" placeholder="e.g. fitting, delivery, mirror grab">
+      <input class="inp mono" data-xa="${i}" value="${esc(x.amount)}" inputmode="decimal" placeholder="£" style="flex:0 0 92px">
+      <button class="idel" data-rmx="${i}" style="flex:0 0 auto" aria-label="Remove extra">×</button>
+    </div>`).join('');
+}
+$('extras').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.xl!==undefined) extras[+t.dataset.xl].label=t.value;
+  if(t.dataset.xa!==undefined){ extras[+t.dataset.xa].amount=t.value; drawCalc(); }
+});
+$('extras').addEventListener('click',e=>{
+  const rm=e.target.closest('[data-rmx]'); if(!rm) return;
+  extras.splice(+rm.dataset.rmx,1); drawExtras(); drawCalc();
+});
+$('addExtra').onclick=()=>{extras.push({label:'',amount:''});drawExtras();};
+
+function drawCosts(){
+  $('costs').innerHTML=costs.map((x,i)=>
+    `<div class="row" style="margin-bottom:8px">
+      <input class="inp" data-cl="${i}" value="${esc(x.label)}" placeholder="e.g. fitter's day, van, sheet cost">
+      <input class="inp mono" data-ca="${i}" value="${esc(x.amount)}" inputmode="decimal" placeholder="£" style="flex:0 0 92px">
+      <button class="idel" data-rmc="${i}" style="flex:0 0 auto" aria-label="Remove cost">×</button>
+    </div>`).join('');
+}
+$('costs').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.cl!==undefined) costs[+t.dataset.cl].label=t.value;
+  if(t.dataset.ca!==undefined){ costs[+t.dataset.ca].amount=t.value; drawCalc(); }
+});
+$('costs').addEventListener('click',e=>{
+  const rm=e.target.closest('[data-rmc]'); if(!rm) return;
+  costs.splice(+rm.dataset.rmc,1); drawCosts(); drawCalc();
+});
+$('addCost').onclick=()=>{costs.push({label:'',amount:''});drawCosts();};
+
+function setTrade(v){isTrade=v;$('tTrade').classList.toggle('on',v);$('tRetail').classList.toggle('on',!v);drawCalc();}
+function setHandover(v){
+  handover=v;
+  Array.prototype.forEach.call($('hoPick').children,b=>b.classList.toggle('on',b.dataset.h===v));
+  $('addrWrap').style.display = v==='collection'?'none':'block';
+  drawAppts();
+}
+/* appointments live on the job; the job sheet just shows them */
+function drawAppts(){
+  const list=editing?apptsOf(editing):[];
+  const need=editing?neededAppts(Object.assign({},editing,{handover,needsMeasure:$('fMeasure').checked})):[];
+  $('apptWrap').innerHTML =
+    (list.length?`<label>In the diary</label>`+list.map((a,i)=>
+      `<div class="unsched" style="margin-bottom:6px"><div><b>${APPT[a.kind].label}</b> — ${new Date(a.date).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}${a.time?' at '+a.time:''}
+        ${a.mins?'<div class="sub">'+(DURS[a.mins]||a.mins+' min')+'</div>':''}</div>
+        <button class="act" data-delappt="${editing.id}|${i}">Remove</button></div>`).join(''):'')
+    + (editing&&need.length?`<button class="addbtn" data-book="${editing.id}">+ Book ${need.map(k=>APPT[k].label.toLowerCase()).join(' / ')}</button>`
+       :!editing&&handover!=='collection'?`<p class="sub">Save the job first, then book it into the diary.</p>`:'');
+}
+$('fMeasure').addEventListener('change',drawAppts);
+$('hoPick').addEventListener('click',e=>{const b=e.target.closest('[data-h]'); if(b) setHandover(b.dataset.h);});
+$('tTrade').onclick=()=>setTrade(true); $('tRetail').onclick=()=>setTrade(false);
+['fDisc','fDep'].forEach(id=>$(id).addEventListener('input',drawCalc));
+$('fCard').addEventListener('change',drawCalc);
+
+function drawCalc(){
+  const t=totals(items,extras,$('fDisc').value,$('fCard').checked);
+  const dep=num($('fDep').value);
+  $('calcRows').innerHTML=
+    `<div class="calcrow"><span>Glass and edgework (${t.area.toFixed(3)} m²)</span><span>${gbp(t.subtotal)}</span></div>`+
+    (t.discountAmount?`<div class="calcrow"><span>Discount ${num($('fDisc').value)}%</span><span>−${gbp(t.discountAmount)}</span></div>`:'')+
+    (t.extrasTotal?`<div class="calcrow"><span>Extras</span><span>${gbp(t.extrasTotal)}</span></div>`:'')+
+    `<div class="calcrow"><span>Net</span><span>${gbp(t.net)}</span></div>`+
+    `<div class="calcrow"><span>VAT @ 20%</span><span>${gbp(t.vat)}</span></div>`+
+    (t.cardAmount?`<div class="calcrow"><span>Card fee 2%</span><span>${gbp(t.cardAmount)}</span></div>`:'')+
+    `<div class="calcrow tot"><span>${isTrade?'To invoice':'To pay'}</span><span>${gbp(t.grand)}</span></div>`+
+    (dep?`<div class="calcrow"><span>Less deposit</span><span>−${gbp(dep)}</span></div>
+          <div class="calcrow"><span>Balance</span><span>${gbp(t.grand-dep)}</span></div>`:'');
+  const nc=items.filter(i=>i.src==='cut').length, no=items.filter(i=>i.src==='order').length;
+  const sup=[];
+  items.filter(i=>i.src==='order').forEach(i=>{const s=i.supplier||'Supplier'; if(sup.indexOf(s)<0) sup.push(s);});
+  $('calcSplit').innerHTML=(nc||no)
+    ? `${nc?nc+' piece'+(nc>1?'s':'')+' onto the cutting list':''}${nc&&no?'<br>':''}${no?no+' piece'+(no>1?'s':'')+' onto the order list ('+esc(sup.join(', '))+')':''}`
+    : '';
+  const draft={items,unit,costs,extras,discountPct:$('fDisc').value,cardFee:$('fCard').checked};
+  const cb=costBreakdown(draft), profit=t.net-cb.total;
+  $('calcSplit').innerHTML += cb.total||cb.glass?
+    `<div class="profit">
+      <div class="calcrow"><span>Sale ex VAT</span><span>${gbp(t.net)}</span></div>
+      <div class="calcrow"><span>Costs${cb.known?'':' so far'}</span><span>−${gbp(cb.total)}</span></div>
+      <div class="calcrow"><span>Profit</span><b>${gbp(profit)}${t.net>0?'  ('+(profit/t.net*100).toFixed(0)+'%)':''}</b></div>
+    </div>`:'';
+  $('calcHint').textContent=ADJ?`List prices are running ${ADJ>0?'+':''}${ADJ}% — change that under Prices.`:'';
+}
+
+/* ---------- customer autocomplete ---------- */
+$('fName').addEventListener('input',()=>{
+  const q=$('fName').value.trim().toLowerCase();
+  if(q.length<2){ $('sugg').innerHTML=''; return; }
+  const seen={}, pool=[];
+  JOBS.forEach(j=>{const k=(j.name+j.phone).toLowerCase();
+    if(!seen[k]){seen[k]=1;pool.push({name:j.name,phone:j.phone,email:j.email||'',trade:j.trade,orders:0,usual:''});}});
+  CUSTOMERS.forEach(c=>{const k=(c.name+c.phone).toLowerCase(); if(!seen[k]){seen[k]=1;pool.push(c);}});
+  const hits=pool.filter(c=>c.name.toLowerCase().indexOf(q)>=0||String(c.phone).indexOf(q)>=0).slice(0,8);
+  $('sugg')._hits=hits;
+  $('sugg').innerHTML=hits.length?`<div class="slist">`+hits.map((c,i)=>
+    `<div class="sitem" data-pick="${i}"><div>${esc(c.name)}${c.trade?' <span class="tag">Trade</span>':''}</div>
+     <div class="sm">${esc(fmtPhone(c.phone))}${c.orders?' · '+c.orders+' past orders':''}${c.usual?' · usually '+esc(c.usual):''}</div></div>`).join('')+`</div>`:'';
+});
+$('sugg').addEventListener('click',e=>{
+  const it=e.target.closest('[data-pick]'); if(!it) return;
+  const c=($('sugg')._hits||[])[+it.dataset.pick]; if(!c) return;
+  $('fName').value=c.name; $('fPhone').value=c.phone||''; if(c.email) $('fEmail').value=c.email;
+  setTrade(!!c.trade); $('sugg').innerHTML='';
+});
+
+/* ---------- open / save ---------- */
+function openJob(j){
+  editing=j||null;
+  $('sheetTitle').textContent=j?`Job ${j.no} — ${j.name}`:'New job';
+  $('delJob').style.display=j?'block':'none';
+  $('fName').value=j?j.name:''; $('fPhone').value=j?(j.phone||''):''; $('fEmail').value=j?(j.email||''):'';
+  unit=j&&j.unit?j.unit:'mm';
+  items=j&&j.items&&j.items.length?clone(j.items)
+       :[{pid:'c4mm',w:'',h:'',q:'1',addons:[],src:'cut',supplier:'',arrived:false,cut:false}];
+  items.forEach(i=>{ if(!i.src) i.src=defaultSrc(i.pid); });
+  extras=j&&j.extras?clone(j.extras):[];
+  $('fDisc').value=j?(j.discountPct||''):''; $('fDep').value=j?(j.deposit||''):'';
+  $('fCard').checked=j?!!j.cardFee:false;
+  $('fAddr').value=j?(j.addr||''):''; $('fWanted').value=j?(j.wanted||''):''; $('fNote').value=j?(j.note||''):'';
+  $('fMeasure').checked=j?!!j.needsMeasure:false;
+  costs=j&&j.costs?clone(j.costs):[];
+  setTrade(j?!!j.trade:false);
+  setHandover(j?(j.handover||(j.deliver?'delivery':'collection')):'collection');
+  drawItems(); drawExtras(); drawCosts(); drawCalc(); drawAppts(); $('sugg').innerHTML='';
+  showSheet($('jobSheet'));
+  if(!j) setTimeout(()=>$('fName').focus(),60);
+}
+$('newBtn').onclick=()=>openJob(null);
+
+$('saveJob').onclick=async()=>{
+  const name=$('fName').value.trim();
+  if(!name){ toast('Needs a customer name',true); $('fName').focus(); return; }
+  const clean=items.filter(it=>{
+    const p=prodOf(it.pid);
+    return p.each?(parseInt(it.q)||0)>0:(parseFloat(it.w)>0&&parseFloat(it.h)>0);
+  }).map(it=>Object.assign({cut:false,arrived:false},it));
+  if(!clean.length && !$('fMeasure').checked){
+    toast('Add a size, or tick "needs measuring first" to book a measure',true); return; }
+  const job=Object.assign({},editing||{},{
+    id: editing?editing.id:'j'+Date.now()+Math.random().toString(36).slice(2,6),
+    no: editing?editing.no:(JOBS.reduce((m,j)=>Math.max(m,j.no||0),1649)+1),
+    name, phone:$('fPhone').value.trim(), email:$('fEmail').value.trim(), trade:isTrade,
+    unit, items:clean, extras:extras.filter(x=>x.label||num(x.amount)),
+    discountPct:num($('fDisc').value), deposit:num($('fDep').value), cardFee:$('fCard').checked,
+    handover, deliver:handover==='delivery', addr:$('fAddr').value.trim(),
+    needsMeasure:$('fMeasure').checked,
+    appts: editing?apptsOf(editing):[],
+    costs: costs.filter(c=>c.label||num(c.amount)),
+    wanted:$('fWanted').value, note:$('fNote').value.trim(),
+    called: editing?!!editing.called:false,
+    confirmed: editing?!!editing.confirmed:false,
+    status: editing?editing.status:'quote',
+    takenAt: editing?editing.takenAt:new Date().toISOString()
+  });
+  if(job.status!=='done'&&job.status!=='lost') applyStatus(job);
+  if(await pushJob(job)){
+    hideSheets(); render();
+    toast(editing?`Job ${job.no} updated`:`Quote ${job.no} saved — send it, then confirm`);
+  }
+};
+$('delJob').onclick=async()=>{
+  if(!editing) return;
+  if(!window.confirm(`Delete job ${editing.no} for ${editing.name}? This can't be undone.`)) return;
+  if(await dropJob(editing.id)){ hideSheets(); render(); toast('Job deleted'); }
+};
+
+/* ============================================================
+   EMAIL — there is no server here, so the message is handed to
+   whatever mail client the shop already uses, filled in and
+   ready to send. It leaves from the shop's own address.
+   ============================================================ */
+function composeLinks(to,subject,body){
+  const t=encodeURIComponent(to||''), s=encodeURIComponent(subject||''), b=encodeURIComponent(body||'');
+  return { mailto:'mailto:'+t+'?subject='+s+'&body='+b,
+           outlook:'https://outlook.live.com/mail/0/deeplink/compose?to='+t+'&subject='+s+'&body='+b,
+           gmail:'https://mail.google.com/mail/?view=cm&fs=1&to='+t+'&su='+s+'&body='+b,
+           length:b.length };
+}
+function buildJobText(j,kind){
+  const W=52, row=(l,v)=>l+' '.repeat(Math.max(2,W-10-l.length))+String(v).padStart(10);
+  const t=jobTotals(j), L=[];
+  L.push(SHOP.name.toUpperCase()); L.push(SHOP.addr); L.push(SHOP.tel+'   '+SHOP.email); L.push('');
+  const bare=!(j.items||[]).length;
+  L.push((bare?'VISIT ':kind==='quote'?'QUOTE ':'JOB ')+j.no);
+  L.push('Date: '+new Date().toLocaleDateString('en-GB'));
+  if(j.name) L.push('Customer: '+j.name);
+  L.push(''); L.push('='.repeat(W));
+  if(bare){
+    L.push('We will come and measure up, then send you a price.');
+    L.push('');
+    apptsOf(j).forEach(a=>L.push(APPT[a.kind].label+': '+new Date(a.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+(a.time?' at '+a.time:'')));
+    if(j.addr) L.push('At: '+j.addr);
+    L.push(''); L.push('Thank you for choosing '+SHOP.name+'.');
+    return L.join('\n');
+  }
+  (j.items||[]).forEach((it,n)=>{
+    const pi=priceItem(it,j.unit), p=pi.p;
+    L.push((n+1)+'. '+p.name);
+    L.push('   '+(p.each?(it.q||1)+' off'
+      :it.w+(j.unit||'mm')+' x '+it.h+(j.unit||'mm')+(+it.q>1?'   '+it.q+' off':'')));
+    pi.addons.forEach(a=>L.push('   + '+a.name+(a.charge==='lm'?'  ('+a.qty.toFixed(2)+' m)':'')));
+    L.push(row('',gbp(pi.total))); L.push('');
+  });
+  L.push('='.repeat(W));
+  L.push(row('Subtotal',gbp(t.subtotal)));
+  if(num(j.discountPct)>0){
+    L.push(row('Discount '+num(j.discountPct)+'%','-'+gbp(t.discountAmount)));
+    L.push(row('After discount',gbp(t.subtotal-t.discountAmount)));
+  }
+  (j.extras||[]).forEach(x=>L.push(row(x.label||'Extra',gbp(x.amount))));
+  L.push(row('VAT 20%',gbp(t.vat)));
+  if(j.cardFee) L.push(row('Card surcharge 2%',gbp(t.cardAmount)));
+  L.push('-'.repeat(W));
+  L.push(row('TOTAL',gbp(t.grand)));
+  if(kind!=='quote'&&num(j.deposit)>0){
+    L.push(row('Deposit paid','-'+gbp(j.deposit)));
+    L.push(row('BALANCE',gbp(t.grand-num(j.deposit))));
+  }
+  L.push('');
+  if(j.handover!=='collection'&&j.addr) L.push(handoverLabel(j)+' at '+j.addr);
+  if(j.handover==='fitting'&&j.durMins) L.push('Allow roughly '+(DURS[j.durMins]||j.durMins+' min')+' on site.');
+  apptsOf(j).forEach(a=>L.push(APPT[a.kind].label+': '+new Date(a.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+(a.time?' at '+a.time:'')));
+  if(kind==='quote'){ L.push(''); L.push('Valid for 30 days.'); }
+  L.push('Thank you for choosing '+SHOP.name+'.');
+  return L.join('\n');
+}
+function defaultMessage(j,kind){
+  const first=(j.name||'').split(' ')[0];
+  const hi='Hi'+(first?' '+first:'')+',\n\n';
+  const sign='\n\nKind regards,\n'+SHOP.name;
+  const bal=jobTotals(j).grand-num(j.deposit);
+  if(!(j.items||[]).length){
+    const a=apptsOf(j).find(x=>x.kind==='measure');
+    return hi+'Thanks for your enquiry. '+
+      (a?'We have you booked in for '+new Date(a.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+(a.time?' at '+a.time:'')+' to measure up.'
+        :'We will be in touch to arrange a time to come and measure up.')+
+      '\n\nOnce we have the sizes we will send you a price. Any questions, call us on '+SHOP.tel+'.'+sign;
+  }
+  if(kind==='quote') return hi+
+    'Thanks for your enquiry. Your quote is below, reference '+j.no+'.\n\n'+
+    'If you are happy to go ahead, just reply to this email or call us on '+SHOP.tel+
+    ' and we will get it ordered and cut. If anything needs changing, let us know.'+sign;
+  if(kind==='confirm') return hi+
+    'Thanks for your order. We have booked it in as job '+j.no+' and the details are below.\n\n'+
+    'We will be in touch as soon as it is ready. If anything needs changing, reply to this email or call us on '+SHOP.tel+'.'+sign;
+  if(kind==='balance') return hi+
+    'The balance on job '+j.no+' is '+gbp(bal)+'. The details are below for your records.\n\n'+
+    'Any questions, reply to this email or call us on '+SHOP.tel+'.'+sign;
+  return hi+
+    'Your glass is ready'+(j.deliver?' and we will be in touch about delivery':' to collect from the shop')+'. Job '+j.no+' — details below.\n\n'+
+    (bal>0.005?'There is '+gbp(bal)+' left to pay'+(j.trade?', which we will invoice.':' on collection.')+'\n\n':'')+
+    'We are at '+SHOP.addr+'. Any questions, call us on '+SHOP.tel+'.'+sign;
+}
+/* ---------- supplier email ----------
+   rfq = ask them what it costs.  po = place the order.
+   Both gather every outstanding piece for that supplier across
+   all live jobs, because that is how you actually ring a supplier. */
+let mailMode='customer', mailSup='', mailRows=[];
+
+function supplierRows(name,kind){
+  const rows=[];
+  JOBS.filter(isWorking).forEach(j=>{
+    toPrice(j).forEach(it=>{
+      if((it.supplier||'Supplier')!==name) return;
+      rows.push({j,it,n:j.items.indexOf(it)});
+    });
+  });
+  return rows;
+}
+function buildSupplierText(name,kind,rows){
+  const W=54, L=[];
+  L.push(SHOP.name.toUpperCase()); L.push(SHOP.addr); L.push(SHOP.tel+'   '+SHOP.email);
+  L.push(''); L.push((kind==='rfq'?'REQUEST FOR PRICE':'PURCHASE ORDER')+' — '+new Date().toLocaleDateString('en-GB'));
+  L.push('='.repeat(W));
+  rows.forEach((r,i)=>{
+    const pi=priceItem(r.it,r.j.unit), p=pi.p, it=r.it;
+    L.push((i+1)+'. '+p.name);
+    L.push('   '+(p.each?(it.q||1)+' off'
+      :it.w+(r.j.unit||'mm')+' x '+it.h+(r.j.unit||'mm')+'   '+(it.q||1)+' off'));
+    pi.addons.forEach(a=>L.push('   + '+a.name+(a.charge==='lm'?'  ('+a.qty.toFixed(2)+' m)':'')));
+    if(kind==='po'&&it.cost!==undefined&&it.cost!=='') L.push('   Agreed price: '+gbp(it.cost));
+    L.push('   Our ref: job '+r.j.no+(r.j.wanted?'   wanted by '+new Date(r.j.wanted).toLocaleDateString('en-GB'):''));
+    L.push('');
+  });
+  L.push('='.repeat(W));
+  if(kind==='po'){
+    const tot=rows.reduce((s,r)=>s+num(r.it.cost),0);
+    L.push('Order total (ex VAT): '+gbp(tot));
+    L.push('');
+  }
+  L.push('Deliver to: '+SHOP.name+', '+SHOP.addr);
+  L.push('Contact: '+SHOP.tel);
+  return L.join('\n');
+}
+function supplierMessage(name,kind,rows){
+  const sign='\n\nMany thanks,\n'+SHOP.name+'\n'+SHOP.tel;
+  if(kind==='rfq') return 'Hello '+name+',\n\n'+
+    'Could you please price the following '+rows.length+' item'+(rows.length===1?'':'s')+' for us? '+
+    'Details are below.\n\nIf you can also let us know your lead time we would appreciate it.'+sign;
+  return 'Hello '+name+',\n\n'+
+    'Please treat this as an order for the '+rows.length+' item'+(rows.length===1?'':'s')+' below, at the prices you quoted.\n\n'+
+    'Delivery to the shop as usual. Please confirm the date when you can.'+sign;
+}
+function openSupplierMail(name,kind){
+  const rows=supplierRows(name,kind);
+  if(!rows.length){ toast('Nothing outstanding for '+name,true); return; }
+  const s=supOf(name);
+  mailMode='supplier'; mailSup=name; mailKind=kind; mailRows=rows; mailJob=null;
+  $('mailTitle').textContent=(kind==='rfq'?'Ask ':'Order from ')+name;
+  $('mTo').value=s.email||'';
+  $('mSubj').value=(kind==='rfq'?'Price request from ':'Order from ')+SHOP.name;
+  $('mMsg').value=supplierMessage(name,kind,rows);
+  $('mKind').style.display='none';
+  $('mTold').textContent = kind==='rfq' ? 'Log as asked' : 'Mark these as ordered';
+  if(s.check) $('mWarn').innerHTML='';
+  drawMail(); showSheet($('mailSheet'));
+}
+
+function openMail(j){
+  if(!j) return;
+  mailMode='customer'; mailSup=''; mailRows=[]; mailJob=j;
+  $('mKind').style.display='';
+  $('mTold').textContent='Mark customer told';
+  mailKind = !(j.items||[]).length ? 'quote'
+           : j.status==='quote'||j.status==='lost' ? 'quote'
+           : j.status==='ready' ? 'ready'
+           : j.status==='done'  ? 'balance' : 'confirm';
+  $('mailTitle').textContent='Email job '+j.no+' — '+j.name;
+  $('mTo').value=j.email||'';
+  $('mSubj').value=((j.items||[]).length?(mailKind==='quote'?'Quote ':'Job '):'Visit ')+j.no+' from '+SHOP.name;
+  $('mMsg').value=defaultMessage(j,mailKind);
+  Array.prototype.forEach.call($('mKind').children,b=>b.classList.toggle('on',b.dataset.k===mailKind));
+  drawMail(); showSheet($('mailSheet'));
+}
+$('mKind').addEventListener('click',e=>{
+  const b=e.target.closest('[data-k]'); if(!b||!mailJob) return;
+  mailKind=b.dataset.k;
+  Array.prototype.forEach.call($('mKind').children,x=>x.classList.toggle('on',x===b));
+  $('mMsg').value=defaultMessage(mailJob,mailKind);
+  $('mSubj').value=(mailKind==='quote'?'Quote ':'Job ')+mailJob.no+' from '+SHOP.name;
+  drawMail();
+});
+function mailBody(){
+  const doc = mailMode==='supplier' ? buildSupplierText(mailSup,mailKind,mailRows)
+            : mailJob ? buildJobText(mailJob,mailKind) : '';
+  return $('mMsg').value.trim()+'\n\n'+doc;
+}
+function drawMail(){
+  $('mPrev').textContent=mailBody();
+  const L=composeLinks($('mTo').value,$('mSubj').value,mailBody());
+  $('mWarn').innerHTML = L.length>1800
+    ? `<div class="warnbox">This is a long message. Desktop mail apps cut pre-filled text off at around 2,000 characters — use Gmail, Outlook or Copy instead of the mail app.</div>` : '';
+}
+['mTo','mSubj','mMsg'].forEach(id=>$(id).addEventListener('input',drawMail));
+function openIn(which){
+  if(!/\S+@\S+\.\S+/.test($('mTo').value)){ toast('Enter a customer email address first',true); $('mTo').focus(); return; }
+  const L=composeLinks($('mTo').value,$('mSubj').value,mailBody());
+  if(which==='mailto'){ window.location.href=L.mailto; }
+  else{ window.open(which==='gmail'?L.gmail:L.outlook,'_blank','noopener'); }
+  toast('Opened in '+(which==='mailto'?'your mail app':which==='gmail'?'Gmail':'Outlook'));
+}
+$('mMail').onclick=()=>openIn('mailto');
+$('mGmail').onclick=()=>openIn('gmail');
+$('mOutlook').onclick=()=>openIn('outlook');
+$('mCopy').onclick=async()=>{
+  try{ await navigator.clipboard.writeText(mailBody()); toast('Copied — paste it into an email'); }
+  catch(e){ toast('Could not copy — select the preview and copy it',true); }
+};
+$('mTold').onclick=async()=>{
+  if(mailMode==='supplier'){
+    let n=0;
+    for(const r of mailRows){
+      const j=JOBS.find(x=>x.id===r.j.id); if(!j) continue;
+      if(mailKind==='po'){ j.items[r.n].ostate='ordered'; j.items[r.n].orderedAt=new Date().toISOString(); n++; }
+      else { j.items[r.n].askedAt=new Date().toISOString(); n++; }
+      applyStatus(j); await pushJob(j);
+    }
+    hideSheets(); render();
+    toast(mailKind==='po'?n+' piece'+(n===1?'':'s')+' now on order from '+mailSup
+                          :'Price request to '+mailSup+' logged');
+    return;
+  }
+  if(!mailJob) return;
+  if(mailKind==='quote'){
+    const to=$('mTo').value.trim();
+    if(to&&!mailJob.email) mailJob.email=to;
+    mailJob.quoteSentAt=new Date().toISOString();
+    if(await pushJob(mailJob)){ hideSheets(); render(); toast('Quote '+mailJob.no+' logged as sent'); }
+    return;
+  }
+  const to=$('mTo').value.trim();
+  if(to && !mailJob.email) mailJob.email=to;
+  mailJob.called=true; mailJob.toldHow='email'; mailJob.calledAt=new Date().toISOString();
+  if(await pushJob(mailJob)){ hideSheets(); render(); toast(mailJob.name+' marked as told'); }
+};
+
+/* ============================================================
+   BACKUP AND EXPORT
+   Three files. The JSON is the only one that can be restored;
+   the CSVs are for reading and totalling in Excel.
+   ============================================================ */
+const csvCell=v=>{ v=(v===undefined||v===null)?'':String(v);
+  return /[",\r\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
+const toCSV=rows=>'\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+const stamp=()=>ymd(new Date());
+const r2=n=>Math.round(num(n)*100)/100;
+
+function apptText(j){
+  return apptsOf(j).map(a=>APPT[a.kind].label+' '+a.date+(a.time?' '+a.time:'')+(a.mins?' ('+(DURS[a.mins]||a.mins+' min')+')':'')).join('; ');
+}
+function jobsCSV(){
+  const head=['Job no','Taken','Status','Customer','Phone','Email','Account','Handover','Address',
+    'Needs measure','Wanted by','Pieces','Area m2','Subtotal ex VAT','Discount %','Discount','Extras',
+    'Net ex VAT','VAT','Card fee','Total inc VAT','Deposit','Balance','Our cost','Profit','Margin %',
+    'Costs known','Customer told','Told how','Diary','Notes'];
+  const rows=[head];
+  JOBS.slice().sort((a,b)=>a.no-b.no).forEach(j=>{
+    const t=jobTotals(j), p=profitOf(j);
+    rows.push([j.no, (j.takenAt||'').slice(0,10), stat(j.status).label, j.name, j.phone, j.email,
+      j.trade?'Trade':'Retail', handoverLabel(j), j.addr, j.needsMeasure?'Yes':'', j.wanted,
+      (j.items||[]).length, r2(t.area), r2(t.subtotal), num(j.discountPct)||'', r2(t.discountAmount),
+      r2(t.extrasTotal), r2(t.net), r2(t.vat), r2(t.cardAmount), r2(t.grand), r2(j.deposit),
+      r2(t.grand-num(j.deposit)), r2(p.cost), r2(p.profit), t.net>0?Math.round(p.margin):'',
+      p.known?'Yes':'Partial', j.called?'Yes':'', j.toldHow||'', apptText(j),
+      (j.note||'').replace(/\s+/g,' ')]);
+  });
+  return toCSV(rows);
+}
+function piecesCSV(){
+  const head=['Job no','Customer','Job status','Product','Category','Width','Height','Qty','Unit',
+    'Chargeable m2','Cut or ordered','Supplier','Piece state','Edgework','We charge','Their cost',
+    'Wanted by','Notes'];
+  const rows=[head];
+  JOBS.slice().sort((a,b)=>a.no-b.no).forEach(j=>{
+    (j.items||[]).forEach(it=>{
+      const pi=priceItem(it,j.unit);
+      const state = it.src==='cut' ? (it.cut?'Cut':'To cut')
+        : ost(it)==='arrived'?'Arrived':ost(it)==='ordered'?'On order':'To price';
+      rows.push([j.no, j.name, stat(j.status).label, pi.p.name, pi.p.category,
+        pi.p.each?'':it.w, pi.p.each?'':it.h, it.q||1, pi.p.each?'each':(j.unit||'mm'), r2(pi.area),
+        it.src==='cut'?'We cut':'Ordered in', it.supplier||'', state,
+        pi.addons.map(a=>a.name+(a.charge==='lm'?' '+r2(a.qty)+'m':'')).join('; '),
+        r2(pi.total), it.cost===''||it.cost===undefined?'':r2(it.cost),
+        j.wanted, (j.note||'').replace(/\s+/g,' ')]);
+    });
+  });
+  return toCSV(rows);
+}
+const backupJSON=()=>JSON.stringify({
+  app:"Wilson's Glass job book", version:4, exported:new Date().toISOString(),
+  jobs:JOBS, prices:PRICES, adjust:ADJ, suppliers:SUPPLIERS, settings:SETTINGS
+},null,1);
+
+async function noteExport(full){
+  const now=new Date().toISOString();
+  lastAny=now; if(full) lastFull=now;
+  try{ await sSet(KEY_EXP,JSON.stringify({full:lastFull,any:lastAny})); }catch(e){}
+  drawExport(); render();
+}
+function offerFile(name,text,mime,full){
+  let ok=false;
+  try{
+    const blob=new Blob([text],{type:mime});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=name; a.style.display='none';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url); a.remove();},2000);
+    ok=true;
+  }catch(e){ ok=false; }
+  if(ok){ toast('Saved '+name); $('expFallbackWrap').style.display='none'; }
+  else{
+    $('expFallbackWrap').style.display='block';
+    $('expFallbackWrap').querySelector('h4').textContent='Downloads are blocked here — copy '+name+' instead';
+    $('expText').value=text;
+    toast('Could not download — copy it from the box below',true);
+  }
+  noteExport(full);
+}
+function drawExport(){
+  const ago=iso=>{ if(!iso) return 'never';
+    const d=daysAgo(iso); return d===0?'today':d===1?'yesterday':d+' days ago'; };
+  const overdue=!lastFull||daysAgo(lastFull)>=7;
+  $('expStatus').innerHTML=
+    `<div class="${overdue?'warnbox':'sub'}" style="margin-bottom:12px">
+       Last full backup: <b>${ago(lastFull)}</b>${lastAny&&lastAny!==lastFull?' · last spreadsheet: '+ago(lastAny):''}
+       <br>${JOBS.length} job${JOBS.length===1?'':'s'} in the book.
+     </div>`;
+}
+$('expBtn').onclick=()=>{ $('menu').classList.remove('on'); $('expFallbackWrap').style.display='none';
+  $('expRestore').innerHTML=''; drawExport(); showSheet($('expSheet')); };
+$('closeExp').onclick=hideSheets; $('expBack').onclick=hideSheets;
+$('expJson').onclick=()=>offerFile('wilsons-glass-backup-'+stamp()+'.json',backupJSON(),'application/json',true);
+$('expJobs').onclick=()=>offerFile('wilsons-glass-jobs-'+stamp()+'.csv',jobsCSV(),'text/csv',false);
+$('expPieces').onclick=()=>offerFile('wilsons-glass-pieces-'+stamp()+'.csv',piecesCSV(),'text/csv',false);
+$('expCopy').onclick=async()=>{
+  try{ await navigator.clipboard.writeText($('expText').value); toast('Copied'); }
+  catch(e){ $('expText').select(); toast('Select the box and copy',true); }
+};
+$('expFile').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=async()=>{
+    let data;
+    try{ data=JSON.parse(r.result); }catch(err){ $('expRestore').innerHTML='<div class="warnbox">That file is not a backup — it could not be read.</div>'; return; }
+    if(!data||!Array.isArray(data.jobs)){ $('expRestore').innerHTML='<div class="warnbox">That file has no jobs in it.</div>'; return; }
+    const when=data.exported?new Date(data.exported).toLocaleString('en-GB'):'unknown date';
+    if(!window.confirm('Restore '+data.jobs.length+' jobs from the backup taken '+when+'?\n\nThis replaces the '+JOBS.length+' job'+(JOBS.length===1?'':'s')+' currently in the book for everyone.')) { e.target.value=''; return; }
+    JOBS=data.jobs.map(normalise);
+    if(data.prices) PRICES=data.prices;
+    if(data.adjust!==undefined) ADJ=num(data.adjust);
+    if(Array.isArray(data.suppliers)&&data.suppliers.length) SUPPLIERS=data.suppliers;
+    if(data.settings) SETTINGS=Object.assign(SETTINGS,data.settings);
+    try{
+      await sSet(KEY_JOBS,JSON.stringify(JOBS));
+      await sSet(KEY_PRICES,JSON.stringify({prices:PRICES,adj:ADJ}));
+      await sSet(KEY_SUP,JSON.stringify({suppliers:SUPPLIERS,settings:SETTINGS}));
+      $('expRestore').innerHTML='<div class="sub" style="color:var(--float-d)"><b>Restored.</b> '+JOBS.length+' jobs are back.</div>';
+      render(); toast('Backup restored');
+    }catch(err){ $('expRestore').innerHTML='<div class="warnbox">Could not write the restored jobs to storage.</div>'; }
+    e.target.value='';
+  };
+  r.readAsText(f);
+});
+
+/* ---------- prices ---------- */
+$('rateBtn').onclick=()=>{
+  $('fAdj').value=ADJ||'';
+  const cats=[];
+  ALL_PRODUCTS.forEach(p=>{let c=cats.find(x=>x.n===p.category);if(!c){c={n:p.category,items:[]};cats.push(c);}c.items.push(p);});
+  $('pTbl').innerHTML=cats.map(c=>
+    `<tr><td class="c" colspan="2">${esc(c.n)}</td></tr>`+
+    c.items.map(p=>`<tr><td>${esc(p.name)}${p.each?' <span class="sub">each</span>':''}${ORDER_IN.has(p.id)?' <span class="src src-order">Order</span>':''}</td>
+      <td><input data-p="${p.id}" value="${priceOf(p.id).toFixed(2)}" inputmode="decimal"></td></tr>`).join('')).join('');
+  $('aTbl').innerHTML=ADDONS.map(a=>
+    `<tr><td>${esc(a.name)} <span class="sub">per ${a.charge==='lm'?'linear metre':a.charge==='m2'?'m²':'unit'}</span></td>
+     <td><input data-p="a:${a.id}" value="${addonPrice(a.id).toFixed(2)}" inputmode="decimal"></td></tr>`).join('');
+  $('fCutPct').value=SETTINGS.cutCostPct||'';
+  $('supTbl').innerHTML=SUPPLIERS.map((s,i)=>
+    `<div class="fgroup"><label>${esc(s.name)}${s.check?' <span class="src src-order">check this one</span>':''}</label>
+      <div class="row"><input class="inp" data-sn="${i}" value="${esc(s.name)}" placeholder="Name" style="flex:0 0 120px">
+      <input class="inp" data-se="${i}" value="${esc(s.email)}" inputmode="email" placeholder="Email"></div>
+      ${s.tel||s.addr?`<div class="sub" style="margin-top:4px">${esc(s.tel)}${s.tel&&s.addr?' · ':''}${esc(s.addr)}</div>`:''}</div>`).join('');
+  showSheet($('rateSheet'));
+};
+$('saveRates').onclick=async()=>{
+  SETTINGS.cutCostPct=num($('fCutPct').value);
+  Array.prototype.forEach.call($('supTbl').querySelectorAll('[data-sn]'),i=>{SUPPLIERS[+i.dataset.sn].name=i.value.trim()||SUPPLIERS[+i.dataset.sn].name;});
+  Array.prototype.forEach.call($('supTbl').querySelectorAll('[data-se]'),i=>{const s=SUPPLIERS[+i.dataset.se];s.email=i.value.trim();delete s.check;});
+  try{ await sSet(KEY_SUP,JSON.stringify({suppliers:SUPPLIERS,settings:SETTINGS})); }catch(e){}
+  ADJ=num($('fAdj').value);
+  Array.prototype.forEach.call(document.querySelectorAll('[data-p]'),i=>{PRICES[i.dataset.p]=num(i.value);});
+  try{ await sSet(KEY_PRICES,JSON.stringify({prices:PRICES,adj:ADJ}));
+       toast(STORE==='shop'?'Prices saved for the whole shop':'Prices saved on this device'); }
+  catch(e){ toast('Could not save prices',true); }
+  hideSheets(); render();
+};
+
+/* ---------- printing ---------- */
+function pieceLine(j,it){
+  const p=prodOf(it.pid), pi=priceItem(it,j.unit);
+  return `<div class="pprod">${esc(p.name)}</div>
+    <div class="psize">${p.each?(it.q||1)+' off':esc(it.w)+' × '+esc(it.h)+' × '+(it.q||1)+' '+(j.unit||'mm')}</div>
+    ${pi.addons.length?`<div>+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}`;
+}
+$('printCut').onclick=()=>{
+  /* Every uncut piece from every confirmed job — a job still waiting on a
+     supplier for one pane can have its other panes cut today. */
+  const rows=[];
+  JOBS.filter(isWorking).forEach(j=>{
+    const pieces=pendingCut(j);
+    if(pieces.length) rows.push({j,pieces});
+  });
+  rows.sort((a,b)=>(a.j.wanted||'9999').localeCompare(b.j.wanted||'9999')||a.j.no-b.j.no);
+  $('printarea').innerHTML=`<div class="ptitle">Cutting list — ${new Date().toLocaleDateString('en-GB')}</div>`+
+    (rows.length?rows.map(r=>`<div class="pjob">
+      <div class="phead"><span>${r.j.no} · ${esc(r.j.name)}${r.j.trade?' (trade)':''}</span>
+      <span>${r.j.handover!=='collection'?handoverLabel(r.j).toUpperCase()+' ':''}${(()=>{const a=nextAppt(r.j);return a?new Date(a.date).toLocaleDateString('en-GB'):(r.j.wanted?'by '+new Date(r.j.wanted).toLocaleDateString('en-GB'):'');})()}</span></div>
+      ${r.pieces.map(it=>pieceLine(r.j,it)).join('')}
+      ${pendingOrder(r.j).length?`<div><em>Rest of this job is on order from ${esc(Object.keys(waitingSuppliers(r.j)).join(', '))}</em></div>`:''}
+      ${r.j.note?`<div>${esc(r.j.note)}</div>`:''}</div>`).join('')
+     :'<p>Nothing waiting to be cut.</p>');
+  $('menu').classList.remove('on'); window.print();
+};
+$('printOrder').onclick=()=>{
+  const bySup={};
+  JOBS.filter(isWorking).forEach(j=>{
+    pendingOrder(j).forEach(it=>{ const s=it.supplier||'Supplier'; (bySup[s]=bySup[s]||[]).push({j,it}); });
+  });
+  const keys=Object.keys(bySup).sort();
+  $('printarea').innerHTML=`<div class="ptitle">Glass to order — ${new Date().toLocaleDateString('en-GB')}</div>`+
+    (keys.length?keys.map(s=>`<div class="psup">${esc(s)}</div>`+
+      bySup[s].map(r=>`<div class="pjob">
+        <div class="phead"><span>${r.j.no} · ${esc(r.j.name)}</span><span>${r.j.wanted?'by '+new Date(r.j.wanted).toLocaleDateString('en-GB'):''}</span></div>
+        ${pieceLine(r.j,r.it)}</div>`).join('')).join('')
+     :'<p>Nothing on order.</p>');
+  $('menu').classList.remove('on'); window.print();
+};
+$('printDiary').onclick=()=>{
+  const from=ymd(new Date(diaryMonth.getFullYear(),diaryMonth.getMonth(),1));
+  const to=ymd(new Date(diaryMonth.getFullYear(),diaryMonth.getMonth()+1,0));
+  const rows=allAppts().filter(x=>x.a.date>=from&&x.a.date<=to)
+    .sort((p,q)=>p.a.date.localeCompare(q.a.date)||(p.a.time||'').localeCompare(q.a.time||''));
+  let last='';
+  $('printarea').innerHTML=`<div class="ptitle">Diary — ${diaryMonth.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</div>`+
+    (rows.length?rows.map(x=>{
+      const j=x.j, a=x.a;
+      const head=a.date!==last?`<div class="psup">${new Date(a.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</div>`:'';
+      last=a.date;
+      return head+`<div class="pjob"><div class="phead">
+        <span>${a.time||'—'} · ${j.no} · ${esc(j.name)}</span>
+        <span>${APPT[a.kind].label.toUpperCase()}${a.mins?' · '+(DURS[a.mins]||a.mins+' min'):''}</span></div>
+        <div>${esc(j.addr||'No address')}${j.phone?' · '+esc(fmtPhone(j.phone)):''}</div>
+        ${toPrice(j).length||pendingOrder(j).length||pendingCut(j).length?`<div><em>Not finished: ${[toPrice(j).length?toPrice(j).length+' to price':'',pendingOrder(j).length?pendingOrder(j).length+' on order':'',pendingCut(j).length?pendingCut(j).length+' to cut':''].filter(Boolean).join(', ')}</em></div>`:''}
+      </div>`;}).join('')
+     :'<p>Nothing booked this month.</p>');
+  $('menu').classList.remove('on'); window.print();
+};
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') hideSheets();
+  if(e.key==='/'&&!/input|textarea|select/i.test(e.target.tagName)){ e.preventDefault(); $('search').focus(); }
+});
+
+/* ---------- boot ---------- */
+(async()=>{
+  await initStore();
+  const tag=$('storeTag');
+  tag.textContent=STORE==='shop'?'Shop-wide':STORE==='device'?'This device':'Not saving';
+  tag.className=STORE==='shop'?'st-shop':STORE==='device'?'st-device':'st-none';
+  tag.title=STORE==='shop'?'Every job saves where the whole shop can see it.'
+    :STORE==='device'?'Saving in this browser only — other machines will not see these jobs.'
+    :'Storage is blocked, so nothing will be kept.';
+  await loadAll();
+  render();
+  setInterval(async()=>{
+    if(document.querySelector('.sheet.on')) return;
+    const before=JSON.stringify(JOBS); await loadAll();
+    if(JSON.stringify(JOBS)!==before) render();
+  },20000);
+})();
 </script>
 </body>
 </html>
-
