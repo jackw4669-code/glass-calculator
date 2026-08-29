@@ -1,8 +1,17 @@
 {
   "name": "glass-calculator",
+  "main": "src/index.js",
   "compatibility_date": "2026-08-23",
   "assets": {
-    "directory": "./public"
-  }
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wilsons-glass",
+      "database_id": "32d6efdc-3df8-4fc3-ba33-3d6980bc9fec",
+      "migrations_dir": "migrations"
+    }
+  ]
 }
-

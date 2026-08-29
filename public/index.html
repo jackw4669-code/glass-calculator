@@ -1566,32 +1566,79 @@ $('bSave').onclick=async()=>{
   }
 };
 
-/* ---------- persistence ---------- */
-async function pushJob(job){
-  let cur=[]; const raw=await sGet(KEY_JOBS);
-  if(raw){ try{cur=JSON.parse(raw)||[];}catch(e){cur=[];} }
-  const i=cur.findIndex(j=>j.id===job.id);
-  if(i>=0) cur[i]=job; else cur.push(job);
-  try{ await sSet(KEY_JOBS,JSON.stringify(cur)); JOBS=cur; return true; }
-  catch(e){ toast('Could not save: '+(e&&e.message?e.message:'storage refused the write'),true); return false; }
+const API = '/api';
+
+async function loadAll() {
+  try {
+    const r = await fetch(API + '/jobs');
+    if (!r.ok) throw new Error('Could not load the job book');
+    JOBS = (await r.json()).map(normalise);
+    
+    const s = await (await fetch(API + '/settings')).json();
+    if (s.prices) { PRICES = s.prices.prices || {}; ADJ = num(s.prices.adj); }
+    if (s.suppliers) { SUPPLIERS = s.suppliers.suppliers || SUPPLIERS;
+      SETTINGS = Object.assign(SETTINGS, s.suppliers.settings || {}); }
+    
+    // Update badge to show "Shared"
+    const badge = document.getElementById('storage-badge');
+    if (badge) badge.textContent = 'Shared';
+  } catch (err) {
+    // Fall back to localStorage
+    initStore();
+    const badge = document.getElementById('storage-badge');
+    if (badge) badge.textContent = 'Local (no connection)';
+  }
 }
-async function dropJob(id){
-  let cur=[]; const raw=await sGet(KEY_JOBS);
-  if(raw){ try{cur=JSON.parse(raw)||[];}catch(e){} }
-  JOBS=cur.filter(j=>j.id!==id);
-  try{ await sSet(KEY_JOBS,JSON.stringify(JOBS)); return true; }
-  catch(e){ toast('Could not delete',true); return false; }
+
+async function pushJob(job) {
+  const t = jobTotals(job);
+  job._total = t.grand;
+  job._balance = t.grand - num(job.deposit);
+  
+  try {
+    const r = await fetch(`${API}/jobs/${job.id}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(job)
+    });
+    
+    if (r.status === 409) {
+      const { current } = await r.json();
+      toast(`${current.updated_by || 'Someone'} changed job ${job.no} while you had it open — reloading`, true);
+      await loadAll();
+      render();
+      return false;
+    }
+    
+    if (!r.ok) { 
+      toast('Could not save — check the connection', true); 
+      return false; 
+    }
+    
+    const { version } = await r.json();
+    job._v = version;
+    const i = JOBS.findIndex(j => j.id === job.id);
+    if (i >= 0) JOBS[i] = job; else JOBS.push(job);
+    return true;
+  } catch (err) {
+    toast('Could not save — check the connection', true);
+    return false;
+  }
 }
-async function loadAll(){
-  const raw=await sGet(KEY_JOBS);
-  if(raw){ try{JOBS=(JSON.parse(raw)||[]).map(normalise);}catch(e){JOBS=[];} }
-  const p=await sGet(KEY_PRICES);
-  if(p){ try{const o=JSON.parse(p);PRICES=o.prices||{};ADJ=num(o.adj);}catch(e){} }
-  const ex=await sGet(KEY_EXP);
-  if(ex){ try{const o=JSON.parse(ex); lastFull=o.full||null; lastAny=o.any||null;}catch(e){} }
-  const sp=await sGet(KEY_SUP);
-  if(sp){ try{const o=JSON.parse(sp); if(o.suppliers&&o.suppliers.length) SUPPLIERS=o.suppliers;
-    if(o.settings) SETTINGS=Object.assign(SETTINGS,o.settings);}catch(e){} }
+
+async function dropJob(id) {
+  try {
+    const r = await fetch(`${API}/jobs/${id}`, { method: 'DELETE' });
+    if (!r.ok) { 
+      toast('Could not delete', true); 
+      return false; 
+    }
+    JOBS = JOBS.filter(j => j.id !== id);
+    return true;
+  } catch (err) {
+    toast('Could not delete', true);
+    return false;
+  }
 }
 
 /* ---------- list events ---------- */
@@ -2472,7 +2519,7 @@ document.addEventListener('keydown',e=>{
     if(document.querySelector('.sheet.on')) return;
     const before=JSON.stringify(JOBS); await loadAll();
     if(JSON.stringify(JOBS)!==before) render();
-  },20000);
+  },10000);
 })();
 </script>
 </body>
