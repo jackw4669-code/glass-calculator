@@ -241,9 +241,38 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
 .slot .dur{font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace;font-weight:400}
 .unsched{background:var(--white);border:1px dashed var(--silver);border-radius:var(--r);padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
 
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:var(--white);padding:11px 18px;border-radius:var(--r);font-size:14px;z-index:99;transition:transform .22s ease;max-width:90vw}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:var(--white);padding:11px 18px;border-radius:var(--r);font-size:14px;z-index:99;transition:transform .22s ease;max-width:90vw;display:flex;gap:16px;align-items:center}
 #toast.on{transform:translateX(-50%) translateY(0)}
 #toast.bad{background:var(--red)}
+/* ---------- undo ---------- */
+.undobtn{color:#8FD9BC;font-weight:700;font-size:13px;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;flex-shrink:0}
+#toast.bad .undobtn{color:#FFD5D4}
+.undobar{padding:9px 14px;border-radius:var(--r);margin-bottom:14px;font-size:13.5px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:var(--white);border:1px solid var(--silver);border-left:4px solid var(--blue)}
+.undobar .ub{color:var(--ink2)}
+.undobar .ub b{color:var(--ink)}
+.undobar button{font-weight:600;font-size:13px;padding:6px 12px;border:1px solid var(--blue);border-radius:var(--r);color:var(--blue);background:var(--white)}
+.undobar button:hover{background:var(--blue);color:var(--white)}
+.undobar .dismiss{border:none;color:var(--ink2);text-decoration:underline;text-underline-offset:2px;padding:6px 4px}
+.undobar .dismiss:hover{background:none;color:var(--ink)}
+
+/* ---------- unit and obscure spec ---------- */
+.xtrawrap{margin-top:10px;padding-top:10px;border-top:1px dashed var(--silver2)}
+.xtrahead{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink2);margin-bottom:8px}
+.xtra{margin-bottom:9px}
+.xtra:last-child{margin-bottom:0}
+.xtra label{font-size:10px}
+.xtra select,.xtra input{font-size:14px;padding:8px 10px}
+.xtrahint{font-size:11.5px;color:var(--ink2);margin-top:6px;line-height:1.4}
+.spec{font-size:12.5px;color:var(--blue);font-weight:600;margin-top:2px}
+.specmiss{font-size:12px;color:var(--amber);font-weight:600;margin-top:2px}
+.wsrow .spec{font-size:12.5px}
+.item .miss{background:var(--amber-l);border:1px solid #E8C99A;border-radius:2px;padding:6px 9px;font-size:12px;color:var(--amber);font-weight:600;margin-top:8px}
+
+/* ---------- diary notes ---------- */
+.dnote{margin-top:7px;padding:7px 10px;background:#FFFBF4;border:1px solid #EBD9BE;border-left:3px solid var(--amber);border-radius:2px;font-size:13.5px;color:var(--ink);white-space:pre-wrap;line-height:1.4}
+.dnote b{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--amber);display:block;margin-bottom:2px}
+.cell .hasnote{color:var(--amber);font-weight:700}
+
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
 #printarea{display:none}
@@ -257,6 +286,8 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
   .pprod{font-size:11px;font-style:italic}
   .ptitle{font-size:17px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border-bottom:3px solid #000;padding-bottom:6px;margin:0 0 8px}
   .psup{font-size:14px;font-weight:700;background:#eee;padding:4px 6px;margin-top:12px}
+  .pnote{border-left:3px solid #000;padding-left:7px;margin-top:4px;font-size:12px;white-space:pre-wrap}
+  .pspec{font-size:12px;font-weight:700}
 }
 </style>
 </head>
@@ -611,6 +642,54 @@ const supOf=n=>SUPPLIERS.find(s=>s.name===n)||{name:n||'Supplier',email:'',tel:'
 const supNames=()=>SUPPLIERS.map(s=>s.name);
 let SETTINGS={cutCostPct:0};
 const defaultSrc=pid=>ORDER_IN.has(pid)?'order':'cut';
+
+/* ============================================================
+   EXTRA SPEC — the details a piece needs before anybody can
+   price it or order it. A unit without a thickness and a bar
+   colour is not an order, and obscured glass without a pattern
+   is a guess. Held on the piece itself, so they travel with it
+   onto the worklists, the supplier email and the printed sheet.
+   ============================================================ */
+const DGU_CAT='Double Glazed Units';
+const isDGU=it=>prodOf(it.pid).category===DGU_CAT;
+
+/* Overall thickness, with the usual make-up in brackets. */
+const DGU_THICK=['14 mm (4-6-4)','16 mm (4-8-4)','18 mm (4-10-4)','20 mm (4-12-4)',
+                 '24 mm (4-16-4)','28 mm (4-20-4)','32 mm (6-20-6)','36 mm (6-24-6)'];
+/* Spacer bar colour. */
+const DGU_BAR=['White','Black','Grey','Anthracite','Brown','Silver / natural','Gold'];
+
+/* Patterned glass. Also asked for when obscure glass goes inside a
+   unit, which is the 'Obscure glass in unit' add-on rather than a
+   product in its own right. */
+const OBSCURE_PIDS=new Set(['o4mm','o6mm','o4oriel','t4o','t6o']);
+const needsObscure=it=>OBSCURE_PIDS.has(it.pid)||(it.addons||[]).some(a=>a.id==='obsunit');
+const OBSCURE_TYPES=['Stippolyte','Cotswold','Contora','Everglade','Flemish','Chantilly',
+                     'Charcoal Sticks','Arctic','Autumn','Mayflower','Minster','Oak',
+                     'Pelerine','Reeded','Satin','Sublime','Taffeta','Warwick',
+                     'Digital','Florielle'];
+
+/* One line summarising whatever extra detail this piece carries. */
+function extraSpec(it,sep){
+  const out=[];
+  if(isDGU(it)){
+    if(it.dgThick) out.push(it.dgThick);
+    if(it.dgBar)   out.push(it.dgBar+' bar');
+  }
+  if(needsObscure(it)&&it.obsType) out.push(it.obsType);
+  return out.join(sep||' \u00b7 ');
+}
+/* What is still blank. Used to warn before a price request goes out. */
+function specMissing(it){
+  const m=[];
+  if(isDGU(it)){
+    if(!it.dgThick) m.push('thickness');
+    if(!it.dgBar)   m.push('bar colour');
+  }
+  if(needsObscure(it)&&!it.obsType) m.push('obscure pattern');
+  return m;
+}
+const specNeeded=it=>isDGU(it)||needsObscure(it);
 
 /* ============================================================
    STORAGE — shared shop book, then this browser, then nothing.
@@ -1204,9 +1283,49 @@ function endTime(t,mins){
 const $=id=>document.getElementById(id);
 const fmtPhone=p=>{const d=String(p||'').replace(/\D/g,'');
   return d.length===11?d.slice(0,5)+' '+d.slice(5,8)+' '+d.slice(8):(p||'');};
-function toast(m,bad){const t=$('toast');t.textContent=m;t.className=bad?'on bad':'on';
-  clearTimeout(t._x);t._x=setTimeout(()=>t.className='',3200);}
+function toast(m,bad,undoLabel){
+  const t=$('toast');
+  t.innerHTML='<span>'+esc(m)+'</span>'+
+    (undoLabel?'<button class="undobtn" data-undo="1">'+esc(undoLabel)+'</button>':'');
+  t.className=bad?'on bad':'on';
+  clearTimeout(t._x);
+  /* leave an undo on screen long enough to actually notice the mistake */
+  t._x=setTimeout(()=>{t.className='';},undoLabel?9000:3200);
+}
 const daysAgo=iso=>iso?Math.floor((Date.now()-new Date(iso))/864e5):0;
+
+/* ---------- undo ----------
+   Every button that moves a job from one tab to another copies the job
+   first. Undo writes that copy back over the top.
+
+   Because a second machine may have saved the same job in between, the
+   copy takes on whatever version number the job is on now — undo is a
+   deliberate overwrite, not a merge. A job that was deleted has no
+   version to inherit, so it goes back in as a fresh row.
+
+   The copy is only kept once the save has actually gone through, so a
+   failed save never leaves a misleading Undo on screen. */
+let UNDO=null;
+const UNDO_LIFE=10*60*1000;                 /* offer it for ten minutes */
+
+const snapshot=(label,jobs)=>({label,at:Date.now(),jobs:jobs.map(j=>clone(j))});
+const undoLive=()=>(UNDO&&(Date.now()-UNDO.at)<UNDO_LIFE)?UNDO:null;
+
+async function runUndo(){
+  const u=undoLive();
+  UNDO=null;
+  if(!u){ render(); toast('That is too old to undo now',true); return; }
+  let ok=0;
+  for(const snap of u.jobs){
+    const live=JOBS.find(j=>j.id===snap.id);
+    snap._v = live ? live._v : 0;            /* 0 = the row is gone, put it back */
+    if(await pushJob(snap)) ok++;
+  }
+  render();
+  if(ok===u.jobs.length)  toast('Put back — '+u.label.toLowerCase());
+  else if(ok)             toast('Only part of that could be put back',true);
+  else                    toast('Could not undo — check the connection',true);
+}
 
 /* ---------- list ---------- */
 function matches(j,q){
@@ -1216,7 +1335,9 @@ function matches(j,q){
       || (j.email||'').toLowerCase().includes(q)
       || (digits.length>=3 && String(j.phone||'').replace(/\D/g,'').includes(digits))
       || String(j.no||'').includes(q)
-      || (j.items||[]).some(i=>prodOf(i.pid).name.toLowerCase().includes(q)||(i.supplier||'').toLowerCase().includes(q));
+      || (j.items||[]).some(i=>prodOf(i.pid).name.toLowerCase().includes(q)
+                             ||(i.supplier||'').toLowerCase().includes(q)
+                             ||extraSpec(i).toLowerCase().includes(q));
 }
 function bucket(f){
   if(f==='all')     return JOBS.filter(isLive);
@@ -1249,8 +1370,17 @@ function render(){
 
   const stale=untold.filter(j=>daysAgo(j.readyAt)>=1);
   const bars=[];
-  if(STORE==='none')
-    bars.push(`<div class="banner"><div><b>Nothing is being saved.</b> This browser is blocking storage, so jobs will vanish when you close the tab.</div></div>`);
+  const u=undoLive();
+  if(u)
+    bars.push(`<div class="undobar">
+      <span class="ub"><b>${esc(u.label)}.</b> Wrong button? Put it back where it was.</span>
+      <span style="display:flex;gap:8px;align-items:center">
+        <button data-undo="1">Undo</button>
+        <button class="dismiss" data-undodrop="1">Dismiss</button></span></div>`);
+  if(!ONLINE)
+    bars.push(`<div class="banner"><div><b>The shared job book cannot be reached.</b>
+      ${STORE==='none'?'This browser is also blocking storage, so nothing can be kept at all.'
+                      :'You are looking at the last copy saved on this machine. You can read it, but nothing will save until the connection is back.'}</div></div>`);
   if(backupDue())
     bars.push(`<div class="banner"><div><b>${new Date().getDay()===5?'It is Friday — time to back up the job book.':'The job book has not been backed up for '+daysAgo(lastFull)+' days.'}</b>
       ${lastFull?'Last full backup '+daysAgo(lastFull)+' days ago.':'It has never been backed up.'} ${JOBS.length} job${JOBS.length===1?'':'s'} would be lost.</div>
@@ -1308,6 +1438,8 @@ function jobCard(j){
           <div class="prod">${esc(pi.p.name)}${it.src==='order'&&it.supplier?' &middot; '+esc(it.supplier):''}${priced?' &middot; costs '+gbp(it.cost):''}</div>
           ${pi.p.each?`<div class="size"><span class="qty">×${it.q||1}</span></div>`
                      :`<div class="size">${esc(it.w)}<span class="x">×</span>${esc(it.h)}<span class="qty">×${it.q||1}</span></div>`}
+          ${extraSpec(it)?`<div class="spec">${esc(extraSpec(it))}</div>`:''}
+          ${specMissing(it).length?`<div class="specmiss">Needs ${esc(specMissing(it).join(' and '))}</div>`:''}
           ${pi.addons.length?`<div class="addons">+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}
         </div></div>`;}).join('')}
       ${measureOnly(j)?'<div class="sub">Waiting to be measured</div>'
@@ -1362,6 +1494,8 @@ function wsRow(j,it,n,kind){
       <div class="ref">${j.no} &middot; ${esc(j.name)}${j.trade?' (trade)':''}${kind==='toprice'&&dueText(j)?' &middot; '+esc(dueText(j)):''}</div>
       <div class="dim">${pi.p.each?(it.q||1)+' off':esc(it.w)+' × '+esc(it.h)+' <span style="color:var(--silver)">×</span>'+(it.q||1)}</div>
       <div class="pn">${esc(pi.p.name)}${!pi.p.each&&j.unit&&j.unit!=='mm'?' &middot; '+esc(j.unit):''}</div>
+      ${extraSpec(it)?`<div class="spec">${esc(extraSpec(it))}</div>`:''}
+      ${specMissing(it).length?`<div class="specmiss">Needs ${esc(specMissing(it).join(' and '))}</div>`:''}
       ${pi.addons.length?`<div class="ex">+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}
       ${kind==='toprice'?`<div class="pn">We charge ${gbp(pi.total)}${priced?' · margin '+gbp(pi.total-num(it.cost)):''}</div>`:''}
       ${j.note?`<div class="pn">${esc(j.note)}</div>`:''}
@@ -1435,7 +1569,7 @@ function renderDiary(){
     const key=ymd(d), out=d.getMonth()!==diaryMonth.getMonth(), evs=byDay[key]||[];
     return `<button class="cell ${out?'out':''} ${key===today?'today':''} ${key===selDay?'sel':''}" data-day="${key}">
       <span class="dn">${d.getDate()}</span>
-      ${evs.slice(0,2).map(x=>`<span class="ev ${APPT[x.a.kind].cls}">${x.a.time?x.a.time+' ':''}${esc(x.j.name)}</span>`).join('')}
+      ${evs.slice(0,2).map(x=>`<span class="ev ${APPT[x.a.kind].cls}"${x.j.note?' title="'+esc(x.j.note)+'"':''}>${x.a.time?x.a.time+' ':''}${esc(x.j.name)}${x.j.note?'<span class="hasnote"> *</span>':''}</span>`).join('')}
       ${evs.length>2?`<span class="more">+${evs.length-2} more</span>`:''}
     </button>`;}).join('');
 
@@ -1465,6 +1599,7 @@ function renderDiary(){
               <div style="font-weight:600">${x.j.no} · ${esc(x.j.name)} <span class="tag ${APPT[x.a.kind].cls}">${APPT[x.a.kind].label}</span></div>
               <div class="sub">${esc(x.j.addr||'No address')}${x.j.phone?' · '+esc(fmtPhone(x.j.phone)):''}</div>
               <div class="sub">${stat(x.j.status).label}${toPrice(x.j).length?' · '+toPrice(x.j).length+' still to price':''}${pendingOrder(x.j).length?' · waiting on '+Object.keys(waitingSuppliers(x.j)).join(', '):''}${pendingCut(x.j).length?' · '+pendingCut(x.j).length+' still to cut':''}</div>
+              ${x.j.note?`<div class="dnote"><b>Note</b>${esc(x.j.note)}</div>`:''}
             </div>
             <div style="display:flex;flex-direction:column;gap:6px">
               <button class="act" data-open="${x.j.id}">Open</button>
@@ -1475,7 +1610,8 @@ function renderDiary(){
       ${waiting.length?`<h4 style="margin:18px 0 9px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--amber)">Needs a slot (${waiting.length})</h4>`+
         waiting.map(j=>`<div class="unsched">
           <div><b>${j.no} · ${esc(j.name)}</b> — needs ${neededAppts(j).map(k=>APPT[k].label.toLowerCase()).join(' and ')}
-            <div class="sub">${esc(j.addr||'No address')}${j.wanted?' · wanted by '+fmtDate(j.wanted):''}</div></div>
+            <div class="sub">${esc(j.addr||'No address')}${j.wanted?' · wanted by '+fmtDate(j.wanted):''}</div>
+            ${j.note?`<div class="dnote"><b>Note</b>${esc(j.note)}</div>`:''}</div>
           <button class="act go" data-book="${j.id}">Book</button></div>`).join(''):''}
     </div>`;
 }
@@ -1568,26 +1704,54 @@ $('bSave').onclick=async()=>{
 
 const API = '/api';
 
+/* True once the shared book has answered. Drives the badge in the header. */
+let ONLINE=false, MIRROR='';
+
+function setStoreTag(){
+  const tag=$('storeTag'); if(!tag) return;
+  if(ONLINE){
+    tag.textContent='Shared';
+    tag.className='st-shop';
+    tag.title='Every machine is reading and writing the same job book.';
+    return;
+  }
+  tag.textContent = STORE==='none' ? 'Not saving' : 'Offline copy';
+  tag.className   = STORE==='none' ? 'st-none' : 'st-device';
+  tag.title = STORE==='none'
+    ? 'The shared job book cannot be reached and this browser is blocking storage, so nothing is being kept.'
+    : 'The shared job book cannot be reached. You are looking at the last copy saved on this machine — you can read it, but changes will not save until it is back.';
+}
+
 async function loadAll() {
   try {
     const r = await fetch(API + '/jobs');
     if (!r.ok) throw new Error('Could not load the job book');
     JOBS = (await r.json()).map(normalise);
-    
+
     const s = await (await fetch(API + '/settings')).json();
     if (s.prices) { PRICES = s.prices.prices || {}; ADJ = num(s.prices.adj); }
     if (s.suppliers) { SUPPLIERS = s.suppliers.suppliers || SUPPLIERS;
       SETTINGS = Object.assign(SETTINGS, s.suppliers.settings || {}); }
-    
-    // Update badge to show "Shared"
-    const badge = document.getElementById('storage-badge');
-    if (badge) badge.textContent = 'Shared';
+    ONLINE = true;
+
+    /* Keep a copy on this machine so the counter can still look things up
+       if Cloudflare is unreachable. Only written when something changed. */
+    const snapJSON = JSON.stringify(JOBS);
+    if (snapJSON !== MIRROR) { MIRROR = snapJSON; try { await sSet(KEY_JOBS, snapJSON); } catch (e) {} }
   } catch (err) {
-    // Fall back to localStorage
-    initStore();
-    const badge = document.getElementById('storage-badge');
-    if (badge) badge.textContent = 'Local (no connection)';
+    ONLINE = false;
+    try {
+      const raw = await sGet(KEY_JOBS);
+      if (raw) JOBS = JSON.parse(raw).map(normalise);
+      const pr = await sGet(KEY_PRICES);
+      if (pr) { const p = JSON.parse(pr); PRICES = p.prices || {}; ADJ = num(p.adj); }
+      const su = await sGet(KEY_SUP);
+      if (su) { const p = JSON.parse(su);
+        SUPPLIERS = p.suppliers || SUPPLIERS;
+        SETTINGS = Object.assign(SETTINGS, p.settings || {}); }
+    } catch (e) {}
   }
+  setStoreTag();
 }
 
 async function pushJob(job) {
@@ -1646,6 +1810,11 @@ document.addEventListener('click',async e=>{
   if(!e.target.closest('.menuwrap')) $('menu').classList.remove('on');
   if(!e.target.closest('.suggest')) $('sugg').innerHTML='';
 
+  const un=e.target.closest('[data-undo]');
+  if(un){ $('toast').className=''; await runUndo(); return; }
+  const ud=e.target.closest('[data-undodrop]');
+  if(ud){ UNDO=null; render(); return; }
+
   const f=e.target.closest('[data-f]');
   if(f){ filter=f.dataset.f; listView='sheet'; $('search').value=''; render(); window.scrollTo({top:0}); return; }
 
@@ -1680,8 +1849,9 @@ document.addEventListener('click',async e=>{
   const ad=e.target.closest('[data-delappt]');
   if(ad){
     const q=ad.dataset.delappt.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const snap=snapshot('Job '+j.no+' taken out of the diary',[j]);
     j.appts.splice(+q[1],1);
-    if(await pushJob(j)){ render(); toast('Taken out of the diary'); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Taken out of the diary',false,'Undo'); }
     return;
   }
   const vw=e.target.closest('[data-view]');
@@ -1690,75 +1860,90 @@ document.addEventListener('click',async e=>{
   if(pr){ ({cut:$('printCut'),order:$('printOrder'),diary:$('printDiary')})[pr.dataset.print].click(); return; }
   const aa=e.target.closest('[data-arrall]');
   if(aa){
-    const name=aa.dataset.arrall; let n=0;
-    for(const j of JOBS.filter(isWorking)){
-      let hit=false;
-      j.items.forEach(i=>{ if(i.src==='order'&&ost(i)!=='arrived'&&(i.supplier||'Supplier')===name){i.ostate='arrived';i.arrived=true;i.arrivedAt=new Date().toISOString();hit=true;n++;} });
-      if(hit){ applyStatus(j); await pushJob(j); }
+    const name=aa.dataset.arrall;
+    const mine=i=>i.src==='order'&&ost(i)!=='arrived'&&(i.supplier||'Supplier')===name;
+    const hits=JOBS.filter(j=>isWorking(j)&&j.items.some(mine));
+    if(!hits.length){ toast('Nothing outstanding for '+name,true); return; }
+    const snap=snapshot('Everything from '+name+' booked in',hits);
+    let n=0, ok=0;
+    for(const j of hits){
+      j.items.forEach(i=>{ if(mine(i)){i.ostate='arrived';i.arrived=true;i.arrivedAt=new Date().toISOString();n++;} });
+      applyStatus(j);
+      if(await pushJob(j)) ok++;
     }
-    render(); toast(n+' piece'+(n===1?'':'s')+' booked in from '+name);
+    if(ok) UNDO=snap;
+    render(); toast(n+' piece'+(n===1?'':'s')+' booked in from '+name,false,ok?'Undo':'');
     return;
   }
   const conf=e.target.closest('[data-conf]');
   if(conf){
     const j=JOBS.find(x=>x.id===conf.dataset.conf); if(!j) return;
+    const snap=snapshot(j.status==='lost'?'Job '+j.no+' brought back':'Job '+j.no+' confirmed',[j]);
     j.confirmed=true; j.confirmedAt=new Date().toISOString();
     if(j.status==='lost') j.status='quote';
     applyStatus(j);
-    if(await pushJob(j)){ render(); toast('Job '+j.no+' confirmed — '+stat(j.status).label.toLowerCase()); }
+    if(await pushJob(j)){ UNDO=snap; render();
+      toast('Job '+j.no+' confirmed — '+stat(j.status).label.toLowerCase(),false,'Undo'); }
     return;
   }
   const lost=e.target.closest('[data-lost]');
   if(lost){
     const j=JOBS.find(x=>x.id===lost.dataset.lost); if(!j) return;
+    const snap=snapshot('Quote '+j.no+' closed off',[j]);
     j.status='lost'; j.confirmed=false;
-    if(await pushJob(j)){ render(); toast('Quote '+j.no+' closed off'); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Quote '+j.no+' closed off',false,'Undo'); }
     return;
   }
   const pc=e.target.closest('[data-pc]');
   if(pc){
     const q=pc.dataset.pc.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const snap=snapshot('Piece ticked off as cut on job '+j.no,[j]);
     j.items[+q[1]].cut=true; applyStatus(j);
-    if(await pushJob(j)){ render(); toast('Piece cut — job '+j.no); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Piece cut — job '+j.no,false,'Undo'); }
     return;
   }
   const pa=e.target.closest('[data-pa]');
   if(pa){
     const q=pa.dataset.pa.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const snap=snapshot('Piece booked in on job '+j.no,[j]);
     const it=j.items[+q[1]]; it.ostate='arrived'; it.arrived=true; it.arrivedAt=new Date().toISOString();
     applyStatus(j);
-    if(await pushJob(j)){ render(); toast('Piece booked in — job '+j.no); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Piece booked in — job '+j.no,false,'Undo'); }
     return;
   }
   const arr=e.target.closest('[data-arr]');
   if(arr){
     const parts=arr.dataset.arr.split('|'), id=parts[0], name=parts[1];
     const j=JOBS.find(x=>x.id===id); if(!j) return;
+    const snap=snapshot(name+' glass booked in on job '+j.no,[j]);
     j.items.forEach(i=>{ if(i.src==='order'&&ost(i)!=='arrived'&&(i.supplier||'Supplier')===name){ i.ostate='arrived'; i.arrived=true; i.arrivedAt=new Date().toISOString(); } });
     applyStatus(j);
-    if(await pushJob(j)){ render(); toast(name+' glass booked in for job '+j.no); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast(name+' glass booked in for job '+j.no,false,'Undo'); }
     return;
   }
   const cut=e.target.closest('[data-cut]');
   if(cut){
     const j=JOBS.find(x=>x.id===cut.dataset.cut); if(!j) return;
+    const snap=snapshot('Job '+j.no+' marked as cut',[j]);
     (j.items||[]).forEach(i=>{ if(i.src==='cut') i.cut=true; });
     applyStatus(j);
-    if(await pushJob(j)){ render(); toast('Job '+j.no+' on the rack'); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Job '+j.no+' on the rack',false,'Undo'); }
     return;
   }
   const coll=e.target.closest('[data-coll]');
   if(coll){
     const j=JOBS.find(x=>x.id===coll.dataset.coll); if(!j) return;
+    const snap=snapshot('Job '+j.no+' closed off',[j]);
     j.status='done'; j.doneAt=new Date().toISOString();
-    if(await pushJob(j)){ render(); toast('Job '+j.no+' closed off'); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Job '+j.no+' closed off',false,'Undo'); }
     return;
   }
   const c=e.target.closest('[data-call]');
   if(c){
     const j=JOBS.find(x=>x.id===c.dataset.call); if(!j) return;
+    const snap=snapshot(j.name+' marked as told',[j]);
     j.called=true; j.toldHow='phone'; j.calledAt=new Date().toISOString();
-    if(await pushJob(j)){ render(); toast(j.name+' marked as told'); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast(j.name+' marked as told',false,'Undo'); }
     return;
   }
   const m=e.target.closest('[data-mail]');
@@ -1792,6 +1977,46 @@ function productOptions(sel){
     c.items.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${esc(p.name)} — ${gbp(rate(priceOf(p.id)))}${p.each?' each':'/m²'}</option>`).join('')+
     `</optgroup>`).join('');
 }
+/* Free-typed answers are kept per field, so picking "Other" leaves the
+   text box open across a redraw. Reset whenever the pieces are rebuilt,
+   because the key is the piece's position in the list. */
+let OTHER={};
+
+function pickRow(i,key,label,val,opts,hint){
+  const k=i+':'+key;
+  const other=!!OTHER[k]||!!(val&&opts.indexOf(val)<0);
+  return `<div class="xtra">
+    <label for="x${i}${key}">${esc(label)}</label>
+    <select class="inp" id="x${i}${key}" data-xs="${i}:${key}">
+      <option value="">Not chosen yet</option>
+      ${opts.map(o=>`<option ${o===val&&!OTHER[k]?'selected':''}>${esc(o)}</option>`).join('')}
+      <option value="__other" ${other?'selected':''}>Other\u2026</option>
+    </select>
+    ${other?`<input class="inp" data-xo="${i}:${key}" value="${esc(val||'')}"
+       placeholder="${esc(hint||'')}" autocomplete="off" style="margin-top:6px">`:''}
+  </div>`;
+}
+
+/* Units need a thickness and a bar colour. Patterned glass needs a
+   pattern. Neither can be worked out from the product name, and both
+   have to be on the order. */
+function specBlock(it,i){
+  if(!specNeeded(it)) return '';
+  const rows=[];
+  if(isDGU(it)){
+    rows.push(pickRow(i,'dgThick','Overall thickness',it.dgThick,DGU_THICK,'e.g. 22 mm (4-14-4)'));
+    rows.push(pickRow(i,'dgBar','Bar colour',it.dgBar,DGU_BAR,'e.g. cream'));
+  }
+  if(needsObscure(it))
+    rows.push(pickRow(i,'obsType','Obscure pattern',it.obsType,OBSCURE_TYPES,'Pattern name'));
+  const miss=specMissing(it);
+  return `<div class="xtrawrap">
+    <div class="xtrahead">${isDGU(it)?'Unit detail':'Glass detail'}</div>
+    ${rows.join('')}
+    <div class="xtrahint">Carried through to the price request, the order and the cutting list.</div>
+    ${miss.length?`<div class="miss">Still needs ${esc(miss.join(' and '))}.</div>`:''}
+  </div>`;
+}
 function drawItems(){
   $('unitPick').innerHTML=`<select id="fUnit" style="border:1px solid var(--silver);border-radius:2px;padding:3px 5px;font-size:11px;text-transform:none;letter-spacing:0">
     ${['mm','cm','inches','feet'].map(u=>`<option ${u===unit?'selected':''}>${u}</option>`).join('')}</select>`;
@@ -1824,11 +2049,13 @@ function drawItems(){
            ${(it.addons||[]).filter(a=>{const A=ADDONS.find(x=>x.id===a.id);return A&&A.charge==='lm';}).map(a=>
              `<div class="lmwrap"><span>${esc((ADDONS.find(x=>x.id===a.id)||{}).name)} — metres</span>
               <input data-lm="${i}:${a.id}" value="${a.m!==undefined&&a.m!==''?esc(a.m):''}" placeholder="${pi.perim.toFixed(2)}" inputmode="decimal"></div>`).join('')}`}
+      ${specBlock(it,i)}
       <div class="iline"><span>${pi.area?pi.area.toFixed(3)+' m²':'stock size'}${pi.perim?' · '+pi.perim.toFixed(2)+' lm':''}</span><b>${gbp(pi.total)}</b></div>
     </div>`;}).join('');
 }
 $('items').addEventListener('input',e=>{
   const t=e.target;
+  if(t.dataset.xo!==undefined){ const q=t.dataset.xo.split(':'); items[+q[0]][q[1]]=t.value; return; }
   if(t.dataset.k){ items[+t.dataset.i][t.dataset.k]=t.value; drawCalc(); refreshLines(); return; }
   if(t.dataset.lm){ const parts=t.dataset.lm.split(':');
     const a=items[+parts[0]].addons.find(x=>x.id===parts[1]); if(a) a.m=t.value; drawCalc(); refreshLines(); }
@@ -1841,11 +2068,17 @@ $('items').addEventListener('change',e=>{
     if(items[i].src==='order'&&!items[i].supplier) items[i].supplier=supNames()[0];
     drawItems(); drawCalc(); return;
   }
-  if(e.target.dataset.sup!==undefined){ items[+e.target.dataset.sup].supplier=e.target.value; drawCalc(); }
+  if(e.target.dataset.sup!==undefined){ items[+e.target.dataset.sup].supplier=e.target.value; drawCalc(); return; }
+  if(e.target.dataset.xs!==undefined){
+    const q=e.target.dataset.xs.split(':'), i=+q[0], k=q[1], v=e.target.value;
+    if(v==='__other'){ OTHER[i+':'+k]=true; items[i][k]=''; }
+    else { delete OTHER[i+':'+k]; items[i][k]=v; }
+    drawItems();
+  }
 });
 $('items').addEventListener('click',e=>{
   const rm=e.target.closest('[data-rmi]');
-  if(rm){ items.splice(+rm.dataset.rmi,1); drawItems(); drawCalc(); return; }
+  if(rm){ items.splice(+rm.dataset.rmi,1); OTHER={}; drawItems(); drawCalc(); return; }
   const sc=e.target.closest('[data-src]');
   if(sc){ const parts=sc.dataset.src.split(':'); const i=+parts[0];
     items[i].src=parts[1];
@@ -1868,7 +2101,7 @@ function refreshLines(){
 $('addItem').onclick=()=>{
   const last=items[items.length-1], pid=last?last.pid:'c4mm', src=defaultSrc(pid);
   items.push({pid,w:'',h:'',q:'1',addons:[],src,supplier:src==='order'?supNames()[0]:'',arrived:false,cut:false});
-  drawItems(); drawCalc();
+  OTHER={}; drawItems(); drawCalc();
 };
 
 function drawExtras(){
@@ -2001,6 +2234,7 @@ function openJob(j){
   $('fAddr').value=j?(j.addr||''):''; $('fWanted').value=j?(j.wanted||''):''; $('fNote').value=j?(j.note||''):'';
   $('fMeasure').checked=j?!!j.needsMeasure:false;
   costs=j&&j.costs?clone(j.costs):[];
+  OTHER={};
   setTrade(j?!!j.trade:false);
   setHandover(j?(j.handover||(j.deliver?'delivery':'collection')):'collection');
   drawItems(); drawExtras(); drawCosts(); drawCalc(); drawAppts(); $('sugg').innerHTML='';
@@ -2042,8 +2276,9 @@ $('saveJob').onclick=async()=>{
 };
 $('delJob').onclick=async()=>{
   if(!editing) return;
-  if(!window.confirm(`Delete job ${editing.no} for ${editing.name}? This can't be undone.`)) return;
-  if(await dropJob(editing.id)){ hideSheets(); render(); toast('Job deleted'); }
+  if(!window.confirm(`Delete job ${editing.no} for ${editing.name}?`)) return;
+  const snap=snapshot('Job '+editing.no+' deleted',[editing]);
+  if(await dropJob(editing.id)){ UNDO=snap; hideSheets(); render(); toast('Job deleted',false,'Undo'); }
 };
 
 /* ============================================================
@@ -2080,6 +2315,7 @@ function buildJobText(j,kind){
     L.push((n+1)+'. '+p.name);
     L.push('   '+(p.each?(it.q||1)+' off'
       :it.w+(j.unit||'mm')+' x '+it.h+(j.unit||'mm')+(+it.q>1?'   '+it.q+' off':'')));
+    if(extraSpec(it)) L.push('   '+extraSpec(it,', '));
     pi.addons.forEach(a=>L.push('   + '+a.name+(a.charge==='lm'?'  ('+a.qty.toFixed(2)+' m)':'')));
     L.push(row('',gbp(pi.total))); L.push('');
   });
@@ -2159,6 +2395,12 @@ function buildSupplierText(name,kind,rows){
     L.push((i+1)+'. '+p.name);
     L.push('   '+(p.each?(it.q||1)+' off'
       :it.w+(r.j.unit||'mm')+' x '+it.h+(r.j.unit||'mm')+'   '+(it.q||1)+' off'));
+    /* spelled out rather than run together, so nothing is assumed */
+    if(isDGU(it)){
+      L.push('   Overall thickness: '+(it.dgThick||'TO CONFIRM'));
+      L.push('   Bar colour: '+(it.dgBar||'TO CONFIRM'));
+    }
+    if(needsObscure(it)) L.push('   Obscure pattern: '+(it.obsType||'TO CONFIRM'));
     pi.addons.forEach(a=>L.push('   + '+a.name+(a.charge==='lm'?'  ('+a.qty.toFixed(2)+' m)':'')));
     if(kind==='po'&&it.cost!==undefined&&it.cost!=='') L.push('   Agreed price: '+gbp(it.cost));
     L.push('   Our ref: job '+r.j.no+(r.j.wanted?'   wanted by '+new Date(r.j.wanted).toLocaleDateString('en-GB'):''));
@@ -2194,7 +2436,6 @@ function openSupplierMail(name,kind){
   $('mMsg').value=supplierMessage(name,kind,rows);
   $('mKind').style.display='none';
   $('mTold').textContent = kind==='rfq' ? 'Log as asked' : 'Mark these as ordered';
-  if(s.check) $('mWarn').innerHTML='';
   drawMail(); showSheet($('mailSheet'));
 }
 
@@ -2230,8 +2471,16 @@ function mailBody(){
 function drawMail(){
   $('mPrev').textContent=mailBody();
   const L=composeLinks($('mTo').value,$('mSubj').value,mailBody());
-  $('mWarn').innerHTML = L.length>1800
-    ? `<div class="warnbox">This is a long message. Desktop mail apps cut pre-filled text off at around 2,000 characters — use Gmail, Outlook or Copy instead of the mail app.</div>` : '';
+  const w=[];
+  if(mailMode==='supplier'){
+    const gaps=mailRows.filter(r=>specMissing(r.it).length);
+    if(gaps.length) w.push(`<div class="warnbox">
+      <b>${gaps.length} piece${gaps.length>1?'s are':' is'} going out without the full detail.</b><br>
+      ${gaps.map(r=>'Job '+r.j.no+' — '+esc(specMissing(r.it).join(' and '))).join('<br>')}<br>
+      They are marked TO CONFIRM below. Better to fill them in on the job first.</div>`);
+  }
+  if(L.length>1800) w.push(`<div class="warnbox">This is a long message. Desktop mail apps cut pre-filled text off at around 2,000 characters — use Gmail, Outlook or Copy instead of the mail app.</div>`);
+  $('mWarn').innerHTML=w.join('');
 }
 ['mTo','mSubj','mMsg'].forEach(id=>$(id).addEventListener('input',drawMail));
 function openIn(which){
@@ -2310,7 +2559,8 @@ function jobsCSV(){
 }
 function piecesCSV(){
   const head=['Job no','Customer','Job status','Product','Category','Width','Height','Qty','Unit',
-    'Chargeable m2','Cut or ordered','Supplier','Piece state','Edgework','We charge','Their cost',
+    'Chargeable m2','Cut or ordered','Supplier','Piece state','Edgework',
+    'Unit thickness','Bar colour','Obscure pattern','We charge','Their cost',
     'Wanted by','Notes'];
   const rows=[head];
   JOBS.slice().sort((a,b)=>a.no-b.no).forEach(j=>{
@@ -2322,6 +2572,8 @@ function piecesCSV(){
         pi.p.each?'':it.w, pi.p.each?'':it.h, it.q||1, pi.p.each?'each':(j.unit||'mm'), r2(pi.area),
         it.src==='cut'?'We cut':'Ordered in', it.supplier||'', state,
         pi.addons.map(a=>a.name+(a.charge==='lm'?' '+r2(a.qty)+'m':'')).join('; '),
+        isDGU(it)?(it.dgThick||''):'', isDGU(it)?(it.dgBar||''):'',
+        needsObscure(it)?(it.obsType||''):'',
         r2(pi.total), it.cost===''||it.cost===undefined?'':r2(it.cost),
         j.wanted, (j.note||'').replace(/\s+/g,' ')]);
     });
@@ -2443,6 +2695,7 @@ function pieceLine(j,it){
   const p=prodOf(it.pid), pi=priceItem(it,j.unit);
   return `<div class="pprod">${esc(p.name)}</div>
     <div class="psize">${p.each?(it.q||1)+' off':esc(it.w)+' × '+esc(it.h)+' × '+(it.q||1)+' '+(j.unit||'mm')}</div>
+    ${extraSpec(it)?`<div class="pspec">${esc(extraSpec(it))}</div>`:''}
     ${pi.addons.length?`<div>+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}`;
 }
 $('printCut').onclick=()=>{
@@ -2494,6 +2747,7 @@ $('printDiary').onclick=()=>{
         <span>${APPT[a.kind].label.toUpperCase()}${a.mins?' · '+(DURS[a.mins]||a.mins+' min'):''}</span></div>
         <div>${esc(j.addr||'No address')}${j.phone?' · '+esc(fmtPhone(j.phone)):''}</div>
         ${toPrice(j).length||pendingOrder(j).length||pendingCut(j).length?`<div><em>Not finished: ${[toPrice(j).length?toPrice(j).length+' to price':'',pendingOrder(j).length?pendingOrder(j).length+' on order':'',pendingCut(j).length?pendingCut(j).length+' to cut':''].filter(Boolean).join(', ')}</em></div>`:''}
+        ${j.note?`<div class="pnote">${esc(j.note)}</div>`:''}
       </div>`;}).join('')
      :'<p>Nothing booked this month.</p>');
   $('menu').classList.remove('on'); window.print();
@@ -2507,12 +2761,6 @@ document.addEventListener('keydown',e=>{
 /* ---------- boot ---------- */
 (async()=>{
   await initStore();
-  const tag=$('storeTag');
-  tag.textContent=STORE==='shop'?'Shop-wide':STORE==='device'?'This device':'Not saving';
-  tag.className=STORE==='shop'?'st-shop':STORE==='device'?'st-device':'st-none';
-  tag.title=STORE==='shop'?'Every job saves where the whole shop can see it.'
-    :STORE==='device'?'Saving in this browser only — other machines will not see these jobs.'
-    :'Storage is blocked, so nothing will be kept.';
   await loadAll();
   render();
   setInterval(async()=>{
