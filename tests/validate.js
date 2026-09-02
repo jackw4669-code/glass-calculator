@@ -50,8 +50,11 @@ const collect = src => {
   for (const m of src.matchAll(/class="([^"$]*)"/g))
     m[1].split(/\s+/).filter(Boolean).forEach(c => used.add(c));
   /* class="a ${x} b" — take the literal words either side of the holes */
-  for (const m of src.matchAll(/class="([^"]*\$\{[^"]*)"/g))
+  for (const m of src.matchAll(/class="([^"]*\$\{[^"]*)"/g)) {
     m[1].replace(/\$\{[^}]*\}/g, ' ').split(/\s+/).filter(Boolean).forEach(c => used.add(c));
+    /* ...and any quoted names chosen inside the holes */
+    for (const s of m[1].matchAll(/'([a-z][\w-]*)'/g)) used.add(s[1]);
+  }
   for (const m of src.matchAll(/classList\.(?:add|remove|toggle)\('([^']+)'/g)) used.add(m[1]);
 };
 collect(markup); collect(script);
@@ -67,7 +70,12 @@ const unstyled = [...used].filter(c => !styled.has(c)).sort();
 if (unstyled.length) console.log('  note  classes with no rule: ' + unstyled.join(', '));
 
 const NEW = ['undobar', 'undobtn', 'dismiss', 'ub', 'xtrawrap', 'xtrahead', 'xtra',
-             'xtrahint', 'spec', 'specmiss', 'miss', 'dnote', 'hasnote', 'pnote', 'pspec'];
+             'xtrahint', 'spec', 'specmiss', 'miss', 'dnote', 'hasnote', 'pnote', 'pspec',
+             'payrow', 'amt', 'payacts', 'owing', 'clear',
+             'mchips', 'mgrid', 'mcard', 'lab', 'val', 'sub2', 'wide', 'dark', 'pos', 'neg',
+             'msec', 'mnote', 'bars', 'bar', 'bl', 'bt', 'bf', 'bz', 'bv', 'down',
+             'betrack', 'befill', 'short', 'mrow', 'mi', 'mn', 'mm', 'mv', 'mp', 'stale',
+             'prow', 'tot', 'pfoot', 'ch'];
 const unstyledNew = NEW.filter(c => !styled.has(c));
 if (unstyledNew.length) bad('new classes with no CSS rule: ' + unstyledNew.join(', '));
 else ok('all ' + NEW.length + ' new classes are styled');

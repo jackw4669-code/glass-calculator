@@ -184,7 +184,9 @@ label{display:block;font-size:11px;font-weight:700;letter-spacing:.09em;text-tra
 .ptbl td{padding:5px 0;border-bottom:1px solid var(--silver2)}
 .ptbl td.c{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--float-d);padding-top:14px;border:none}
 .ptbl input{width:92px;padding:6px 8px;border:1px solid var(--silver);border-radius:2px;font-family:'IBM Plex Mono',monospace;text-align:right}
-.ptbl td:nth-child(2),.ptbl td:nth-child(3){width:100px;text-align:right}
+.ptbl td:nth-child(2),.ptbl td:nth-child(3){width:92px;text-align:right}
+.ptbl td.ch{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink2);text-align:right;padding-bottom:4px}
+.ptbl input::placeholder{color:var(--silver)}
 pre.preview{background:var(--white);border:1px solid var(--silver);border-radius:var(--r);padding:12px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:340px;overflow-y:auto}
 .sendrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .sendrow button{flex:1 1 auto;min-width:118px;padding:11px;border-radius:var(--r);font-weight:600;font-size:14px;border:1px solid var(--silver);background:var(--white)}
@@ -244,6 +246,17 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:var(--white);padding:11px 18px;border-radius:var(--r);font-size:14px;z-index:99;transition:transform .22s ease;max-width:90vw;display:flex;gap:16px;align-items:center}
 #toast.on{transform:translateX(-50%) translateY(0)}
 #toast.bad{background:var(--red)}
+/* ---------- payments ---------- */
+.payrow{display:flex;gap:7px;margin-bottom:8px;align-items:center;flex-wrap:wrap}
+.payrow input[type=date]{flex:1 1 132px;min-width:0;font-size:13.5px;padding:8px 9px}
+.payrow .amt{flex:0 0 86px;text-align:right;font-size:14px;padding:8px 9px}
+.payrow select{flex:1 1 118px;min-width:0;font-size:13.5px;padding:8px 9px}
+.payacts{display:flex;gap:8px}
+.payacts .addbtn{margin:0}
+#payBal{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:none}
+#payBal.owing{color:var(--red)}
+#payBal.clear{color:var(--float-d)}
+
 /* ---------- undo ---------- */
 .undobtn{color:#8FD9BC;font-weight:700;font-size:13px;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;flex-shrink:0}
 #toast.bad .undobtn{color:#FFD5D4}
@@ -268,6 +281,48 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
 .wsrow .spec{font-size:12.5px}
 .item .miss{background:var(--amber-l);border:1px solid #E8C99A;border-radius:2px;padding:6px 9px;font-size:12px;color:var(--amber);font-weight:600;margin-top:8px}
 
+/* ---------- money ---------- */
+.mchips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.mchips button{padding:6px 12px;border:1px solid var(--silver);background:var(--white);border-radius:14px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+.mchips button.on{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:9px;margin-bottom:14px}
+.mcard{background:var(--white);border:1px solid var(--silver);border-radius:var(--r);padding:11px 13px}
+.mcard .lab{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.mcard .val{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;line-height:1.15;margin-top:3px}
+.mcard .sub2{font-size:11.5px;color:var(--ink2);margin-top:3px;line-height:1.35}
+.mcard.wide{grid-column:1/-1}
+.mcard.dark{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.mcard.dark .lab{color:#8FBCA9}
+.mcard.dark .sub2{color:#B9CDCB}
+.mcard .val.pos{color:var(--float-d)}
+.mcard .val.neg{color:var(--red)}
+.mcard.dark .val.pos{color:#8FD9BC}
+.mcard.dark .val.neg{color:#F0A9A7}
+.msec{margin:18px 0 9px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--float-d)}
+.mnote{font-size:12.5px;color:var(--ink2);line-height:1.45;margin-top:8px}
+.bars{background:var(--white);border:1px solid var(--silver);border-radius:var(--r);padding:12px 13px}
+.bar{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+.bar:last-child{margin-bottom:0}
+.bar .bl{flex:0 0 54px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink2)}
+.bar .bt{flex:1;min-width:0;height:17px;background:var(--silver2);border-radius:2px;position:relative;overflow:hidden}
+.bar .bf{position:absolute;top:0;bottom:0;left:50%;background:var(--float)}
+.bar .bf.down{background:var(--red)}
+.bar .bz{position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--silver)}
+.bar .bv{flex:0 0 74px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+.betrack{height:22px;background:var(--silver2);border-radius:2px;position:relative;overflow:hidden;margin-top:8px}
+.befill{position:absolute;left:0;top:0;bottom:0;background:var(--float)}
+.befill.short{background:var(--amber)}
+.mrow{display:flex;gap:10px;align-items:center;background:var(--white);border:1px solid var(--silver);border-top:none;padding:10px 12px;flex-wrap:wrap}
+.mrow:first-of-type{border-top:1px solid var(--silver);border-radius:var(--r) var(--r) 0 0}
+.mrow:last-of-type{border-radius:0 0 var(--r) var(--r)}
+.mrow .mi{flex:1;min-width:0}
+.mrow .mn{font-size:14px;font-weight:600}
+.mrow .mm{font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace}
+.mrow .mv{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;text-align:right;white-space:nowrap}
+.mrow .mv .mp{font-size:11.5px;font-weight:500;color:var(--ink2);display:block}
+.mrow.late{background:#FFF9F4}
+.stale{color:var(--red);font-weight:700}
+
 /* ---------- diary notes ---------- */
 .dnote{margin-top:7px;padding:7px 10px;background:#FFFBF4;border:1px solid #EBD9BE;border-left:3px solid var(--amber);border-radius:2px;font-size:13.5px;color:var(--ink);white-space:pre-wrap;line-height:1.4}
 .dnote b{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--amber);display:block;margin-bottom:2px}
@@ -286,6 +341,9 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
   .pprod{font-size:11px;font-style:italic}
   .ptitle{font-size:17px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border-bottom:3px solid #000;padding-bottom:6px;margin:0 0 8px}
   .psup{font-size:14px;font-weight:700;background:#eee;padding:4px 6px;margin-top:12px}
+  .prow{display:flex;justify-content:space-between;gap:20px;padding:3px 0;border-bottom:1px dotted #999;font-size:12px}
+  .prow.tot{font-weight:700;font-size:14px;border-bottom:2px solid #000;border-top:1px solid #000;margin-top:4px;padding:5px 0}
+  .pfoot{font-size:10px;margin-top:10px;font-style:italic}
   .pnote{border-left:3px solid #000;padding-left:7px;margin-top:4px;font-size:12px;white-space:pre-wrap}
   .pspec{font-size:12px;font-weight:700}
 }
@@ -306,6 +364,7 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
       <button id="printCut">Print cutting list</button>
       <button id="printOrder">Print order list</button>
       <button id="printDiary">Print diary</button>
+      <button id="printMoney">Print money summary</button>
       <button id="expBtn">Back up / export</button>
       <button id="rateBtn">Prices &amp; suppliers</button>
     </div>
@@ -347,13 +406,22 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
         <h4>Extras and labour</h4>
         <div id="extras"></div>
         <button class="addbtn" id="addExtra">+ Add an extra</button>
-        <div class="row" style="margin-top:12px">
-          <div><label for="fDisc">Discount %</label><input class="inp mono" id="fDisc" inputmode="decimal" placeholder="0"></div>
-          <div><label for="fDep">Deposit £</label><input class="inp mono" id="fDep" inputmode="decimal" placeholder="0"></div>
+        <div style="margin-top:12px;max-width:160px">
+          <label for="fDisc">Discount %</label><input class="inp mono" id="fDisc" inputmode="decimal" placeholder="0">
         </div>
         <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink);margin-top:12px">
           <input type="checkbox" id="fCard" style="width:17px;height:17px"> Paying by card (adds 2%)
         </label>
+      </div>
+
+      <div class="card">
+        <h4><span>Payments</span><span id="payBal"></span></h4>
+        <div id="pays"></div>
+        <div class="payacts">
+          <button class="addbtn" id="addPay">+ Add a payment</button>
+          <button class="addbtn" id="payFull">Settle the balance</button>
+        </div>
+        <p class="sub" style="margin-top:9px">Deposits, card payments, transfers. Whatever is left shows as the balance on the job card and in the money owed list.</p>
       </div>
 
       <div class="card">
@@ -508,6 +576,12 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
     <div class="card"><h4>Glass — £ per m², before VAT</h4><table class="ptbl" id="pTbl"></table></div>
     <div class="card"><h4>Edgework and extras</h4><table class="ptbl" id="aTbl"></table></div>
     <div class="card"><h4>Suppliers</h4><div id="supTbl"></div></div>
+    <div class="card">
+      <h4><span>Running the shop — every month</span><span id="ohTot"></span></h4>
+      <div id="ohTbl"></div>
+      <button class="addbtn" id="addOh">+ Add a monthly cost</button>
+      <p class="sub" style="margin-top:9px">Rent, business rates, insurance, the van, wages, power, the accountant. These come off the gross profit in the Money tab and set the figure you have to turn over each month to break even. Enter them before VAT.</p>
+    </div>
     <div class="card"><h4>Working out profit</h4>
       <div style="max-width:300px"><label for="fCutPct">Glass we cut costs us roughly</label>
         <div class="row"><input class="inp mono" id="fCutPct" inputmode="decimal" style="flex:0 0 90px"><span style="align-self:center;font-size:14px;color:var(--ink2)">% of what we charge</span></div></div>
@@ -640,7 +714,7 @@ const SUPPLIER_SEED=[
 let SUPPLIERS=SUPPLIER_SEED.map(s=>Object.assign({},s));
 const supOf=n=>SUPPLIERS.find(s=>s.name===n)||{name:n||'Supplier',email:'',tel:'',addr:''};
 const supNames=()=>SUPPLIERS.map(s=>s.name);
-let SETTINGS={cutCostPct:0};
+let SETTINGS={cutCostPct:0,overheads:[]};
 const defaultSrc=pid=>ORDER_IN.has(pid)?'order':'cut';
 
 /* ============================================================
@@ -731,7 +805,7 @@ const stat=k=>STATUSES.find(s=>s.k===k)||STATUSES[0];
 const DURS={30:'30 min',60:'1 hr',90:'1½ hr',120:'2 hr',180:'3 hr',240:'Half day',360:'6 hr',480:'Full day'};
 
 let JOBS=[], CUSTOMERS=[], PRICES={}, ADJ=0, filter='all', editing=null, mailJob=null, mailKind='ready';
-let items=[], extras=[], costs=[], isTrade=false, handover='collection', unit='mm';
+let items=[], extras=[], costs=[], pays=[], isTrade=false, handover='collection', unit='mm';
 let diaryMonth=new Date(), selDay=null, listView='sheet';
 let lastFull=null, lastAny=null, nagDismissed='';
 
@@ -1142,10 +1216,15 @@ Marios|07454266133||1||4mm float clean cut|`.trim().split('\n').filter(Boolean).
 /* ---------- pricing (mirrors the calculator exactly) ---------- */
 const clone=o=>JSON.parse(JSON.stringify(o));
 const gbp=n=>'£'+(num(n)).toFixed(2);
+/* for figures that can legitimately come out negative */
+const gbpS=n=>(num(n)<0?'−':'')+'£'+Math.abs(num(n)).toFixed(2);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const prodOf=id=>ALL_PRODUCTS.find(x=>x.id===id)||ALL_PRODUCTS[0];
 const priceOf=id=>{const p=ALL_PRODUCTS.find(x=>x.id===id);return PRICES[id]!==undefined?PRICES[id]:(p?p.price:0);};
 const addonPrice=id=>{const a=ADDONS.find(x=>x.id===id);return PRICES['a:'+id]!==undefined?PRICES['a:'+id]:(a?a.price:0);};
+/* What a product costs us, per m² or per pane. Blank means we have not
+   worked it out, which is different from zero. */
+const costRateOf=id=>{const v=PRICES['c:'+id]; return (v===undefined||v==='')?null:num(v);};
 const rate=p=>p*(1+num(ADJ)/100);
 const toMm=(v,u)=>{const n=parseFloat(v); if(!n) return 0; u=u||unit;
   return u==='mm'?n:u==='cm'?n*10:u==='inches'?n*25.4:n*304.8;};
@@ -1219,12 +1298,41 @@ function waitingSuppliers(j){
   return m;
 }
 
+/* ---------- what has actually been paid ----------
+   The job used to hold a single 'deposit' number and work the balance
+   out from it, which meant the book knew what was owed but never when
+   anything was paid. Payments are now a list, so the balance is a fact
+   rather than an inference, and a month's takings can be added up. */
+const PAY_METHODS=['Cash','Card','Bank transfer','Cheque','On account'];
+const paymentsOf=j=>(j.payments||[]);
+const paidOf=j=>paymentsOf(j).reduce((s,p)=>s+num(p.amount),0);
+const balanceOf=j=>jobTotals(j).grand-paidOf(j);
+/* Anything under half a penny is rounding, not a debt. */
+const owes=j=>balanceOf(j)>0.005;
+
 /* ---------- what it costs us, and what we make ---------- */
+/* Three ways of knowing what a piece cost, best first:
+   what the supplier actually charged, then our own cost per m² for that
+   product, then the rough percentage. The percentage is circular — put a
+   price up and the "cost" rises with it — so it is only a last resort. */
 function itemCost(j,it){
   if(it.cost!==undefined&&it.cost!=='') return num(it.cost);
+  const cr=costRateOf(it.pid);
+  if(cr!==null){
+    const p=prodOf(it.pid);
+    return p.each ? cr*Math.max(1,parseInt(it.q)||1) : cr*priceItem(it,j.unit).area;
+  }
   if(it.src==='cut'&&num(SETTINGS.cutCostPct)>0)
     return priceItem(it,j.unit).total*num(SETTINGS.cutCostPct)/100;
   return 0;
+}
+/* How the number above was arrived at, so nothing looks more certain
+   than it is. */
+function costBasis(j,it){
+  if(it.cost!==undefined&&it.cost!=='') return 'supplier';
+  if(costRateOf(it.pid)!==null) return 'ourrate';
+  if(it.src==='cut'&&num(SETTINGS.cutCostPct)>0) return 'percent';
+  return 'none';
 }
 function costBreakdown(j){
   const glass=(j.items||[]).reduce((s,it)=>s+itemCost(j,it),0);
@@ -1232,6 +1340,12 @@ function costBreakdown(j){
   const known=(j.items||[]).every(it=>it.src!=='order'||(it.cost!==undefined&&it.cost!==''));
   return {glass,other,total:glass+other,known};
 }
+/* Rent, rates, the van, insurance, wages. Entered once as a monthly
+   figure. Without these, "profit" is only gross profit and reads far
+   too well. */
+const overheadsList=()=>(SETTINGS.overheads||[]);
+const overheadsMonthly=()=>overheadsList().reduce((s,o)=>s+num(o.amount),0);
+
 function profitOf(j){
   const t=jobTotals(j), c=costBreakdown(j);
   const profit=t.net-c.total;
@@ -1265,6 +1379,15 @@ function normalise(j){
   if(!j.appts){
     j.appts = j.schedDate
       ? [{kind:j.handover==='fitting'?'fit':'deliver',date:j.schedDate,time:j.schedTime||'',mins:+j.durMins||60}]
+      : [];
+  }
+  /* A record taken before payments existed carries its deposit across as
+     the first payment, dated when the job was taken. Nothing is lost and
+     the balance still comes out the same. */
+  if(!j.payments){
+    j.payments = num(j.deposit)>0
+      ? [{date:(j.takenAt||new Date().toISOString()).slice(0,10),
+          amount:num(j.deposit),method:'Cash',note:'Deposit'}]
       : [];
   }
   return j;
@@ -1366,7 +1489,8 @@ function render(){
     ['all','Live'],['measure','To measure'],['quote','Quotes'],['pricing','To price'],['order','On order'],['cut','To cut'],
     ['ready','Ready'],['told','Not told'],['closed','Closed']
   ].map(x=>`<button class="chip ${filter===x[0]?'on':''} ${x[0]==='told'&&untold.length?'alert':''}" data-f="${x[0]}">${x[1]} <b>${bucket(x[0]).length}</b></button>`).join('')
-   +`<button class="chip ${filter==='diary'?'on':''}" data-f="diary">Diary</button>`;
+   +`<button class="chip ${filter==='diary'?'on':''}" data-f="diary">Diary</button>`
+   +`<button class="chip ${filter==='money'?'on':''}" data-f="money">Money</button>`;
 
   const stale=untold.filter(j=>daysAgo(j.readyAt)>=1);
   const bars=[];
@@ -1390,6 +1514,7 @@ function render(){
   $('banner').innerHTML=bars.join('');
 
   if(filter==='diary'&&!q){ renderDiary(); return; }
+  if(filter==='money'&&!q){ renderMoney(); return; }
   if((filter==='cut'||filter==='order'||filter==='pricing')&&!q&&listView==='sheet'){
     renderSheet(filter==='pricing'?'toprice':filter); return; }
 
@@ -1407,7 +1532,7 @@ function render(){
 }
 function jobCard(j){
   const s=stat(j.status), t=jobTotals(j);
-  const bal=t.grand-num(j.deposit);
+  const bal=balanceOf(j);
   const flag=j.status==='ready'&&!j.called;
   const sup=waitingSuppliers(j);
   const nCut=pendingCut(j).length;
@@ -1452,7 +1577,7 @@ function jobCard(j){
         ? `<span class="sub">No sizes yet — price once it has been measured</span>`
         : `<span class="money">${gbp(t.grand)}</span><span class="sub"> inc VAT</span>
            ${bal>0.005?`<span class="owed">${gbp(bal)} ${j.trade?'to invoice':'to pay'}</span>`:`<span class="paid">Paid</span>`}`}
-        ${p.cost?`<div class="sub mono">Cost ${gbp(p.cost)} · profit <b style="color:${p.profit>=0?'var(--float-d)':'var(--red)'}">${gbp(p.profit)}</b> (${p.margin.toFixed(0)}%)${p.known?'':' so far'}</div>`:''}</div>
+        ${p.cost?`<div class="sub mono">Cost ${gbp(p.cost)} · profit <b style="color:${p.profit>=0?'var(--float-d)':'var(--red)'}">${gbpS(p.profit)}</b> (${p.margin.toFixed(0)}%)${p.known?'':' so far'}</div>`:''}</div>
       <div class="acts">
         ${j.status==='measure'?`<button class="act go" data-open="${j.id}">Add sizes</button>
                                 <button class="act" data-lost="${j.id}">Not going ahead</button>`:''}
@@ -1463,6 +1588,7 @@ function jobCard(j){
         ${isWorking(j)&&nCut?`<button class="act blue" data-cut="${j.id}">Cutting done (${nCut})</button>`:''}
         ${need.length?`<button class="act blue" data-book="${j.id}">Book ${APPT[need[0]].label.toLowerCase()}</button>`:''}
         ${flag?`<button class="act warn" data-call="${j.id}">Mark told</button>`:''}
+        ${(j.status==='ready'||j.status==='done')&&owes(j)?`<button class="act warn" data-settle="${j.id}">Take ${gbp(balanceOf(j))}</button>`:''}
         ${j.status==='ready'?`<button class="act go" data-coll="${j.id}">${doneVerb(j)}</button>`:''}
         <button class="act" data-mail="${j.id}">Email</button>
         <button class="act" data-open="${j.id}">Edit</button>
@@ -1616,6 +1742,310 @@ function renderDiary(){
     </div>`;
 }
 
+/* ============================================================
+   MONEY
+   A job counts on the day it went out of the door, not the day
+   it was quoted and not the day it was paid. That matches what
+   we charged against what the glass cost us.
+
+   Cash is tracked separately, from the payments, because the
+   month you earn something and the month you get paid for it
+   are not the same month.
+   ============================================================ */
+const countDate=j=>(j.doneAt||'').slice(0,10);
+const countsIn=(j,from,to)=>{const d=countDate(j); return !!d&&d>=from&&d<=to;};
+const MONTH_DAYS=30.44;
+const monthName=d=>d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
+
+function periodRange(kind,off){
+  const now=new Date();
+  if(kind==='week'){
+    const s=new Date(now); s.setDate(s.getDate()-((s.getDay()+6)%7)+off*7);
+    const e=new Date(s); e.setDate(e.getDate()+6);
+    return {from:ymd(s),to:ymd(e),months:7/MONTH_DAYS,
+      label:'Week of '+s.toLocaleDateString('en-GB',{day:'numeric',month:'long'})};
+  }
+  if(kind==='month'){
+    const s=new Date(now.getFullYear(),now.getMonth()+off,1);
+    return {from:ymd(s),to:ymd(new Date(s.getFullYear(),s.getMonth()+1,0)),months:1,
+      label:s.toLocaleDateString('en-GB',{month:'long',year:'numeric'})};
+  }
+  if(kind==='quarter'){
+    const s=new Date(now.getFullYear(),(Math.floor(now.getMonth()/3)+off)*3,1);
+    return {from:ymd(s),to:ymd(new Date(s.getFullYear(),s.getMonth()+3,0)),months:3,
+      label:'Quarter '+(Math.floor(s.getMonth()/3)+1)+', '+s.getFullYear()};
+  }
+  if(kind==='year'){
+    const s=new Date(now.getFullYear()+off,0,1);
+    return {from:ymd(s),to:ymd(new Date(s.getFullYear(),12,0)),months:12,label:String(s.getFullYear())};
+  }
+  const dates=JOBS.map(countDate).filter(Boolean).sort();
+  const from=dates[0]||ymd(now);
+  const days=Math.max(1,(new Date(ymd(now))-new Date(from))/864e5);
+  return {from,to:ymd(now),months:days/MONTH_DAYS,label:'Everything so far'};
+}
+
+/* What we earned in a period, and what it cost us to earn it. */
+function moneyFor(from,to){
+  const jobs=JOBS.filter(j=>j.status==='done'&&countsIn(j,from,to));
+  let sales=0,cost=0,vat=0,provisional=0,cutSale=0,cutCost=0,ordSale=0,ordCost=0;
+  let tradeSale=0,retailSale=0;
+  const bySup={};
+  jobs.forEach(j=>{
+    const t=jobTotals(j), c=costBreakdown(j);
+    sales+=t.net; cost+=c.total; vat+=t.vat;
+    if(!c.known) provisional++;
+    (j.trade?(tradeSale+=t.net):(retailSale+=t.net));
+    (j.items||[]).forEach(it=>{
+      const s=priceItem(it,j.unit).total, k=itemCost(j,it);
+      if(it.src==='order'){ ordSale+=s; ordCost+=k;
+        const n=it.supplier||'Supplier';
+        bySup[n]=bySup[n]||{sale:0,cost:0,pieces:0};
+        bySup[n].sale+=s; bySup[n].cost+=k; bySup[n].pieces++;
+      } else { cutSale+=s; cutCost+=k; }
+    });
+  });
+  const gross=sales-cost;
+  return {jobs,sales,cost,gross,vat,provisional,bySup,
+    margin:sales>0?gross/sales*100:0,
+    cut:{sale:cutSale,cost:cutCost}, ord:{sale:ordSale,cost:ordCost},
+    tradeSale,retailSale};
+}
+
+/* Cash actually received in a period, whatever job it belonged to. */
+function takingsFor(from,to){
+  let total=0; const rows=[];
+  JOBS.forEach(j=>paymentsOf(j).forEach(p=>{
+    const d=(p.date||'').slice(0,10);
+    if(d>=from&&d<=to){ total+=num(p.amount); rows.push({j,p}); }
+  }));
+  rows.sort((a,b)=>(b.p.date||'').localeCompare(a.p.date||''));
+  return {total,rows};
+}
+
+/* Everything finished or on the rack that has not been paid for. */
+function owedList(){
+  return JOBS.filter(j=>(j.status==='done'||j.status==='ready')&&owes(j))
+    .map(j=>({j,bal:balanceOf(j),days:daysAgo(j.doneAt||j.readyAt||j.takenAt)}))
+    .sort((a,b)=>b.days-a.days||b.bal-a.bal);
+}
+const agedBuckets=list=>{
+  const b={'Up to 30 days':0,'31 to 60 days':0,'Over 60 days':0};
+  list.forEach(o=>{ b[o.days<=30?'Up to 30 days':o.days<=60?'31 to 60 days':'Over 60 days']+=o.bal; });
+  return b;
+};
+
+/* Margin over the last twelve months, used for break-even. A single
+   quiet month is too thin a base to plan the shop on. */
+function trailingMargin(){
+  const now=new Date();
+  const from=ymd(new Date(now.getFullYear(),now.getMonth()-11,1));
+  const m=moneyFor(from,ymd(now));
+  return {frac:m.sales>0?m.gross/m.sales:0, jobs:m.jobs.length, sales:m.sales};
+}
+function breakEven(){
+  const oh=overheadsMonthly(), tm=trailingMargin();
+  if(!oh) return {oh:0,need:0,why:'no overheads entered yet'};
+  if(tm.jobs<3) return {oh,need:0,why:'not enough finished jobs yet to know the margin'};
+  return {oh,need:oh/tm.frac,margin:tm.frac*100,why:''};
+}
+
+/* Twelve months ending with the period on screen. */
+function monthSeries(endYmd){
+  const e=new Date(endYmd), out=[];
+  for(let i=11;i>=0;i--){
+    const s=new Date(e.getFullYear(),e.getMonth()-i,1);
+    const to=ymd(new Date(s.getFullYear(),s.getMonth()+1,0));
+    const m=moneyFor(ymd(s),to);
+    out.push({label:monthName(s),sales:m.sales,gross:m.gross,
+      net:m.gross-overheadsMonthly(),jobs:m.jobs.length});
+  }
+  return out;
+}
+
+/* Of the quotes raised in a period, how many turned into work. */
+function conversionFor(from,to){
+  const taken=JOBS.filter(j=>{const d=(j.takenAt||'').slice(0,10); return d>=from&&d<=to;});
+  const won=taken.filter(j=>j.confirmed&&j.status!=='lost').length;
+  const lost=taken.filter(j=>j.status==='lost').length;
+  return {taken:taken.length,won,lost,open:taken.length-won-lost,
+    pct:taken.length?won/taken.length*100:0};
+}
+
+let moneyKind='month', moneyOff=0, moneyView='summary';
+
+const PERIODS=[['week','Week'],['month','Month'],['quarter','Quarter'],['year','Year'],['all','All time']];
+
+function barBlock(series,key){
+  const vals=series.map(s=>s[key]);
+  const top=Math.max(1,...vals.map(Math.abs));
+  return `<div class="bars">${series.map(s=>{
+    const v=s[key], w=Math.abs(v)/top*50;
+    return `<div class="bar">
+      <span class="bl">${esc(s.label)}</span>
+      <span class="bt"><span class="bz"></span>
+        <span class="bf ${v<0?'down':''}" style="${v<0?'left:'+(50-w)+'%':'left:50%'};width:${w}%"></span></span>
+      <span class="bv">${gbpS(v).replace('.00','')}</span>
+    </div>`;}).join('')}</div>`;
+}
+
+function renderMoney(){
+  const r=periodRange(moneyKind,moneyOff);
+  const m=moneyFor(r.from,r.to);
+  const cash=takingsFor(r.from,r.to);
+  const oh=overheadsMonthly()*r.months;
+  const net=m.gross-oh;
+  const be=breakEven();
+  const owed=owedList();
+  const owedTotal=owed.reduce((s,o)=>s+o.bal,0);
+
+  const head=`<div class="dtop">
+      <div><h2>Money</h2><div class="wsmeta">${esc(r.label)}</div></div>
+      <div class="dnav">
+        ${moneyKind==='all'?'':`<button data-moff="-1">←</button><button data-moff="0">Now</button><button data-moff="1">→</button>`}
+        <button class="pri" data-print="money" style="background:var(--ink);color:#fff;border-color:var(--ink)">Print</button>
+      </div>
+    </div>
+    <div class="toggle" style="margin-bottom:12px">
+      ${[['summary','Summary'],['owed','Owed'+(owedTotal>0.005?' ('+gbp(owedTotal).replace('.00','')+')':'')],['jobs','Jobs']]
+        .map(v=>`<button data-mview="${v[0]}" class="${moneyView===v[0]?'on':''}">${esc(v[1])}</button>`).join('')}
+    </div>`;
+
+  if(moneyView==='owed'){ $('list').innerHTML=head+owedBody(owed,owedTotal); return; }
+  if(moneyView==='jobs'){ $('list').innerHTML=head+periodChips()+jobsBody(m,r); return; }
+
+  const provNote=m.provisional
+    ? `<div class="mnote"><b style="color:var(--amber)">${m.provisional} of these ${m.provisional===1?'job has':'jobs have'} glass with no supplier price entered.</b>
+       The cost is understated and the profit is flattered until those are filled in.</div>` : '';
+
+  $('list').innerHTML=head+periodChips()+`
+    <div class="mgrid">
+      <div class="mcard"><div class="lab">Sales, before VAT</div><div class="val">${gbp(m.sales)}</div>
+        <div class="sub2">${m.jobs.length} job${m.jobs.length===1?'':'s'} finished${m.sales>0?' · '+gbp(m.sales/m.jobs.length)+' average':''}</div></div>
+      <div class="mcard"><div class="lab">Glass and materials</div><div class="val">${gbp(m.cost)}</div>
+        <div class="sub2">what the work cost us</div></div>
+      <div class="mcard"><div class="lab">Gross profit</div><div class="val ${m.gross>=0?'pos':'neg'}">${gbpS(m.gross)}</div>
+        <div class="sub2">${m.margin.toFixed(0)}% margin</div></div>
+      <div class="mcard"><div class="lab">Running the shop</div><div class="val">${gbp(oh)}</div>
+        <div class="sub2">${overheadsMonthly()?gbp(overheadsMonthly())+' a month':'nothing entered yet'}</div></div>
+      <div class="mcard dark wide"><div class="lab">What the shop actually made</div>
+        <div class="val ${net>=0?'pos':'neg'}">${gbpS(net)}</div>
+        <div class="sub2">${overheadsMonthly()
+          ? 'Gross profit less the cost of running the shop for this period.'
+          : 'This is gross profit only. Enter your monthly costs under Prices &amp; suppliers to see what is really left.'}</div></div>
+      <div class="mcard"><div class="lab">Cash in</div><div class="val">${gbp(cash.total)}</div>
+        <div class="sub2">${cash.rows.length} payment${cash.rows.length===1?'':'s'} taken in this period</div></div>
+      <div class="mcard"><div class="lab">Still owed</div><div class="val ${owedTotal>0.005?'neg':''}">${gbp(owedTotal)}</div>
+        <div class="sub2">${owed.length} job${owed.length===1?'':'s'} outstanding right now</div></div>
+      <div class="mcard"><div class="lab">VAT on these sales</div><div class="val">${gbp(m.vat)}</div>
+        <div class="sub2">collected for HMRC, not income</div></div>
+    </div>
+    ${provNote}
+
+    ${be.why?`<div class="msec">Break even</div>
+      <div class="mcard wide"><div class="sub2">Cannot work this out yet — ${esc(be.why)}.</div></div>`
+     :`<div class="msec">Break even</div>
+      <div class="mcard wide">
+        <div class="lab">Sales needed each month to cover the shop</div>
+        <div class="val">${gbp(be.need)}</div>
+        <div class="betrack"><div class="befill ${(m.sales/r.months)<be.need?'short':''}"
+          style="width:${Math.min(100,(m.sales/r.months)/be.need*100).toFixed(1)}%"></div></div>
+        <div class="sub2">Running at ${gbp(m.sales/r.months)} a month${(m.sales/r.months)>=be.need
+          ? ', which covers it.' : ', which is '+gbp(be.need-m.sales/r.months)+' a month short.'}
+          Worked out from ${be.margin.toFixed(0)}% margin over the last twelve months.</div>
+      </div>`}
+
+    <div class="msec">Month by month</div>
+    ${barBlock(monthSeries(r.to),'gross')}
+    <div class="mnote">Gross profit by month, before the cost of running the shop.</div>
+
+    <div class="msec">Where it came from</div>
+    <div class="mgrid">
+      <div class="mcard"><div class="lab">Glass we cut</div><div class="val">${gbpS(m.cut.sale-m.cut.cost)}</div>
+        <div class="sub2">${gbp(m.cut.sale)} sold${m.cut.sale>0?' · '+((m.cut.sale-m.cut.cost)/m.cut.sale*100).toFixed(0)+'% margin':''}</div></div>
+      <div class="mcard"><div class="lab">Glass we buy in</div><div class="val">${gbpS(m.ord.sale-m.ord.cost)}</div>
+        <div class="sub2">${gbp(m.ord.sale)} sold${m.ord.sale>0?' · '+((m.ord.sale-m.ord.cost)/m.ord.sale*100).toFixed(0)+'% margin':''}</div></div>
+      <div class="mcard"><div class="lab">Retail</div><div class="val">${gbp(m.retailSale)}</div>
+        <div class="sub2">${m.sales>0?(m.retailSale/m.sales*100).toFixed(0)+'% of sales':'—'}</div></div>
+      <div class="mcard"><div class="lab">Trade</div><div class="val">${gbp(m.tradeSale)}</div>
+        <div class="sub2">${m.sales>0?(m.tradeSale/m.sales*100).toFixed(0)+'% of sales':'—'}</div></div>
+    </div>
+    ${supplierBody(m)}
+    ${conversionBody(r)}
+    <div class="mnote" style="margin-top:18px">A job counts on the day it went out, so the glass and the money it
+      made land in the same month. This is a management view for running the shop — it is not your accounts, and it
+      will not do a VAT return.</div>`;
+}
+
+const periodChips=()=>`<div class="mchips">${PERIODS.map(p=>
+  `<button data-mkind="${p[0]}" class="${moneyKind===p[0]?'on':''}">${esc(p[1])}</button>`).join('')}</div>`;
+
+function supplierBody(m){
+  const names=Object.keys(m.bySup).sort((a,b)=>m.bySup[b].sale-m.bySup[a].sale);
+  if(!names.length) return '';
+  return `<div class="msec">By supplier</div>`+names.map(n=>{
+    const s=m.bySup[n], p=s.sale-s.cost;
+    return `<div class="mrow"><div class="mi">
+      <div class="mn">${esc(n)}</div>
+      <div class="mm">${s.pieces} piece${s.pieces===1?'':'s'} · ${gbp(s.cost)} paid out</div></div>
+      <div class="mv">${gbpS(p)}<span class="mp">${s.sale>0?(p/s.sale*100).toFixed(0)+'% margin':''}</span></div>
+    </div>`;}).join('');
+}
+
+function conversionBody(r){
+  const c=conversionFor(r.from,r.to);
+  if(!c.taken) return '';
+  return `<div class="msec">Quotes raised in this period</div>
+    <div class="mgrid">
+      <div class="mcard"><div class="lab">Turned into work</div><div class="val">${c.pct.toFixed(0)}%</div>
+        <div class="sub2">${c.won} of ${c.taken}</div></div>
+      <div class="mcard"><div class="lab">Not proceeding</div><div class="val">${c.lost}</div>
+        <div class="sub2">${c.open} still open</div></div>
+    </div>`;
+}
+
+function owedBody(owed,total){
+  if(!owed.length) return `<div class="empty"><h3>Nobody owes us anything</h3><p>Every finished job has been paid for.</p></div>`;
+  const aged=agedBuckets(owed);
+  const trade=owed.filter(o=>o.j.trade).reduce((s,o)=>s+o.bal,0);
+  return `<div class="mgrid">
+      <div class="mcard dark wide"><div class="lab">Owed to the shop</div><div class="val">${gbp(total)}</div>
+        <div class="sub2">across ${owed.length} job${owed.length===1?'':'s'}${trade>0.005?' · '+gbp(trade)+' of it on trade accounts':''}</div></div>
+      ${Object.keys(aged).map(k=>`<div class="mcard"><div class="lab">${esc(k)}</div>
+        <div class="val ${k==='Over 60 days'&&aged[k]>0.005?'neg':''}">${gbp(aged[k])}</div></div>`).join('')}
+    </div>
+    ${owed.map(o=>`<div class="mrow ${o.days>60?'late':''}">
+      <div class="mi">
+        <div class="mn">${o.j.no} · ${esc(o.j.name)}${o.j.trade?' <span class="tag">Trade</span>':''}</div>
+        <div class="mm">${esc(fmtPhone(o.j.phone))} · ${stat(o.j.status).label.toLowerCase()} ·
+          <span class="${o.days>60?'stale':''}">${o.days} day${o.days===1?'':'s'}</span></div>
+      </div>
+      <div class="mv">${gbp(o.bal)}<span class="mp">of ${gbp(jobTotals(o.j).grand)}</span></div>
+      <div class="acts">
+        <button class="act warn" data-settle="${o.j.id}">Take ${gbp(o.bal)}</button>
+        <button class="act" data-mail="${o.j.id}">Chase</button>
+        <button class="act" data-open="${o.j.id}">Open</button>
+      </div>
+    </div>`).join('')}
+    <div class="mnote">Oldest first. Retail jobs should be settled on collection, so anything sitting here for weeks is
+      usually a trade account worth a phone call.</div>`;
+}
+
+function jobsBody(m,r){
+  if(!m.jobs.length) return `<div class="empty"><h3>Nothing finished in this period</h3><p>Jobs appear here on the day they go out.</p></div>`;
+  const rows=m.jobs.map(j=>({j,p:profitOf(j)})).sort((a,b)=>b.p.profit-a.p.profit);
+  return rows.map(x=>`<div class="mrow">
+      <div class="mi">
+        <div class="mn">${x.j.no} · ${esc(x.j.name)}${x.j.trade?' <span class="tag">Trade</span>':''}</div>
+        <div class="mm">${fmtDate(countDate(x.j))} · ${gbp(x.p.net)} sold · ${gbp(x.p.cost)} cost${x.p.known?'':' so far'}</div>
+      </div>
+      <div class="mv ${x.p.profit>=0?'':'neg'}">${gbpS(x.p.profit)}<span class="mp">${x.p.net>0?x.p.margin.toFixed(0)+'%':''}${x.p.known?'':' · partial'}</span></div>
+      <div class="acts"><button class="act" data-open="${x.j.id}">Open</button></div>
+    </div>`).join('')
+    +`<div class="mnote">Best first. A job showing a thin margin is usually one where the fitting time or the
+      delivery never got put in under what it costs us.</div>`;
+}
+
 /* ---------- booking ---------- */
 let bookJob=null, bookKind='fit';
 function openBook(j,date){
@@ -1757,7 +2187,12 @@ async function loadAll() {
 async function pushJob(job) {
   const t = jobTotals(job);
   job._total = t.grand;
-  job._balance = t.grand - num(job.deposit);
+  job._paid = paidOf(job);
+  job._balance = t.grand - job._paid;
+  job._net = t.net;
+  job._cost = costBreakdown(job).total;
+  /* the date the job counts towards, so the database can group by month */
+  job._doneAt = job.status==='done' ? (job.doneAt||'').slice(0,10) : '';
   
   try {
     const r = await fetch(`${API}/jobs/${job.id}`, {
@@ -1818,6 +2253,13 @@ document.addEventListener('click',async e=>{
   const f=e.target.closest('[data-f]');
   if(f){ filter=f.dataset.f; listView='sheet'; $('search').value=''; render(); window.scrollTo({top:0}); return; }
 
+  const mk=e.target.closest('[data-mkind]');
+  if(mk){ moneyKind=mk.dataset.mkind; moneyOff=0; renderMoney(); return; }
+  const mo=e.target.closest('[data-moff]');
+  if(mo){ const d=+mo.dataset.moff; moneyOff = d===0 ? 0 : moneyOff+d; renderMoney(); return; }
+  const mvw=e.target.closest('[data-mview]');
+  if(mvw){ moneyView=mvw.dataset.mview; renderMoney(); return; }
+
   const mv=e.target.closest('[data-mv]');
   if(mv){ const d=+mv.dataset.mv;
     if(d===0){ diaryMonth=new Date(); selDay=ymd(new Date()); }
@@ -1857,7 +2299,7 @@ document.addEventListener('click',async e=>{
   const vw=e.target.closest('[data-view]');
   if(vw){ listView=vw.dataset.view; render(); return; }
   const pr=e.target.closest('[data-print]');
-  if(pr){ ({cut:$('printCut'),order:$('printOrder'),diary:$('printDiary')})[pr.dataset.print].click(); return; }
+  if(pr){ ({cut:$('printCut'),order:$('printOrder'),diary:$('printDiary'),money:$('printMoney')})[pr.dataset.print].click(); return; }
   const aa=e.target.closest('[data-arrall]');
   if(aa){
     const name=aa.dataset.arrall;
@@ -1938,6 +2380,17 @@ document.addEventListener('click',async e=>{
     if(await pushJob(j)){ UNDO=snap; render(); toast('Job '+j.no+' closed off',false,'Undo'); }
     return;
   }
+  const st=e.target.closest('[data-settle]');
+  if(st){
+    const j=JOBS.find(x=>x.id===st.dataset.settle); if(!j) return;
+    const bal=balanceOf(j);
+    if(bal<=0.005){ toast('Nothing left to pay on that one'); return; }
+    const snap=snapshot(gbp(bal)+' taken on job '+j.no,[j]);
+    j.payments=paymentsOf(j).concat([{date:ymd(new Date()),amount:r2(bal),method:'Cash'}]);
+    if(await pushJob(j)){ UNDO=snap; render(); toast(gbp(bal)+' paid on job '+j.no,false,'Undo'); }
+    return;
+  }
+
   const c=e.target.closest('[data-call]');
   if(c){
     const j=JOBS.find(x=>x.id===c.dataset.call); if(!j) return;
@@ -2123,6 +2576,83 @@ $('extras').addEventListener('click',e=>{
 });
 $('addExtra').onclick=()=>{extras.push({label:'',amount:''});drawExtras();};
 
+function drawPays(){
+  $('pays').innerHTML=pays.map((p,i)=>
+    `<div class="payrow">
+      <input class="inp" data-payd="${i}" type="date" value="${esc(p.date||'')}">
+      <input class="inp mono amt" data-payv="${i}" value="${esc(p.amount)}" inputmode="decimal" placeholder="£">
+      <select class="inp" data-paym="${i}">${PAY_METHODS.map(m=>
+        `<option ${m===p.method?'selected':''}>${esc(m)}</option>`).join('')}</select>
+      <button class="idel" data-rmpay="${i}" aria-label="Remove payment">×</button>
+    </div>`).join('')
+    ||'<p class="sub">Nothing paid yet.</p>';
+  drawPayBal();
+}
+/* The running balance, shown in the card heading so it is always in view. */
+function drawPayBal(){
+  const t=totals(items,extras,$('fDisc').value,$('fCard').checked);
+  const paid=pays.reduce((s,p)=>s+num(p.amount),0);
+  const bal=t.grand-paid;
+  const el=$('payBal');
+  el.textContent = paid<=0 ? gbp(t.grand)+' to pay'
+    : bal>0.005 ? gbp(paid)+' paid, '+gbp(bal)+' left'
+    : bal<-0.005 ? gbp(-bal)+' overpaid'
+    : 'Paid in full';
+  el.className = bal>0.005 ? 'owing' : 'clear';
+  $('payFull').style.display = bal>0.005 ? '' : 'none';
+}
+$('pays').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.payv!==undefined){ pays[+t.dataset.payv].amount=t.value; drawPayBal(); drawCalc(); }
+  if(t.dataset.payd!==undefined) pays[+t.dataset.payd].date=t.value;
+});
+$('pays').addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.paym!==undefined) pays[+t.dataset.paym].method=t.value;
+});
+$('pays').addEventListener('click',e=>{
+  const rm=e.target.closest('[data-rmpay]'); if(!rm) return;
+  pays.splice(+rm.dataset.rmpay,1); drawPays(); drawCalc();
+});
+$('addPay').onclick=()=>{
+  pays.push({date:ymd(new Date()),amount:'',method:PAY_METHODS[0]});
+  drawPays(); drawCalc();
+};
+$('payFull').onclick=()=>{
+  const t=totals(items,extras,$('fDisc').value,$('fCard').checked);
+  const bal=t.grand-pays.reduce((s,p)=>s+num(p.amount),0);
+  if(bal<=0.005) return;
+  pays.push({date:ymd(new Date()),amount:bal.toFixed(2),method:PAY_METHODS[0]});
+  drawPays(); drawCalc();
+};
+
+function drawOverheads(){
+  const list=overheadsList();
+  $('ohTbl').innerHTML=list.map((o,i)=>
+    `<div class="row" style="margin-bottom:8px">
+      <input class="inp" data-ohl="${i}" value="${esc(o.label)}" placeholder="e.g. rent, van, insurance">
+      <input class="inp mono" data-oha="${i}" value="${esc(o.amount)}" inputmode="decimal" placeholder="£ a month" style="flex:0 0 108px">
+      <button class="idel" data-rmoh="${i}" style="flex:0 0 auto" aria-label="Remove">×</button>
+    </div>`).join('')||'<p class="sub">Nothing entered yet.</p>';
+  const t=overheadsMonthly();
+  $('ohTot').textContent=t?gbp(t)+' a month':'';
+  $('ohTot').style.cssText='font-size:11px;font-weight:700;text-transform:none;letter-spacing:.04em';
+}
+$('ohTbl').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.ohl!==undefined) SETTINGS.overheads[+t.dataset.ohl].label=t.value;
+  if(t.dataset.oha!==undefined){ SETTINGS.overheads[+t.dataset.oha].amount=t.value;
+    const s=overheadsMonthly(); $('ohTot').textContent=s?gbp(s)+' a month':''; }
+});
+$('ohTbl').addEventListener('click',e=>{
+  const rm=e.target.closest('[data-rmoh]'); if(!rm) return;
+  SETTINGS.overheads.splice(+rm.dataset.rmoh,1); drawOverheads();
+});
+$('addOh').onclick=()=>{
+  SETTINGS.overheads=overheadsList().concat([{label:'',amount:''}]);
+  drawOverheads();
+};
+
 function drawCosts(){
   $('costs').innerHTML=costs.map((x,i)=>
     `<div class="row" style="margin-bottom:8px">
@@ -2164,12 +2694,12 @@ function drawAppts(){
 $('fMeasure').addEventListener('change',drawAppts);
 $('hoPick').addEventListener('click',e=>{const b=e.target.closest('[data-h]'); if(b) setHandover(b.dataset.h);});
 $('tTrade').onclick=()=>setTrade(true); $('tRetail').onclick=()=>setTrade(false);
-['fDisc','fDep'].forEach(id=>$(id).addEventListener('input',drawCalc));
+$('fDisc').addEventListener('input',()=>{drawCalc();drawPayBal();});
 $('fCard').addEventListener('change',drawCalc);
 
 function drawCalc(){
   const t=totals(items,extras,$('fDisc').value,$('fCard').checked);
-  const dep=num($('fDep').value);
+  const dep=pays.reduce((s,p)=>s+num(p.amount),0);
   $('calcRows').innerHTML=
     `<div class="calcrow"><span>Glass and edgework (${t.area.toFixed(3)} m²)</span><span>${gbp(t.subtotal)}</span></div>`+
     (t.discountAmount?`<div class="calcrow"><span>Discount ${num($('fDisc').value)}%</span><span>−${gbp(t.discountAmount)}</span></div>`:'')+
@@ -2178,7 +2708,7 @@ function drawCalc(){
     `<div class="calcrow"><span>VAT @ 20%</span><span>${gbp(t.vat)}</span></div>`+
     (t.cardAmount?`<div class="calcrow"><span>Card fee 2%</span><span>${gbp(t.cardAmount)}</span></div>`:'')+
     `<div class="calcrow tot"><span>${isTrade?'To invoice':'To pay'}</span><span>${gbp(t.grand)}</span></div>`+
-    (dep?`<div class="calcrow"><span>Less deposit</span><span>−${gbp(dep)}</span></div>
+    (dep?`<div class="calcrow"><span>Less paid</span><span>−${gbp(dep)}</span></div>
           <div class="calcrow"><span>Balance</span><span>${gbp(t.grand-dep)}</span></div>`:'');
   const nc=items.filter(i=>i.src==='cut').length, no=items.filter(i=>i.src==='order').length;
   const sup=[];
@@ -2192,7 +2722,7 @@ function drawCalc(){
     `<div class="profit">
       <div class="calcrow"><span>Sale ex VAT</span><span>${gbp(t.net)}</span></div>
       <div class="calcrow"><span>Costs${cb.known?'':' so far'}</span><span>−${gbp(cb.total)}</span></div>
-      <div class="calcrow"><span>Profit</span><b>${gbp(profit)}${t.net>0?'  ('+(profit/t.net*100).toFixed(0)+'%)':''}</b></div>
+      <div class="calcrow"><span>Profit</span><b>${gbpS(profit)}${t.net>0?'  ('+(profit/t.net*100).toFixed(0)+'%)':''}</b></div>
     </div>`:'';
   $('calcHint').textContent=ADJ?`List prices are running ${ADJ>0?'+':''}${ADJ}% — change that under Prices.`:'';
 }
@@ -2229,7 +2759,8 @@ function openJob(j){
        :[{pid:'c4mm',w:'',h:'',q:'1',addons:[],src:'cut',supplier:'',arrived:false,cut:false}];
   items.forEach(i=>{ if(!i.src) i.src=defaultSrc(i.pid); });
   extras=j&&j.extras?clone(j.extras):[];
-  $('fDisc').value=j?(j.discountPct||''):''; $('fDep').value=j?(j.deposit||''):'';
+  $('fDisc').value=j?(j.discountPct||''):'';
+  pays=j&&j.payments?clone(j.payments):[];
   $('fCard').checked=j?!!j.cardFee:false;
   $('fAddr').value=j?(j.addr||''):''; $('fWanted').value=j?(j.wanted||''):''; $('fNote').value=j?(j.note||''):'';
   $('fMeasure').checked=j?!!j.needsMeasure:false;
@@ -2237,7 +2768,7 @@ function openJob(j){
   OTHER={};
   setTrade(j?!!j.trade:false);
   setHandover(j?(j.handover||(j.deliver?'delivery':'collection')):'collection');
-  drawItems(); drawExtras(); drawCosts(); drawCalc(); drawAppts(); $('sugg').innerHTML='';
+  drawItems(); drawExtras(); drawCosts(); drawPays(); drawCalc(); drawAppts(); $('sugg').innerHTML='';
   showSheet($('jobSheet'));
   if(!j) setTimeout(()=>$('fName').focus(),60);
 }
@@ -2257,7 +2788,13 @@ $('saveJob').onclick=async()=>{
     no: editing?editing.no:(JOBS.reduce((m,j)=>Math.max(m,j.no||0),1649)+1),
     name, phone:$('fPhone').value.trim(), email:$('fEmail').value.trim(), trade:isTrade,
     unit, items:clean, extras:extras.filter(x=>x.label||num(x.amount)),
-    discountPct:num($('fDisc').value), deposit:num($('fDep').value), cardFee:$('fCard').checked,
+    discountPct:num($('fDisc').value), cardFee:$('fCard').checked,
+    payments: pays.filter(p=>num(p.amount)!==0).map(p=>({
+      date:p.date||ymd(new Date()), amount:num(p.amount), method:p.method||PAY_METHODS[0]
+    })),
+    /* kept in step so a machine still running the old build reads the
+       right balance until it picks up this version */
+    deposit: pays.reduce((s,p)=>s+num(p.amount),0),
     handover, deliver:handover==='delivery', addr:$('fAddr').value.trim(),
     needsMeasure:$('fMeasure').checked,
     appts: editing?apptsOf(editing):[],
@@ -2330,9 +2867,11 @@ function buildJobText(j,kind){
   if(j.cardFee) L.push(row('Card surcharge 2%',gbp(t.cardAmount)));
   L.push('-'.repeat(W));
   L.push(row('TOTAL',gbp(t.grand)));
-  if(kind!=='quote'&&num(j.deposit)>0){
-    L.push(row('Deposit paid','-'+gbp(j.deposit)));
-    L.push(row('BALANCE',gbp(t.grand-num(j.deposit))));
+  if(kind!=='quote'&&paidOf(j)>0){
+    paymentsOf(j).forEach(p=>L.push(row(
+      'Paid '+new Date(p.date).toLocaleDateString('en-GB')+(p.method?' ('+p.method+')':''),
+      '-'+gbp(p.amount))));
+    L.push(row('BALANCE',gbp(balanceOf(j))));
   }
   L.push('');
   if(j.handover!=='collection'&&j.addr) L.push(handoverLabel(j)+' at '+j.addr);
@@ -2346,7 +2885,7 @@ function defaultMessage(j,kind){
   const first=(j.name||'').split(' ')[0];
   const hi='Hi'+(first?' '+first:'')+',\n\n';
   const sign='\n\nKind regards,\n'+SHOP.name;
-  const bal=jobTotals(j).grand-num(j.deposit);
+  const bal=balanceOf(j);
   if(!(j.items||[]).length){
     const a=apptsOf(j).find(x=>x.kind==='measure');
     return hi+'Thanks for your enquiry. '+
@@ -2542,17 +3081,19 @@ function apptText(j){
 function jobsCSV(){
   const head=['Job no','Taken','Status','Customer','Phone','Email','Account','Handover','Address',
     'Needs measure','Wanted by','Pieces','Area m2','Subtotal ex VAT','Discount %','Discount','Extras',
-    'Net ex VAT','VAT','Card fee','Total inc VAT','Deposit','Balance','Our cost','Profit','Margin %',
-    'Costs known','Customer told','Told how','Diary','Notes'];
+    'Net ex VAT','VAT','Card fee','Total inc VAT','Paid','Balance','Payments','Our cost','Profit','Margin %',
+    'Costs known','Customer told','Told how','Completed','Diary','Notes'];
   const rows=[head];
   JOBS.slice().sort((a,b)=>a.no-b.no).forEach(j=>{
     const t=jobTotals(j), p=profitOf(j);
     rows.push([j.no, (j.takenAt||'').slice(0,10), stat(j.status).label, j.name, j.phone, j.email,
       j.trade?'Trade':'Retail', handoverLabel(j), j.addr, j.needsMeasure?'Yes':'', j.wanted,
       (j.items||[]).length, r2(t.area), r2(t.subtotal), num(j.discountPct)||'', r2(t.discountAmount),
-      r2(t.extrasTotal), r2(t.net), r2(t.vat), r2(t.cardAmount), r2(t.grand), r2(j.deposit),
-      r2(t.grand-num(j.deposit)), r2(p.cost), r2(p.profit), t.net>0?Math.round(p.margin):'',
-      p.known?'Yes':'Partial', j.called?'Yes':'', j.toldHow||'', apptText(j),
+      r2(t.extrasTotal), r2(t.net), r2(t.vat), r2(t.cardAmount), r2(t.grand), r2(paidOf(j)),
+      r2(balanceOf(j)),
+      paymentsOf(j).map(x=>x.date+' '+r2(x.amount)+(x.method?' '+x.method:'')).join('; '),
+      r2(p.cost), r2(p.profit), t.net>0?Math.round(p.margin):'',
+      p.known?'Yes':'Partial', j.called?'Yes':'', j.toldHow||'', (j.doneAt||'').slice(0,10), apptText(j),
       (j.note||'').replace(/\s+/g,' ')]);
   });
   return toCSV(rows);
@@ -2662,14 +3203,21 @@ $('rateBtn').onclick=()=>{
   $('fAdj').value=ADJ||'';
   const cats=[];
   ALL_PRODUCTS.forEach(p=>{let c=cats.find(x=>x.n===p.category);if(!c){c={n:p.category,items:[]};cats.push(c);}c.items.push(p);});
-  $('pTbl').innerHTML=cats.map(c=>
-    `<tr><td class="c" colspan="2">${esc(c.n)}</td></tr>`+
-    c.items.map(p=>`<tr><td>${esc(p.name)}${p.each?' <span class="sub">each</span>':''}${ORDER_IN.has(p.id)?' <span class="src src-order">Order</span>':''}</td>
-      <td><input data-p="${p.id}" value="${priceOf(p.id).toFixed(2)}" inputmode="decimal"></td></tr>`).join('')).join('');
+  $('pTbl').innerHTML=`<tr><td></td><td class="ch">We charge</td><td class="ch">Costs us</td></tr>`+
+    cats.map(c=>
+    `<tr><td class="c" colspan="3">${esc(c.n)}</td></tr>`+
+    c.items.map(p=>{
+      const cr=costRateOf(p.id);
+      return `<tr><td>${esc(p.name)}${p.each?' <span class="sub">each</span>':''}${ORDER_IN.has(p.id)?' <span class="src src-order">Order</span>':''}</td>
+      <td><input data-p="${p.id}" value="${priceOf(p.id).toFixed(2)}" inputmode="decimal"></td>
+      <td><input data-p="c:${p.id}" value="${cr===null?'':cr.toFixed(2)}" inputmode="decimal" placeholder="—"></td></tr>`;
+    }).join('')).join('');
   $('aTbl').innerHTML=ADDONS.map(a=>
     `<tr><td>${esc(a.name)} <span class="sub">per ${a.charge==='lm'?'linear metre':a.charge==='m2'?'m²':'unit'}</span></td>
      <td><input data-p="a:${a.id}" value="${addonPrice(a.id).toFixed(2)}" inputmode="decimal"></td></tr>`).join('');
   $('fCutPct').value=SETTINGS.cutCostPct||'';
+  if(!Array.isArray(SETTINGS.overheads)) SETTINGS.overheads=[];
+  drawOverheads();
   $('supTbl').innerHTML=SUPPLIERS.map((s,i)=>
     `<div class="fgroup"><label>${esc(s.name)}${s.check?' <span class="src src-order">check this one</span>':''}</label>
       <div class="row"><input class="inp" data-sn="${i}" value="${esc(s.name)}" placeholder="Name" style="flex:0 0 120px">
@@ -2679,11 +3227,17 @@ $('rateBtn').onclick=()=>{
 };
 $('saveRates').onclick=async()=>{
   SETTINGS.cutCostPct=num($('fCutPct').value);
+  SETTINGS.overheads=overheadsList().filter(o=>o.label||num(o.amount))
+    .map(o=>({label:o.label.trim(),amount:num(o.amount)}));
   Array.prototype.forEach.call($('supTbl').querySelectorAll('[data-sn]'),i=>{SUPPLIERS[+i.dataset.sn].name=i.value.trim()||SUPPLIERS[+i.dataset.sn].name;});
   Array.prototype.forEach.call($('supTbl').querySelectorAll('[data-se]'),i=>{const s=SUPPLIERS[+i.dataset.se];s.email=i.value.trim();delete s.check;});
   try{ await sSet(KEY_SUP,JSON.stringify({suppliers:SUPPLIERS,settings:SETTINGS})); }catch(e){}
   ADJ=num($('fAdj').value);
-  Array.prototype.forEach.call(document.querySelectorAll('[data-p]'),i=>{PRICES[i.dataset.p]=num(i.value);});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-p]'),i=>{
+    const k=i.dataset.p;
+    if(k.slice(0,2)==='c:'&&i.value.trim()===''){ delete PRICES[k]; return; }
+    PRICES[k]=num(i.value);
+  });
   try{ await sSet(KEY_PRICES,JSON.stringify({prices:PRICES,adj:ADJ}));
        toast(STORE==='shop'?'Prices saved for the whole shop':'Prices saved on this device'); }
   catch(e){ toast('Could not save prices',true); }
@@ -2729,6 +3283,42 @@ $('printOrder').onclick=()=>{
         <div class="phead"><span>${r.j.no} · ${esc(r.j.name)}</span><span>${r.j.wanted?'by '+new Date(r.j.wanted).toLocaleDateString('en-GB'):''}</span></div>
         ${pieceLine(r.j,r.it)}</div>`).join('')).join('')
      :'<p>Nothing on order.</p>');
+  $('menu').classList.remove('on'); window.print();
+};
+$('printMoney').onclick=()=>{
+  const r=periodRange(moneyKind,moneyOff);
+  const m=moneyFor(r.from,r.to);
+  const oh=overheadsMonthly()*r.months;
+  const net=m.gross-oh, cash=takingsFor(r.from,r.to);
+  const owed=owedList(), owedTotal=owed.reduce((s,o)=>s+o.bal,0);
+  const row=(l,v,cls)=>`<div class="prow ${cls||''}"><span>${esc(l)}</span><span>${esc(v)}</span></div>`;
+
+  $('printarea').innerHTML=`<div class="ptitle">Money — ${esc(r.label)}</div>
+    <div class="psup">What we earned</div>
+    ${row('Sales, before VAT',gbp(m.sales))}
+    ${row('Glass and materials','-'+gbp(m.cost))}
+    ${row('Gross profit',gbpS(m.gross)+'  ('+m.margin.toFixed(0)+'%)','tot')}
+    ${row('Running the shop','-'+gbp(oh))}
+    ${row('Left to the business',gbpS(net),'tot')}
+
+    <div class="psup">Cash</div>
+    ${row('Taken in this period',gbp(cash.total))}
+    ${row('Still owed to us right now',gbp(owedTotal))}
+    ${row('VAT collected on these sales',gbp(m.vat))}
+
+    <div class="psup">Where it came from</div>
+    ${row('Glass we cut',gbp(m.cut.sale)+' sold, '+gbpS(m.cut.sale-m.cut.cost)+' profit')}
+    ${row('Glass we bought in',gbp(m.ord.sale)+' sold, '+gbpS(m.ord.sale-m.ord.cost)+' profit')}
+    ${row('Retail',gbp(m.retailSale))}
+    ${row('Trade',gbp(m.tradeSale))}
+
+    <div class="psup">Jobs finished (${m.jobs.length})</div>
+    ${m.jobs.map(j=>{const p=profitOf(j);
+      return row(j.no+' · '+j.name+' · '+fmtDate(countDate(j)),
+                 gbp(p.net)+' sold, '+gbpS(p.profit)+' profit'+(p.known?'':' (partial)'));}).join('')
+      ||'<p>Nothing finished in this period.</p>'}
+
+    <div class="pfoot">${m.provisional?m.provisional+' job'+(m.provisional===1?'':'s')+' still missing a supplier price, so the profit above is overstated. ':''}A job counts on the day it went out. This is a management summary, not a set of accounts.</div>`;
   $('menu').classList.remove('on'); window.print();
 };
 $('printDiary').onclick=()=>{

@@ -32,19 +32,25 @@ export default {
         const expected = job._v ?? 0; // version the browser loaded
         delete job._v;
 
+        // The app works these out before sending. They are copies of what
+        // is already inside `data`, kept as real columns so the database
+        // can sort and total without unpacking every job.
         const res = await env.DB.prepare(`
           INSERT INTO jobs (id,no,name,phone,email,trade,status,confirmed,
-            wanted,total,balance,data,updated_at,updated_by,version)
-          VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,1)
+            wanted,total,balance,paid,done_at,cost,net,
+            data,updated_at,updated_by,version)
+          VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,1)
           ON CONFLICT(id) DO UPDATE SET
             no=?2, name=?3, phone=?4, email=?5, trade=?6, status=?7,
-            confirmed=?8, wanted=?9, total=?10, balance=?11, data=?12,
-            updated_at=?13, updated_by=?14, version=jobs.version+1
-          WHERE jobs.version = ?15
+            confirmed=?8, wanted=?9, total=?10, balance=?11, paid=?12,
+            done_at=?13, cost=?14, net=?15,
+            data=?16, updated_at=?17, updated_by=?18, version=jobs.version+1
+          WHERE jobs.version = ?19
         `).bind(
           job.id, job.no, job.name, job.phone || '', job.email || '',
           job.trade ? 1 : 0, job.status, job.confirmed ? 1 : 0,
-          job.wanted || '', job._total ?? 0, job._balance ?? 0,
+          job.wanted || '', job._total ?? 0, job._balance ?? 0, job._paid ?? 0,
+          job._doneAt || null, job._cost ?? null, job._net ?? null,
           JSON.stringify(job), new Date().toISOString(), who, expected
         ).run();
 
@@ -86,15 +92,45 @@ export default {
       }
 
       // ---- who owes us money ----
+      // The Money tab works this out in the browser, because every job is
+      // loaded there anyway and it still works with the connection down.
+      // This is the same question asked of the database instead, and it is
+      // what you would use once the book is too big to load in one go.
       if (path === '/api/owing' && request.method === 'GET') {
         const { results } = await env.DB.prepare(`
-          SELECT no, name, phone, trade, balance
+          SELECT id, no, name, phone, trade, total, paid, balance, done_at
           FROM jobs
           WHERE balance > 0.005 AND status IN ('done','ready')
           ORDER BY balance DESC
         `).all();
         const total = results.reduce((s, r) => s + r.balance, 0);
         return json({ jobs: results, total });
+      }
+
+      // ---- money by month ----
+      // Grouping four hundred jobs by month is the one thing the database
+      // is plainly better at than the browser. cost and net are only
+      // filled in on jobs saved since the money columns were added, so
+      // `complete` says whether the profit figures can be trusted yet.
+      if (path === '/api/summary' && request.method === 'GET') {
+        const { results } = await env.DB.prepare(`
+          SELECT substr(done_at,1,7)          AS month,
+                 COUNT(*)                     AS jobs,
+                 SUM(net)                     AS net,
+                 SUM(cost)                    AS cost,
+                 SUM(net) - SUM(cost)         AS gross,
+                 SUM(total)                   AS gross_inc_vat,
+                 SUM(paid)                    AS paid,
+                 SUM(CASE WHEN net IS NULL THEN 1 ELSE 0 END) AS unpriced
+          FROM jobs
+          WHERE status = 'done' AND done_at IS NOT NULL AND done_at <> ''
+          GROUP BY month
+          ORDER BY month
+        `).all();
+        return json({
+          months: results,
+          complete: results.every(r => r.unpriced === 0)
+        });
       }
 
       return json({ error: 'not found' }, 404);
