@@ -246,6 +246,47 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:var(--white);padding:11px 18px;border-radius:var(--r);font-size:14px;z-index:99;transition:transform .22s ease;max-width:90vw;display:flex;gap:16px;align-items:center}
 #toast.on{transform:translateX(-50%) translateY(0)}
 #toast.bad{background:var(--red)}
+/* ---------- a job somebody has flagged ---------- */
+.job.urgent{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red);color:var(--red)}
+.job.urgent h3,.job.urgent .sub,.job.urgent .mono,.job.urgent .prod,.job.urgent .size,
+.job.urgent .qty,.job.urgent .x,.job.urgent .addons,.job.urgent .money,.job.urgent .spec,
+.job.urgent .owed,.job.urgent .paid,.job.urgent .ref,.job.urgent .dim,.job.urgent .pn{color:var(--red)}
+.job.urgent .docket{border-top-color:#F0B7B3}
+.job.urgent .ditem{border-top-color:#F5D3D0}
+.note.urgent,.dnote.urgent{background:#FDECEA;border-color:#F0B7B3;border-left:4px solid var(--red);
+  color:var(--red);font-size:16px;font-weight:600;line-height:1.4;padding:10px 12px}
+.note.urgent b,.dnote.urgent b{display:block;font-size:10px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--red);margin-bottom:3px}
+.wsrow.urgent .pn.unote{color:var(--red);font-weight:700;font-size:14px}
+.cell .hasnote.urgent{color:var(--red)}
+.miniact{margin-top:6px;width:100%;padding:5px 8px;border:1px solid var(--blue);border-radius:var(--r);
+  background:var(--white);color:var(--blue);font-size:11.5px;font-weight:700}
+.miniact:hover{background:var(--blue);color:var(--white)}
+.picks{max-height:230px;overflow:auto;border:1px solid var(--silver);border-radius:var(--r)}
+.pick{display:flex;gap:9px;align-items:flex-start;padding:8px 10px;border-top:1px solid var(--silver2);font-size:13px}
+.pick:first-child{border-top:none}
+.pick input{width:17px;height:17px;flex:0 0 auto;margin-top:1px}
+.pick .pk{flex:1;min-width:0}
+.pick .pk>span{display:block}
+.pick .pkr{font-weight:600}
+.pick .pks{font-size:12px;color:var(--ink2);font-family:'IBM Plex Mono',monospace}
+.pickbar{display:flex;gap:8px;margin-top:9px}
+.pickbar button{flex:1;padding:6px 10px;border:1px solid var(--silver);border-radius:var(--r);
+  background:var(--white);font-size:12px;font-weight:600;color:var(--ink2)}
+
+/* ---------- photos ---------- */
+.phgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:8px}
+.ph{position:relative;border:1px solid var(--silver);border-radius:var(--r);overflow:hidden;background:var(--paper)}
+.ph img{width:100%;height:82px;object-fit:cover;display:block;cursor:zoom-in}
+.phwait{height:82px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink2)}
+.phsend{display:flex;align-items:center;gap:5px;padding:5px 7px;font-size:10.5px;font-weight:600;color:var(--ink2);text-transform:none;letter-spacing:0;border-top:1px solid var(--silver2)}
+.phsend input{width:14px;height:14px;flex:0 0 auto}
+.phcount{font-size:11px;font-weight:700;text-transform:none;letter-spacing:.04em}
+.phdel{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(17,34,31,.62);color:#fff;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
+.phadd{display:block;text-align:center;cursor:pointer}
+.jobphotos{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.jobphotos img{width:52px;height:42px;object-fit:cover;border-radius:2px;border:1px solid var(--silver);cursor:zoom-in}
+
 /* ---------- payments ---------- */
 .payrow{display:flex;gap:7px;margin-bottom:8px;align-items:center;flex-wrap:wrap}
 .payrow input[type=date]{flex:1 1 132px;min-width:0;font-size:13.5px;padding:8px 9px}
@@ -396,14 +437,39 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
       </div>
 
       <div class="card">
-        <h4><span>Glass</span><span id="unitPick"></span></h4>
-        <div id="items"></div>
-        <button class="addbtn" id="addItem">+ Add another piece</button>
-        <p class="sub" style="margin-top:9px">No sizes yet? Tick <b>needs measuring first</b> under Handover and save — the job goes in the diary to be measured, and you add the sizes afterwards.</p>
+        <h4><span id="workTitle">Glass</span><span id="unitPick"></span></h4>
+        <div class="fgroup"><label>What sort of job is this?</label>
+          <div class="toggle" id="kindPick">
+            <button data-kind="glass" class="on">Glass</button>
+            <button data-kind="frames">Frames</button>
+            <button data-kind="maintenance">Maintenance</button>
+          </div>
+        </div>
+        <div id="glassWrap">
+          <div id="items"></div>
+          <button class="addbtn" id="addItem">+ Add another piece</button>
+          <p class="sub" style="margin-top:9px">No sizes yet? Tick <b>needs measuring first</b> under Handover and save — the job goes in the diary to be measured, and you add the sizes afterwards.</p>
+        </div>
+        <div id="framesWrap" style="display:none">
+          <div id="frames"></div>
+          <button class="addbtn" id="addFrame">+ Add another frame</button>
+          <p class="sub" style="margin-top:9px">Sizes are kept for the order and the fitting. The price is whatever you are charging, typed in by hand — there is no rate for frames.</p>
+        </div>
+        <div id="maintWrap" style="display:none">
+          <p class="sub">Put what you are charging under <b>The work</b> below, and everything the fitter needs to know in the <b>Notes</b>.</p>
+        </div>
       </div>
 
       <div class="card">
-        <h4>Extras and labour</h4>
+        <h4><span>Photos</span><span id="photoCount" class="phcount"></span></h4>
+        <div id="photoGrid" class="phgrid"></div>
+        <label class="addbtn phadd" for="photoIn">+ Add a photo</label>
+        <input type="file" id="photoIn" accept="image/*" multiple style="display:none">
+        <p class="sub" style="margin-top:9px">Photos of the opening, the damage or the old frame. Anything ticked <b>Send</b> is offered to the supplier with the price request or the order. They are shrunk before they are saved, so they do not slow the job book down.</p>
+      </div>
+
+      <div class="card">
+        <h4 id="extrasTitle">Extras and labour</h4>
         <div id="extras"></div>
         <button class="addbtn" id="addExtra">+ Add an extra</button>
         <div style="margin-top:12px;max-width:160px">
@@ -412,6 +478,10 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
         <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink);margin-top:12px">
           <input type="checkbox" id="fCard" style="width:17px;height:17px"> Paying by card (adds 2%)
         </label>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink);margin-top:10px">
+          <input type="checkbox" id="fNoVat" style="width:17px;height:17px"> No VAT on this job
+        </label>
+        <p class="sub" id="noVatHint" style="margin-top:6px;display:none">Nothing will be added for VAT and the quote will not mention it. Only use this where the work genuinely is not standard-rated.</p>
       </div>
 
       <div class="card">
@@ -447,6 +517,10 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
         <div class="fgroup" id="apptWrap"></div>
         <div class="fgroup"><label for="fWanted">Wanted by</label><input class="inp" id="fWanted" type="date"></div>
         <div class="fgroup"><label for="fNote">Notes</label><textarea class="inp" id="fNote" rows="3" placeholder="Anything the workshop or counter needs to know"></textarea></div>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink)">
+          <input type="checkbox" id="fUrgent" style="width:17px;height:17px"> Make this note stand out
+        </label>
+        <p class="sub" style="margin-top:6px">The whole job turns red on the list and in the diary, and the note is shown large. Use it for the ones that will go wrong if somebody misses the note.</p>
       </div>
     </div>
 
@@ -466,6 +540,15 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
   <div class="sheethead"><h2 id="mailTitle">Send</h2><button class="hbtn ghost" id="closeMail">Close</button></div>
   <div class="sheetbody"><div class="sheetgrid">
     <div class="left">
+      <div class="card" id="pickCard" style="display:none">
+        <h4><span>What this covers</span><span id="pickCount"></span></h4>
+        <div class="picks" id="mPicks"></div>
+        <div class="pickbar">
+          <button id="pickAll">Tick all</button>
+          <button id="pickNone">Untick all</button>
+        </div>
+        <p class="sub" style="margin-top:9px">Only the ticked pieces go in the email, and only those get marked when you press the button at the bottom. Leave one unticked if you are not ready to order it yet.</p>
+      </div>
       <div class="card">
         <h4>Message</h4>
         <div class="fgroup"><label for="mTo">To</label><input class="inp" id="mTo" inputmode="email" placeholder="name@example.com"></div>
@@ -486,6 +569,7 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
           <button id="mGmail">Gmail</button>
           <button id="mOutlook">Outlook</button>
           <button id="mCopy">Copy</button>
+          <button id="mPhotos" style="display:none">Save photos</button>
         </div>
       </div>
     </div>
@@ -805,7 +889,8 @@ const stat=k=>STATUSES.find(s=>s.k===k)||STATUSES[0];
 const DURS={30:'30 min',60:'1 hr',90:'1½ hr',120:'2 hr',180:'3 hr',240:'Half day',360:'6 hr',480:'Full day'};
 
 let JOBS=[], CUSTOMERS=[], PRICES={}, ADJ=0, filter='all', editing=null, mailJob=null, mailKind='ready';
-let items=[], extras=[], costs=[], pays=[], isTrade=false, handover='collection', unit='mm';
+let items=[], extras=[], costs=[], pays=[], frames=[], jobKind='glass';
+let isTrade=false, handover='collection', unit='mm';
 let diaryMonth=new Date(), selDay=null, listView='sheet';
 let lastFull=null, lastAny=null, nagDismissed='';
 
@@ -1247,19 +1332,32 @@ function priceItem(it,u){
   }).filter(Boolean);
   return {p,area,perim,glass,addons,total:glass+addons.reduce((s,a)=>s+a.cost,0)};
 }
-function totals(its,exs,discPct,card,u){
+function totals(its,exs,discPct,card,u,opt){
+  opt=opt||{};
   const priced=its.map(i=>priceItem(i,u));
-  const subtotal=priced.reduce((s,i)=>s+i.total,0);
+  const framesTotal=(opt.frames||[]).reduce((s,f)=>s+num(f.price)*Math.max(1,parseInt(f.q)||1),0);
+  const subtotal=priced.reduce((s,i)=>s+i.total,0)+framesTotal;
   const discountAmount=subtotal*(num(discPct)/100);
   const extrasTotal=(exs||[]).reduce((s,x)=>s+num(x.amount),0);
   const net=subtotal-discountAmount+extrasTotal;
-  const vat=net*VAT_RATE;
+  const vat=opt.noVat?0:net*VAT_RATE;
   const beforeCard=net+vat;
   const cardAmount=card?beforeCard*CARD_FEE:0;
-  return {priced,subtotal,discountAmount,extrasTotal,net,vat,cardAmount,
+  return {priced,subtotal,framesTotal,discountAmount,extrasTotal,net,vat,cardAmount,noVat:!!opt.noVat,
           grand:beforeCard+cardAmount,area:priced.reduce((s,i)=>s+i.area,0)};
 }
-const jobTotals=j=>totals(j.items||[],j.extras||[],j.discountPct,j.cardFee,j.unit);
+const jobTotals=j=>totals(j.items||[],j.extras||[],j.discountPct,j.cardFee,j.unit,
+                          {frames:j.frames||[],noVat:!!j.noVat});
+
+/* ---------- not every job is glass ----------
+   Frames get sizes and a price typed in by hand rather than worked out
+   from a rate. Maintenance is a price and whatever is in the notes.
+   Both still go through quoting, the diary, payments and the money. */
+const KINDS={glass:'Glass',frames:'Frames',maintenance:'Maintenance'};
+const kindOf=j=>KINDS[j.kind]?j.kind:'glass';
+const isGlass=j=>kindOf(j)==='glass';
+const framesOf=j=>(j.frames||[]);
+const pendingFrames=j=>framesOf(j).filter(f=>!f.arrived);
 
 /* ---------- status derives from the pieces ----------
    A job can be waiting on a supplier AND have glass to cut at the
@@ -1276,13 +1374,22 @@ const isWorking=j=>isLive(j)&&j.confirmed&&!measureOnly(j);
 /* a measure visit is booked before anyone has confirmed anything */
 const bookable=j=>isLive(j)&&(j.confirmed||measureOnly(j));
 
-const measureOnly=j=>!(j.items||[]).length;
+/* Is there anything on this job yet? For glass that means pieces, for
+   frames it means frames, for maintenance it means a price. Until there
+   is, the job is waiting to be measured or quoted. */
+function hasWork(j){
+  const k=kindOf(j);
+  if(k==='maintenance') return (j.extras||[]).length>0;
+  if(k==='frames')      return framesOf(j).length>0;
+  return (j.items||[]).length>0;
+}
+const measureOnly=j=>!hasWork(j);
 function autoStatus(j){
   if(j.status==='done'||j.status==='lost') return j.status;
   if(measureOnly(j)) return 'measure';      // nothing to price until it's been measured
   if(!j.confirmed) return 'quote';
   if(toPrice(j).length) return 'pricing';
-  if(pendingOrder(j).length) return 'order';
+  if(pendingOrder(j).length||pendingFrames(j).length) return 'order';
   if(pendingCut(j).length) return 'cut';
   return 'ready';
 }
@@ -1295,6 +1402,7 @@ function applyStatus(j){
 function waitingSuppliers(j){
   const m={};
   notArrived(j).forEach(i=>{const s=i.supplier||'Supplier'; m[s]=(m[s]||0)+1;});
+  pendingFrames(j).forEach(f=>{const s=f.supplier||'Supplier'; m[s]=(m[s]||0)+1;});
   return m;
 }
 
@@ -1539,7 +1647,7 @@ function jobCard(j){
   const need=bookable(j)?neededAppts(j):[];
   const p=profitOf(j);
   const appt=nextAppt(j);
-  return `<article class="job ${flag?'flag':''}">
+  return `<article class="job ${flag?'flag':''} ${j.noteUrgent&&j.note?'urgent':''}">
     <div class="jobtop" data-open="${j.id}">
       <div class="ticket">${j.no}</div>
       <div class="who">
@@ -1567,15 +1675,26 @@ function jobCard(j){
           ${specMissing(it).length?`<div class="specmiss">Needs ${esc(specMissing(it).join(' and '))}</div>`:''}
           ${pi.addons.length?`<div class="addons">+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}
         </div></div>`;}).join('')}
+      ${framesOf(j).map((f,n)=>`<div class="ditem">
+        ${f.arrived?'<span class="src src-in" title="Arrived">In</span>'
+                   :`<button class="src src-order" data-fa="${j.id}|${n}" title="Tick off when it arrives">On order</button>`}
+        <div class="body">
+          <div class="prod">${esc(f.desc||'Frame')}${f.supplier?' &middot; '+esc(f.supplier):''}</div>
+          ${f.w||f.h?`<div class="size">${esc(f.w)}<span class="x">×</span>${esc(f.h)}<span class="qty">×${f.q||1}</span></div>`
+                    :`<div class="size"><span class="qty">×${f.q||1}</span></div>`}
+        </div></div>`).join('')}
       ${measureOnly(j)?'<div class="sub">Waiting to be measured</div>'
-        :`<div class="sub mono" style="margin-top:7px">${t.area.toFixed(3)} m²${(j.extras||[]).length?' · '+j.extras.map(x=>esc(x.label)).join(', '):''}</div>`}
-      ${j.note?`<div class="note">${esc(j.note)}</div>`:''}
+        :`<div class="sub mono" style="margin-top:7px">${kindOf(j)==='glass'?t.area.toFixed(3)+' m²':KINDS[kindOf(j)]}${(j.extras||[]).length?' · '+j.extras.map(x=>esc(x.label)).join(', '):''}</div>`}
+      ${j.note?(j.noteUrgent?`<div class="note urgent"><b>Read this first</b>${esc(j.note)}</div>`
+                            :`<div class="note">${esc(j.note)}</div>`):''}
       ${j.handover!=='collection'&&j.addr?`<div class="note">${handoverLabel(j)} — ${esc(j.addr)}</div>`:''}
+      ${(j.photos||[]).length?`<div class="jobphotos">${(j.photos||[]).map(p=>
+        `<img src="${PHOTOCACHE[p.id]||''}" alt="${esc(p.name||'Photo')}" data-jph="${p.id}" loading="lazy">`).join('')}</div>`:''}
     </div>
     <div class="jobfoot">
       <div>${measureOnly(j)
         ? `<span class="sub">No sizes yet — price once it has been measured</span>`
-        : `<span class="money">${gbp(t.grand)}</span><span class="sub"> inc VAT</span>
+        : `<span class="money">${gbp(t.grand)}</span><span class="sub"> ${t.noVat?'no VAT':'inc VAT'}</span>
            ${bal>0.005?`<span class="owed">${gbp(bal)} ${j.trade?'to invoice':'to pay'}</span>`:`<span class="paid">Paid</span>`}`}
         ${p.cost?`<div class="sub mono">Cost ${gbp(p.cost)} · profit <b style="color:${p.profit>=0?'var(--float-d)':'var(--red)'}">${gbpS(p.profit)}</b> (${p.margin.toFixed(0)}%)${p.known?'':' so far'}</div>`:''}</div>
       <div class="acts">
@@ -1612,9 +1731,10 @@ function wsRow(j,it,n,kind){
     ? `<div class="flagtxt">Rest of this job is on order from ${esc(Object.keys(waitingSuppliers(j)).join(', '))}</div>` : '';
   const priced=it.cost!==undefined&&it.cost!=='';
   const costBox=`<div class="costwrap"><label>Their price £</label>
-      <input class="costin" data-cost="${j.id}|${n}" value="${priced?esc(it.cost):''}" inputmode="decimal" placeholder="—"></div>`;
+      <input class="costin" data-cost="${j.id}|${n}" value="${priced?esc(it.cost):''}" inputmode="decimal" placeholder="—">
+      <button class="miniact" data-mko="${j.id}|${n}" title="Put just this one on order">Ordered</button></div>`;
   const tickBox=`<button class="tick" data-${kind==='cut'?'pc':'pa'}="${j.id}|${n}" title="${kind==='cut'?'Tick off when it is cut':'Tick off when it arrives'}" aria-label="Tick off">&#10003;</button>`;
-  return `<div class="wsrow ${overdue(j)?'late':''}">
+  return `<div class="wsrow ${overdue(j)?'late':''} ${j.noteUrgent&&j.note?'urgent':''}">
     ${kind==='toprice'?'':tickBox}
     <button class="info" data-open="${j.id}">
       <div class="ref">${j.no} &middot; ${esc(j.name)}${j.trade?' (trade)':''}${kind==='toprice'&&dueText(j)?' &middot; '+esc(dueText(j)):''}</div>
@@ -1624,7 +1744,7 @@ function wsRow(j,it,n,kind){
       ${specMissing(it).length?`<div class="specmiss">Needs ${esc(specMissing(it).join(' and '))}</div>`:''}
       ${pi.addons.length?`<div class="ex">+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}
       ${kind==='toprice'?`<div class="pn">We charge ${gbp(pi.total)}${priced?' · margin '+gbp(pi.total-num(it.cost)):''}</div>`:''}
-      ${j.note?`<div class="pn">${esc(j.note)}</div>`:''}
+      ${j.note?`<div class="pn ${j.noteUrgent?'unote':''}">${esc(j.note)}</div>`:''}
       ${rest}
     </button>
     ${kind==='toprice'?costBox:`<div class="due">${esc(dueText(j))}</div>`}
@@ -1695,7 +1815,7 @@ function renderDiary(){
     const key=ymd(d), out=d.getMonth()!==diaryMonth.getMonth(), evs=byDay[key]||[];
     return `<button class="cell ${out?'out':''} ${key===today?'today':''} ${key===selDay?'sel':''}" data-day="${key}">
       <span class="dn">${d.getDate()}</span>
-      ${evs.slice(0,2).map(x=>`<span class="ev ${APPT[x.a.kind].cls}"${x.j.note?' title="'+esc(x.j.note)+'"':''}>${x.a.time?x.a.time+' ':''}${esc(x.j.name)}${x.j.note?'<span class="hasnote"> *</span>':''}</span>`).join('')}
+      ${evs.slice(0,2).map(x=>`<span class="ev ${APPT[x.a.kind].cls}"${x.j.note?' title="'+esc(x.j.note)+'"':''}>${x.a.time?x.a.time+' ':''}${esc(x.j.name)}${x.j.note?`<span class="hasnote ${x.j.noteUrgent?'urgent':''}"> *</span>`:''}</span>`).join('')}
       ${evs.length>2?`<span class="more">+${evs.length-2} more</span>`:''}
     </button>`;}).join('');
 
@@ -1725,7 +1845,7 @@ function renderDiary(){
               <div style="font-weight:600">${x.j.no} · ${esc(x.j.name)} <span class="tag ${APPT[x.a.kind].cls}">${APPT[x.a.kind].label}</span></div>
               <div class="sub">${esc(x.j.addr||'No address')}${x.j.phone?' · '+esc(fmtPhone(x.j.phone)):''}</div>
               <div class="sub">${stat(x.j.status).label}${toPrice(x.j).length?' · '+toPrice(x.j).length+' still to price':''}${pendingOrder(x.j).length?' · waiting on '+Object.keys(waitingSuppliers(x.j)).join(', '):''}${pendingCut(x.j).length?' · '+pendingCut(x.j).length+' still to cut':''}</div>
-              ${x.j.note?`<div class="dnote"><b>Note</b>${esc(x.j.note)}</div>`:''}
+              ${x.j.note?`<div class="dnote ${x.j.noteUrgent?'urgent':''}"><b>${x.j.noteUrgent?'Read this first':'Note'}</b>${esc(x.j.note)}</div>`:''}
             </div>
             <div style="display:flex;flex-direction:column;gap:6px">
               <button class="act" data-open="${x.j.id}">Open</button>
@@ -1737,7 +1857,7 @@ function renderDiary(){
         waiting.map(j=>`<div class="unsched">
           <div><b>${j.no} · ${esc(j.name)}</b> — needs ${neededAppts(j).map(k=>APPT[k].label.toLowerCase()).join(' and ')}
             <div class="sub">${esc(j.addr||'No address')}${j.wanted?' · wanted by '+fmtDate(j.wanted):''}</div>
-            ${j.note?`<div class="dnote"><b>Note</b>${esc(j.note)}</div>`:''}</div>
+            ${j.note?`<div class="dnote ${j.noteUrgent?'urgent':''}"><b>${j.noteUrgent?'Read this first':'Note'}</b>${esc(j.note)}</div>`:''}</div>
           <button class="act go" data-book="${j.id}">Book</button></div>`).join(''):''}
     </div>`;
 }
@@ -1790,12 +1910,13 @@ function moneyFor(from,to){
   const jobs=JOBS.filter(j=>j.status==='done'&&countsIn(j,from,to));
   let sales=0,cost=0,vat=0,provisional=0,cutSale=0,cutCost=0,ordSale=0,ordCost=0;
   let tradeSale=0,retailSale=0;
-  const bySup={};
+  const bySup={}, byKind={glass:0,frames:0,maintenance:0};
   jobs.forEach(j=>{
     const t=jobTotals(j), c=costBreakdown(j);
     sales+=t.net; cost+=c.total; vat+=t.vat;
     if(!c.known) provisional++;
     (j.trade?(tradeSale+=t.net):(retailSale+=t.net));
+    byKind[kindOf(j)]+=t.net;
     (j.items||[]).forEach(it=>{
       const s=priceItem(it,j.unit).total, k=itemCost(j,it);
       if(it.src==='order'){ ordSale+=s; ordCost+=k;
@@ -1806,7 +1927,7 @@ function moneyFor(from,to){
     });
   });
   const gross=sales-cost;
-  return {jobs,sales,cost,gross,vat,provisional,bySup,
+  return {jobs,sales,cost,gross,vat,provisional,bySup,byKind,
     margin:sales>0?gross/sales*100:0,
     cut:{sale:cutSale,cost:cutCost}, ord:{sale:ordSale,cost:ordCost},
     tradeSale,retailSale};
@@ -1970,6 +2091,12 @@ function renderMoney(){
       <div class="mcard"><div class="lab">Trade</div><div class="val">${gbp(m.tradeSale)}</div>
         <div class="sub2">${m.sales>0?(m.tradeSale/m.sales*100).toFixed(0)+'% of sales':'—'}</div></div>
     </div>
+    ${(m.byKind.frames||m.byKind.maintenance)?`<div class="msec">By type of job</div>
+    <div class="mgrid">
+      ${Object.keys(KINDS).map(k=>`<div class="mcard"><div class="lab">${esc(KINDS[k])}</div>
+        <div class="val">${gbp(m.byKind[k]||0)}</div>
+        <div class="sub2">${m.sales>0?((m.byKind[k]||0)/m.sales*100).toFixed(0)+'% of sales':'—'}</div></div>`).join('')}
+    </div>`:''}
     ${supplierBody(m)}
     ${conversionBody(r)}
     <div class="mnote" style="margin-top:18px">A job counts on the day it went out, so the glass and the money it
@@ -2380,6 +2507,30 @@ document.addEventListener('click',async e=>{
     if(await pushJob(j)){ UNDO=snap; render(); toast('Job '+j.no+' closed off',false,'Undo'); }
     return;
   }
+  const jph=e.target.closest('[data-jph]');
+  if(jph){ window.open(location.origin+'/p/'+jph.dataset.jph,'_blank','noopener'); return; }
+
+  const mko=e.target.closest('[data-mko]');
+  if(mko){
+    const q=mko.dataset.mko.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const snap=snapshot('One piece put on order on job '+j.no,[j]);
+    const it=j.items[+q[1]];
+    it.ostate='ordered'; it.orderedAt=new Date().toISOString();
+    applyStatus(j);
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Piece on order — job '+j.no,false,'Undo'); }
+    return;
+  }
+
+  const fa=e.target.closest('[data-fa]');
+  if(fa){
+    const q=fa.dataset.fa.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const snap=snapshot('Frame booked in on job '+j.no,[j]);
+    j.frames[+q[1]].arrived=true; j.frames[+q[1]].arrivedAt=new Date().toISOString();
+    applyStatus(j);
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Frame booked in — job '+j.no,false,'Undo'); }
+    return;
+  }
+
   const st=e.target.closest('[data-settle]');
   if(st){
     const j=JOBS.find(x=>x.id===st.dataset.settle); if(!j) return;
@@ -2576,6 +2727,165 @@ $('extras').addEventListener('click',e=>{
 });
 $('addExtra').onclick=()=>{extras.push({label:'',amount:''});drawExtras();};
 
+/* ---------- photos ----------
+   The bytes live in their own table, one row per photo, and never go
+   anywhere near the job's own record. Every machine loads every job on
+   every refresh, so a photo in there would be downloaded hundreds of
+   times a day for nothing. The job keeps a name and an id; the picture
+   is fetched only when somebody opens the job. */
+let photoList=[], photoGone=[];
+const PHOTOCACHE={};
+const MAX_PX=1400, JPEG_Q=0.72, MAX_BYTES=900000;
+
+function photoId(){
+  const a=new Uint8Array(16);
+  (window.crypto||window.msCrypto).getRandomValues(a);
+  return Array.prototype.map.call(a,b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* A phone photo is four or five megabytes. D1 will not take a value over
+   a megabyte, and we would not want it to, so it gets scaled down first. */
+function shrink(file){
+  return new Promise((res,rej)=>{
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      let w=img.naturalWidth||img.width, hh=img.naturalHeight||img.height;
+      const sc=Math.min(1,MAX_PX/Math.max(w,hh));
+      w=Math.max(1,Math.round(w*sc)); hh=Math.max(1,Math.round(hh*sc));
+      const c=document.createElement('canvas'); c.width=w; c.height=hh;
+      c.getContext('2d').drawImage(img,0,0,w,hh);
+      res({data:c.toDataURL('image/jpeg',JPEG_Q),w,h:hh});
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error('not an image we can read')); };
+    img.src=url;
+  });
+}
+
+async function loadPhoto(id){
+  if(PHOTOCACHE[id]) return PHOTOCACHE[id];
+  const r=await fetch(API+'/photo/'+id);
+  if(!r.ok) throw new Error('could not fetch photo');
+  const p=await r.json();
+  return (PHOTOCACHE[id]='data:'+p.mime+';base64,'+p.bytes);
+}
+const photoSrc=p=>p.data||PHOTOCACHE[p.id]||'';
+
+function drawPhotos(){
+  $('photoGrid').innerHTML=photoList.map((p,i)=>{
+    const src=photoSrc(p);
+    return `<div class="ph">
+      ${src?`<img src="${src}" alt="${esc(p.name||'Photo')}" data-phview="${i}">`
+           :`<div class="phwait">Loading…</div>`}
+      <label class="phsend"><input type="checkbox" data-phsend="${i}" ${p.send===false?'':'checked'}> Send</label>
+      <button class="phdel" data-phdel="${i}" aria-label="Remove photo">×</button>
+    </div>`;}).join('')||'<p class="sub">No photos on this job.</p>';
+  const n=photoList.length, s=photoList.filter(p=>p.send!==false).length;
+  $('photoCount').textContent=n?n+(s<n?' · '+s+' to send':''):'';
+}
+
+$('photoIn').addEventListener('change',async e=>{
+  const files=Array.prototype.slice.call(e.target.files||[]);
+  e.target.value='';
+  for(const f of files){
+    try{
+      const {data,w,h}=await shrink(f);
+      if(data.length>MAX_BYTES){ toast(f.name+' is still too big after shrinking',true); continue; }
+      photoList.push({id:photoId(),name:f.name||'photo.jpg',mime:'image/jpeg',data,w,h,send:true,isNew:true});
+      drawPhotos();
+    }catch(err){ toast('Could not read '+(f.name||'that file'),true); }
+  }
+});
+$('photoGrid').addEventListener('click',e=>{
+  const del=e.target.closest('[data-phdel]');
+  if(del){
+    const p=photoList[+del.dataset.phdel];
+    if(p&&!p.isNew) photoGone.push(p.id);
+    photoList.splice(+del.dataset.phdel,1); drawPhotos(); return;
+  }
+  const v=e.target.closest('[data-phview]');
+  if(v){
+    const p=photoList[+v.dataset.phview]; if(!p) return;
+    if(p.isNew){ const win=window.open(); if(win) win.document.write('<img src="'+p.data+'" style="max-width:100%">'); }
+    else window.open(location.origin+'/p/'+p.id,'_blank','noopener');
+  }
+});
+$('photoGrid').addEventListener('change',e=>{
+  const s=e.target.closest('[data-phsend]'); if(!s) return;
+  photoList[+s.dataset.phsend].send=s.checked; drawPhotos();
+});
+
+/* Saving: new pictures go up, removed ones come out, and what the job
+   keeps is only the list of names and ids. */
+async function syncPhotos(jobId){
+  for(const id of photoGone){
+    try{ await fetch(API+'/photo/'+id,{method:'DELETE'}); delete PHOTOCACHE[id]; }catch(e){}
+  }
+  photoGone=[];
+  for(const p of photoList){
+    if(!p.isNew) continue;
+    const body={id:p.id,jobId,name:p.name,mime:p.mime,w:p.w,h:p.h,
+                data:String(p.data).split(',')[1]||''};
+    const r=await fetch(API+'/photos',{method:'POST',
+      headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok){ toast('A photo would not save',true); continue; }
+    PHOTOCACHE[p.id]=p.data; p.isNew=false;
+  }
+  return photoList.map(p=>({id:p.id,name:p.name,w:p.w,h:p.h,send:p.send!==false}));
+}
+
+function drawFrames(){
+  $('frames').innerHTML=frames.map((f,i)=>
+    `<div class="item cutting">
+      <div class="ihead"><span class="inum">Frame ${i+1}</span>
+        ${frames.length>1?`<button class="idel" data-rmf="${i}" aria-label="Remove frame">×</button>`:''}</div>
+      <div class="fgroup"><label for="fd${i}">What it is</label>
+        <input class="inp" id="fd${i}" data-fdesc="${i}" value="${esc(f.desc||'')}"
+          placeholder="e.g. white uPVC casement, one opener"></div>
+      <div class="dims">
+        <input class="inp mono" data-fwid="${i}" value="${esc(f.w||'')}" inputmode="decimal" placeholder="width">
+        <span class="x">×</span>
+        <input class="inp mono" data-fhgt="${i}" value="${esc(f.h||'')}" inputmode="decimal" placeholder="height">
+        <input class="inp mono qty" data-fqty="${i}" value="${esc(f.q||'1')}" inputmode="numeric" aria-label="Quantity">
+      </div>
+      <div class="row" style="margin-top:9px">
+        <div><label for="fs${i}">Coming from</label>
+          <input class="inp" id="fs${i}" data-fsup="${i}" value="${esc(f.supplier||'')}" placeholder="supplier"></div>
+        <div><label for="fp${i}">Price each, ex VAT</label>
+          <input class="inp mono" id="fp${i}" data-fprice="${i}" value="${esc(f.price||'')}" inputmode="decimal" placeholder="£"></div>
+      </div>
+    </div>`).join('')||'<p class="sub">No frames on this job yet.</p>';
+}
+$('frames').addEventListener('input',e=>{
+  const t=e.target, map={fdesc:'desc',fwid:'w',fhgt:'h',fqty:'q',fsup:'supplier',fprice:'price'};
+  for(const k in map) if(t.dataset[k]!==undefined){ frames[+t.dataset[k]][map[k]]=t.value; drawCalc(); return; }
+});
+$('frames').addEventListener('click',e=>{
+  const rm=e.target.closest('[data-rmf]'); if(!rm) return;
+  frames.splice(+rm.dataset.rmf,1); drawFrames(); drawCalc();
+});
+$('addFrame').onclick=()=>{ frames.push({desc:'',w:'',h:'',q:'1',supplier:'',price:'',arrived:false});
+  drawFrames(); drawCalc(); };
+
+/* Swapping the job type changes what the sheet asks for. Nothing is
+   thrown away — switch back and the glass is still there. */
+function setKind(k){
+  jobKind=KINDS[k]?k:'glass';
+  Array.prototype.forEach.call($('kindPick').children,b=>b.classList.toggle('on',b.dataset.kind===jobKind));
+  $('workTitle').textContent=KINDS[jobKind];
+  $('glassWrap').style.display = jobKind==='glass'?'':'none';
+  $('framesWrap').style.display= jobKind==='frames'?'':'none';
+  $('maintWrap').style.display = jobKind==='maintenance'?'':'none';
+  $('unitPick').style.display  = jobKind==='maintenance'?'none':'';
+  $('extrasTitle').textContent = jobKind==='maintenance'?'The work':'Extras and labour';
+  if(jobKind==='frames'&&!frames.length) frames.push({desc:'',w:'',h:'',q:'1',supplier:'',price:'',arrived:false});
+  drawFrames(); drawCalc();
+}
+$('kindPick').addEventListener('click',e=>{
+  const b=e.target.closest('[data-kind]'); if(!b) return;
+  setKind(b.dataset.kind);
+});
+
 function drawPays(){
   $('pays').innerHTML=pays.map((p,i)=>
     `<div class="payrow">
@@ -2590,7 +2900,8 @@ function drawPays(){
 }
 /* The running balance, shown in the card heading so it is always in view. */
 function drawPayBal(){
-  const t=totals(items,extras,$('fDisc').value,$('fCard').checked);
+  const t=totals(items,extras,$('fDisc').value,$('fCard').checked,unit,
+                 {frames:jobKind==='frames'?frames:[],noVat:$('fNoVat').checked});
   const paid=pays.reduce((s,p)=>s+num(p.amount),0);
   const bal=t.grand-paid;
   const el=$('payBal');
@@ -2619,7 +2930,8 @@ $('addPay').onclick=()=>{
   drawPays(); drawCalc();
 };
 $('payFull').onclick=()=>{
-  const t=totals(items,extras,$('fDisc').value,$('fCard').checked);
+  const t=totals(items,extras,$('fDisc').value,$('fCard').checked,unit,
+                 {frames:jobKind==='frames'?frames:[],noVat:$('fNoVat').checked});
   const bal=t.grand-pays.reduce((s,p)=>s+num(p.amount),0);
   if(bal<=0.005) return;
   pays.push({date:ymd(new Date()),amount:bal.toFixed(2),method:PAY_METHODS[0]});
@@ -2695,28 +3007,36 @@ $('fMeasure').addEventListener('change',drawAppts);
 $('hoPick').addEventListener('click',e=>{const b=e.target.closest('[data-h]'); if(b) setHandover(b.dataset.h);});
 $('tTrade').onclick=()=>setTrade(true); $('tRetail').onclick=()=>setTrade(false);
 $('fDisc').addEventListener('input',()=>{drawCalc();drawPayBal();});
+$('fNoVat').addEventListener('change',()=>{drawCalc();drawPayBal();});
 $('fCard').addEventListener('change',drawCalc);
 
 function drawCalc(){
-  const t=totals(items,extras,$('fDisc').value,$('fCard').checked);
+  const t=totals(items,extras,$('fDisc').value,$('fCard').checked,unit,
+                 {frames:jobKind==='frames'?frames:[],noVat:$('fNoVat').checked});
+  $('noVatHint').style.display=$('fNoVat').checked?'':'none';
   const dep=pays.reduce((s,p)=>s+num(p.amount),0);
   $('calcRows').innerHTML=
-    `<div class="calcrow"><span>Glass and edgework (${t.area.toFixed(3)} m²)</span><span>${gbp(t.subtotal)}</span></div>`+
+    (jobKind==='glass'?`<div class="calcrow"><span>Glass and edgework (${t.area.toFixed(3)} m²)</span><span>${gbp(t.subtotal)}</span></div>`:'')+
+    (jobKind==='frames'?`<div class="calcrow"><span>Frames</span><span>${gbp(t.framesTotal)}</span></div>`:'')+
     (t.discountAmount?`<div class="calcrow"><span>Discount ${num($('fDisc').value)}%</span><span>−${gbp(t.discountAmount)}</span></div>`:'')+
-    (t.extrasTotal?`<div class="calcrow"><span>Extras</span><span>${gbp(t.extrasTotal)}</span></div>`:'')+
+    (t.extrasTotal?`<div class="calcrow"><span>${jobKind==='maintenance'?'The work':'Extras'}</span><span>${gbp(t.extrasTotal)}</span></div>`:'')+
     `<div class="calcrow"><span>Net</span><span>${gbp(t.net)}</span></div>`+
-    `<div class="calcrow"><span>VAT @ 20%</span><span>${gbp(t.vat)}</span></div>`+
+    (t.noVat?`<div class="calcrow"><span>VAT</span><span>none on this job</span></div>`
+            :`<div class="calcrow"><span>VAT @ 20%</span><span>${gbp(t.vat)}</span></div>`)+
     (t.cardAmount?`<div class="calcrow"><span>Card fee 2%</span><span>${gbp(t.cardAmount)}</span></div>`:'')+
     `<div class="calcrow tot"><span>${isTrade?'To invoice':'To pay'}</span><span>${gbp(t.grand)}</span></div>`+
     (dep?`<div class="calcrow"><span>Less paid</span><span>−${gbp(dep)}</span></div>
           <div class="calcrow"><span>Balance</span><span>${gbp(t.grand-dep)}</span></div>`:'');
-  const nc=items.filter(i=>i.src==='cut').length, no=items.filter(i=>i.src==='order').length;
+  const nc=jobKind==='glass'?items.filter(i=>i.src==='cut').length:0;
+  const no=jobKind==='glass'?items.filter(i=>i.src==='order').length:0;
   const sup=[];
   items.filter(i=>i.src==='order').forEach(i=>{const s=i.supplier||'Supplier'; if(sup.indexOf(s)<0) sup.push(s);});
   $('calcSplit').innerHTML=(nc||no)
     ? `${nc?nc+' piece'+(nc>1?'s':'')+' onto the cutting list':''}${nc&&no?'<br>':''}${no?no+' piece'+(no>1?'s':'')+' onto the order list ('+esc(sup.join(', '))+')':''}`
     : '';
-  const draft={items,unit,costs,extras,discountPct:$('fDisc').value,cardFee:$('fCard').checked};
+  const draft={items:jobKind==='glass'?items:[],unit,costs,extras,
+    frames:jobKind==='frames'?frames:[],noVat:$('fNoVat').checked,
+    discountPct:$('fDisc').value,cardFee:$('fCard').checked};
   const cb=costBreakdown(draft), profit=t.net-cb.total;
   $('calcSplit').innerHTML += cb.total||cb.glass?
     `<div class="profit">
@@ -2762,12 +3082,21 @@ function openJob(j){
   $('fDisc').value=j?(j.discountPct||''):'';
   pays=j&&j.payments?clone(j.payments):[];
   $('fCard').checked=j?!!j.cardFee:false;
+  $('fNoVat').checked=j?!!j.noVat:false;
+  frames=j&&j.frames?clone(j.frames):[];
+  photoList=j&&j.photos?clone(j.photos):[]; photoGone=[];
+  photoList.filter(p=>!PHOTOCACHE[p.id]).forEach(p=>{
+    loadPhoto(p.id).then(drawPhotos).catch(()=>{});
+  });
+  drawPhotos();
   $('fAddr').value=j?(j.addr||''):''; $('fWanted').value=j?(j.wanted||''):''; $('fNote').value=j?(j.note||''):'';
   $('fMeasure').checked=j?!!j.needsMeasure:false;
+  $('fUrgent').checked=j?!!j.noteUrgent:false;
   costs=j&&j.costs?clone(j.costs):[];
   OTHER={};
   setTrade(j?!!j.trade:false);
   setHandover(j?(j.handover||(j.deliver?'delivery':'collection')):'collection');
+  setKind(j?kindOf(j):'glass');
   drawItems(); drawExtras(); drawCosts(); drawPays(); drawCalc(); drawAppts(); $('sugg').innerHTML='';
   showSheet($('jobSheet'));
   if(!j) setTimeout(()=>$('fName').focus(),60);
@@ -2777,18 +3106,29 @@ $('newBtn').onclick=()=>openJob(null);
 $('saveJob').onclick=async()=>{
   const name=$('fName').value.trim();
   if(!name){ toast('Needs a customer name',true); $('fName').focus(); return; }
-  const clean=items.filter(it=>{
+  const clean=jobKind==='glass'?items.filter(it=>{
     const p=prodOf(it.pid);
     return p.each?(parseInt(it.q)||0)>0:(parseFloat(it.w)>0&&parseFloat(it.h)>0);
-  }).map(it=>Object.assign({cut:false,arrived:false},it));
-  if(!clean.length && !$('fMeasure').checked){
+  }).map(it=>Object.assign({cut:false,arrived:false},it)):[];
+  const cleanFrames=jobKind==='frames'
+    ? frames.filter(f=>(f.desc||'').trim()||num(f.price)||parseFloat(f.w)>0)
+        .map(f=>Object.assign({arrived:false},f,{price:num(f.price)}))
+    : [];
+  if(jobKind==='glass' && !clean.length && !$('fMeasure').checked){
     toast('Add a size, or tick "needs measuring first" to book a measure',true); return; }
+  if(jobKind==='frames' && !cleanFrames.length && !$('fMeasure').checked){
+    toast('Add a frame, or tick "needs measuring first" to book a measure',true); return; }
+  if(jobKind==='maintenance' && !extras.filter(x=>x.label||num(x.amount)).length && !$('fMeasure').checked){
+    toast('Put what you are charging under "The work"',true); return; }
+  const jobId = editing?editing.id:'j'+Date.now()+Math.random().toString(36).slice(2,6);
+  const photos = await syncPhotos(jobId);
   const job=Object.assign({},editing||{},{
-    id: editing?editing.id:'j'+Date.now()+Math.random().toString(36).slice(2,6),
+    id: jobId,
     no: editing?editing.no:(JOBS.reduce((m,j)=>Math.max(m,j.no||0),1649)+1),
     name, phone:$('fPhone').value.trim(), email:$('fEmail').value.trim(), trade:isTrade,
-    unit, items:clean, extras:extras.filter(x=>x.label||num(x.amount)),
-    discountPct:num($('fDisc').value), cardFee:$('fCard').checked,
+    unit, items:clean, frames:cleanFrames, kind:jobKind,
+    extras:extras.filter(x=>x.label||num(x.amount)),
+    discountPct:num($('fDisc').value), cardFee:$('fCard').checked, noVat:$('fNoVat').checked,
     payments: pays.filter(p=>num(p.amount)!==0).map(p=>({
       date:p.date||ymd(new Date()), amount:num(p.amount), method:p.method||PAY_METHODS[0]
     })),
@@ -2796,7 +3136,7 @@ $('saveJob').onclick=async()=>{
        right balance until it picks up this version */
     deposit: pays.reduce((s,p)=>s+num(p.amount),0),
     handover, deliver:handover==='delivery', addr:$('fAddr').value.trim(),
-    needsMeasure:$('fMeasure').checked,
+    needsMeasure:$('fMeasure').checked, noteUrgent:$('fUrgent').checked, photos,
     appts: editing?apptsOf(editing):[],
     costs: costs.filter(c=>c.label||num(c.amount)),
     wanted:$('fWanted').value, note:$('fNote').value.trim(),
@@ -2847,6 +3187,10 @@ function buildJobText(j,kind){
     L.push(''); L.push('Thank you for choosing '+SHOP.name+'.');
     return L.join('\n');
   }
+  framesOf(j).forEach((f,n)=>{
+    L.push((n+1)+'. '+(f.desc||'Frame'));
+    L.push('   '+((f.w&&f.h)?f.w+(j.unit||'mm')+' x '+f.h+(j.unit||'mm')+'   ':'')+(f.q||1)+' off');
+  });
   (j.items||[]).forEach((it,n)=>{
     const pi=priceItem(it,j.unit), p=pi.p;
     L.push((n+1)+'. '+p.name);
@@ -2863,7 +3207,7 @@ function buildJobText(j,kind){
     L.push(row('After discount',gbp(t.subtotal-t.discountAmount)));
   }
   (j.extras||[]).forEach(x=>L.push(row(x.label||'Extra',gbp(x.amount))));
-  L.push(row('VAT 20%',gbp(t.vat)));
+  if(!t.noVat) L.push(row('VAT 20%',gbp(t.vat)));
   if(j.cardFee) L.push(row('Card surcharge 2%',gbp(t.cardAmount)));
   L.push('-'.repeat(W));
   L.push(row('TOTAL',gbp(t.grand)));
@@ -2958,29 +3302,62 @@ function buildSupplierText(name,kind,rows){
 function supplierMessage(name,kind,rows){
   const sign='\n\nMany thanks,\n'+SHOP.name+'\n'+SHOP.tel;
   if(kind==='rfq') return 'Hello '+name+',\n\n'+
-    'Could you please price the following '+rows.length+' item'+(rows.length===1?'':'s')+' for us? '+
-    'Details are below.\n\nIf you can also let us know your lead time we would appreciate it.'+sign;
+    'Could you please price the items listed below for us?\n\n'+
+    'If you can also let us know your lead time we would appreciate it.'+sign;
   return 'Hello '+name+',\n\n'+
-    'Please treat this as an order for the '+rows.length+' item'+(rows.length===1?'':'s')+' below, at the prices you quoted.\n\n'+
+    'Please treat this as an order for the items listed below, at the prices you quoted.\n\n'+
     'Delivery to the shop as usual. Please confirm the date when you can.'+sign;
 }
+/* Which of the supplier's outstanding pieces this email actually covers.
+   Everything is ticked to start with, because that is the usual case, but
+   a piece the customer has not confirmed yet can be left out and stays on
+   the list for next time. */
+let mailPick=new Set();
+const activeRows=()=>mailRows.filter((r,i)=>mailPick.has(i));
+
+function drawPicks(){
+  if(mailMode!=='supplier'){ $('pickCard').style.display='none'; return; }
+  $('pickCard').style.display='';
+  $('mPicks').innerHTML=mailRows.map((r,i)=>{
+    const pi=priceItem(r.it,r.j.unit);
+    return `<label class="pick">
+      <input type="checkbox" data-mpick="${i}" ${mailPick.has(i)?'checked':''}>
+      <span class="pk">
+        <span class="pkr">${r.j.no} &middot; ${esc(r.j.name)}</span>
+        <span class="pks">${pi.p.each?(r.it.q||1)+' off':esc(r.it.w)+' × '+esc(r.it.h)+' × '+(r.it.q||1)}</span>
+        <span class="pks">${esc(pi.p.name)}${extraSpec(r.it)?' · '+esc(extraSpec(r.it)):''}</span>
+      </span></label>`;}).join('');
+  $('pickCount').textContent=mailPick.size+' of '+mailRows.length;
+  $('pickCount').style.cssText='font-size:11px;font-weight:700;text-transform:none;letter-spacing:.04em';
+}
+$('mPicks').addEventListener('change',e=>{
+  const c=e.target.closest('[data-mpick]'); if(!c) return;
+  const i=+c.dataset.mpick;
+  if(c.checked) mailPick.add(i); else mailPick.delete(i);
+  drawPicks(); drawMail();
+});
+$('pickAll').onclick=()=>{ mailRows.forEach((r,i)=>mailPick.add(i)); drawPicks(); drawMail(); };
+$('pickNone').onclick=()=>{ mailPick.clear(); drawPicks(); drawMail(); };
+
 function openSupplierMail(name,kind){
   const rows=supplierRows(name,kind);
   if(!rows.length){ toast('Nothing outstanding for '+name,true); return; }
   const s=supOf(name);
   mailMode='supplier'; mailSup=name; mailKind=kind; mailRows=rows; mailJob=null;
+  mailPick=new Set(rows.map((r,i)=>i));
   $('mailTitle').textContent=(kind==='rfq'?'Ask ':'Order from ')+name;
   $('mTo').value=s.email||'';
   $('mSubj').value=(kind==='rfq'?'Price request from ':'Order from ')+SHOP.name;
   $('mMsg').value=supplierMessage(name,kind,rows);
   $('mKind').style.display='none';
   $('mTold').textContent = kind==='rfq' ? 'Log as asked' : 'Mark these as ordered';
-  drawMail(); showSheet($('mailSheet'));
+  drawPicks(); drawMail(); showSheet($('mailSheet'));
 }
 
 function openMail(j){
   if(!j) return;
-  mailMode='customer'; mailSup=''; mailRows=[]; mailJob=j;
+  mailMode='customer'; mailSup=''; mailRows=[]; mailPick=new Set(); mailJob=j;
+  $('pickCard').style.display='none';
   $('mKind').style.display='';
   $('mTold').textContent='Mark customer told';
   mailKind = !(j.items||[]).length ? 'quote'
@@ -3002,22 +3379,54 @@ $('mKind').addEventListener('click',e=>{
   $('mSubj').value=(mailKind==='quote'?'Quote ':'Job ')+mailJob.no+' from '+SHOP.name;
   drawMail();
 });
+/* The photos belonging to whatever is ticked, in job order, once each. */
+function mailPhotos(){
+  if(mailMode!=='supplier') return [];
+  const out=[], seen={};
+  activeRows().forEach(r=>{
+    if(seen[r.j.id]) return; seen[r.j.id]=1;
+    (r.j.photos||[]).filter(p=>p.send!==false)
+      .forEach(p=>out.push({id:p.id,name:p.name,no:r.j.no,who:r.j.name}));
+  });
+  return out;
+}
+
 function mailBody(){
-  const doc = mailMode==='supplier' ? buildSupplierText(mailSup,mailKind,mailRows)
+  const doc = mailMode==='supplier' ? buildSupplierText(mailSup,mailKind,activeRows())
             : mailJob ? buildJobText(mailJob,mailKind) : '';
-  return $('mMsg').value.trim()+'\n\n'+doc;
+  let ph='';
+  const ps=mailPhotos();
+  if(ps.length){
+    const lines=['','PHOTOS'];
+    let last=null;
+    ps.forEach(p=>{
+      if(p.no!==last){ lines.push('Job '+p.no+' — '+p.who); last=p.no; }
+      lines.push('  '+location.origin+'/p/'+p.id);
+    });
+    ph=lines.join('\n');
+  }
+  return $('mMsg').value.trim()+'\n\n'+doc+ph;
 }
 function drawMail(){
   $('mPrev').textContent=mailBody();
   const L=composeLinks($('mTo').value,$('mSubj').value,mailBody());
   const w=[];
   if(mailMode==='supplier'){
-    const gaps=mailRows.filter(r=>specMissing(r.it).length);
+    if(!mailPick.size) w.push(`<div class="warnbox">Nothing is ticked, so this email covers nothing. Tick at least one piece above.</div>`);
+    const gaps=activeRows().filter(r=>specMissing(r.it).length);
     if(gaps.length) w.push(`<div class="warnbox">
       <b>${gaps.length} piece${gaps.length>1?'s are':' is'} going out without the full detail.</b><br>
       ${gaps.map(r=>'Job '+r.j.no+' — '+esc(specMissing(r.it).join(' and '))).join('<br>')}<br>
       They are marked TO CONFIRM below. Better to fill them in on the job first.</div>`);
   }
+  const ps=mailPhotos();
+  $('mPhotos').style.display = ps.length?'':'none';
+  if(ps.length) w.push(`<div class="warnbox">
+    <b>${ps.length} photo${ps.length===1?' is':'s are'} linked at the bottom of the message.</b>
+    An email you open from here cannot carry attachments — no mail app accepts them from a
+    pre-filled message. The links work for anyone you send them to, unless the job book is behind
+    Cloudflare Access, which blocks outsiders. If your supplier cannot open them, press
+    <b>Save photos</b> and attach the files yourself.</div>`);
   if(L.length>1800) w.push(`<div class="warnbox">This is a long message. Desktop mail apps cut pre-filled text off at around 2,000 characters — use Gmail, Outlook or Copy instead of the mail app.</div>`);
   $('mWarn').innerHTML=w.join('');
 }
@@ -3032,22 +3441,44 @@ function openIn(which){
 $('mMail').onclick=()=>openIn('mailto');
 $('mGmail').onclick=()=>openIn('gmail');
 $('mOutlook').onclick=()=>openIn('outlook');
+$('mPhotos').onclick=async()=>{
+  const ps=mailPhotos();
+  if(!ps.length){ toast('No photos ticked to send',true); return; }
+  let n=0;
+  for(const p of ps){
+    try{
+      const src=await loadPhoto(p.id);
+      const a=document.createElement('a');
+      a.href=src;
+      a.download=('job'+p.no+'-'+(p.name||'photo.jpg')).replace(/[^A-Za-z0-9.\-]+/g,'-');
+      document.body.appendChild(a); a.click(); a.remove(); n++;
+    }catch(e){}
+  }
+  toast(n?n+' photo'+(n===1?'':'s')+' saved to your downloads':'Could not save the photos',!n);
+};
 $('mCopy').onclick=async()=>{
   try{ await navigator.clipboard.writeText(mailBody()); toast('Copied — paste it into an email'); }
   catch(e){ toast('Could not copy — select the preview and copy it',true); }
 };
 $('mTold').onclick=async()=>{
   if(mailMode==='supplier'){
+    const rows=activeRows();
+    if(!rows.length){ toast('Tick at least one piece first',true); return; }
+    const touched=[];
+    rows.forEach(r=>{ if(touched.indexOf(r.j.id)<0) touched.push(r.j.id); });
+    const snap=snapshot(mailKind==='po'?'Pieces put on order from '+mailSup
+                                       :'Price request to '+mailSup+' logged',
+                        JOBS.filter(j=>touched.indexOf(j.id)>=0));
     let n=0;
-    for(const r of mailRows){
+    for(const r of rows){
       const j=JOBS.find(x=>x.id===r.j.id); if(!j) continue;
       if(mailKind==='po'){ j.items[r.n].ostate='ordered'; j.items[r.n].orderedAt=new Date().toISOString(); n++; }
       else { j.items[r.n].askedAt=new Date().toISOString(); n++; }
       applyStatus(j); await pushJob(j);
     }
-    hideSheets(); render();
+    UNDO=snap; hideSheets(); render();
     toast(mailKind==='po'?n+' piece'+(n===1?'':'s')+' now on order from '+mailSup
-                          :'Price request to '+mailSup+' logged');
+                          :'Price request to '+mailSup+' logged',false,'Undo');
     return;
   }
   if(!mailJob) return;
@@ -3080,15 +3511,15 @@ function apptText(j){
 }
 function jobsCSV(){
   const head=['Job no','Taken','Status','Customer','Phone','Email','Account','Handover','Address',
-    'Needs measure','Wanted by','Pieces','Area m2','Subtotal ex VAT','Discount %','Discount','Extras',
+    'Job type','Needs measure','Wanted by','Pieces','Frames','Area m2','Subtotal ex VAT','Discount %','Discount','Extras',
     'Net ex VAT','VAT','Card fee','Total inc VAT','Paid','Balance','Payments','Our cost','Profit','Margin %',
     'Costs known','Customer told','Told how','Completed','Diary','Notes'];
   const rows=[head];
   JOBS.slice().sort((a,b)=>a.no-b.no).forEach(j=>{
     const t=jobTotals(j), p=profitOf(j);
     rows.push([j.no, (j.takenAt||'').slice(0,10), stat(j.status).label, j.name, j.phone, j.email,
-      j.trade?'Trade':'Retail', handoverLabel(j), j.addr, j.needsMeasure?'Yes':'', j.wanted,
-      (j.items||[]).length, r2(t.area), r2(t.subtotal), num(j.discountPct)||'', r2(t.discountAmount),
+      j.trade?'Trade':'Retail', handoverLabel(j), j.addr, KINDS[kindOf(j)], j.needsMeasure?'Yes':'', j.wanted,
+      (j.items||[]).length, framesOf(j).length, r2(t.area), r2(t.subtotal), num(j.discountPct)||'', r2(t.discountAmount),
       r2(t.extrasTotal), r2(t.net), r2(t.vat), r2(t.cardAmount), r2(t.grand), r2(paidOf(j)),
       r2(balanceOf(j)),
       paymentsOf(j).map(x=>x.date+' '+r2(x.amount)+(x.method?' '+x.method:'')).join('; '),

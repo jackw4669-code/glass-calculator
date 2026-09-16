@@ -9,6 +9,27 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // A photo by its own long random id. This is the link that goes to
+    // suppliers, so it sits outside /api/ and returns the image itself
+    // rather than JSON. Anyone holding the link can see that one photo
+    // and nothing else — if the Worker is behind Cloudflare Access,
+    // outsiders will not get this far without a bypass rule for /p/.
+    if (path.startsWith('/p/') && request.method === 'GET') {
+      const row = await env.DB
+        .prepare('SELECT mime, bytes FROM photos WHERE id=?')
+        .bind(path.slice(3)).first();
+      if (!row) return new Response('Not found', { status: 404 });
+      const bin = atob(row.bytes);
+      const buf = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+      return new Response(buf, {
+        headers: {
+          'content-type': row.mime || 'image/jpeg',
+          'cache-control': 'public, max-age=31536000, immutable'
+        }
+      });
+    }
+
     if (!path.startsWith('/api/')) {
       return env.ASSETS.fetch(request); // serve index.html etc.
     }
@@ -65,7 +86,39 @@ export default {
       }
 
       if (path.startsWith('/api/jobs/') && request.method === 'DELETE') {
-        await env.DB.prepare('DELETE FROM jobs WHERE id=?')
+        const id = path.split('/')[3];
+        // photos first, so a failure here cannot orphan them
+        await env.DB.batch([
+          env.DB.prepare('DELETE FROM photos WHERE job_id=?').bind(id),
+          env.DB.prepare('DELETE FROM jobs WHERE id=?').bind(id)
+        ]);
+        return json({ ok: true });
+      }
+
+      // ---- photos ----
+      if (path.startsWith('/api/photo/') && request.method === 'GET') {
+        const row = await env.DB
+          .prepare('SELECT id, name, mime, bytes, w, h FROM photos WHERE id=?')
+          .bind(path.split('/')[3]).first();
+        return row ? json(row) : json({ error: 'not found' }, 404);
+      }
+
+      if (path === '/api/photos' && request.method === 'POST') {
+        const p = await request.json();
+        if (!p.id || !p.jobId || !p.data) return json({ error: 'incomplete' }, 400);
+        // D1 will not take a value over a megabyte. The app shrinks
+        // pictures before sending, so this only catches something odd.
+        if (p.data.length > 1000000) return json({ error: 'too big' }, 413);
+        await env.DB.prepare(`
+          INSERT INTO photos (id,job_id,name,mime,bytes,w,h,added_at,added_by)
+          VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9)
+        `).bind(p.id, p.jobId, p.name || 'photo.jpg', p.mime || 'image/jpeg',
+                p.data, p.w || null, p.h || null, new Date().toISOString(), who).run();
+        return json({ ok: true, id: p.id });
+      }
+
+      if (path.startsWith('/api/photo/') && request.method === 'DELETE') {
+        await env.DB.prepare('DELETE FROM photos WHERE id=?')
           .bind(path.split('/')[3]).run();
         return json({ ok: true });
       }

@@ -10,12 +10,14 @@ if (!TARGET) { console.error('Could not find index.html. Run from the repo root,
 
 function makeServer() {
   const rows = new Map();          // id -> {data, version}
+  const photos = new Map();
   const settings = new Map();
   const log = [];
   return {
-    rows, settings, log,
+    rows, settings, log, photos,
     seed(job) { rows.set(job.id, { data: JSON.stringify(job), version: 1 }); },
     async handle(url, opt) {
+      if (this._photoRoute) { const r = this._photoRoute(url, opt); if (r) return r; }
       const method = (opt && opt.method) || 'GET';
       const path = url.replace(/^https?:\/\/[^/]+/, '');
       log.push(method + ' ' + path);
@@ -50,7 +52,25 @@ function makeServer() {
       }
 
       if (path.startsWith('/api/jobs/') && method === 'DELETE') {
-        rows.delete(path.split('/')[3]);
+        const id = path.split('/')[3];
+        [...photos.keys()].forEach(k => { if (photos.get(k).job_id === id) photos.delete(k); });
+        rows.delete(id);
+        return json({ ok: true });
+      }
+
+      if (path === '/api/photos' && method === 'POST') {
+        const p = JSON.parse(opt.body);
+        if (String(p.data).length > 1000000) return json({ error: 'too big' }, 413);
+        photos.set(p.id, { id: p.id, job_id: p.jobId, name: p.name, mime: p.mime,
+                           bytes: p.data, w: p.w, h: p.h });
+        return json({ ok: true, id: p.id });
+      }
+      if (path.startsWith('/api/photo/') && method === 'GET') {
+        const p = photos.get(path.split('/')[3]);
+        return p ? json(p) : json({ error: 'not found' }, 404);
+      }
+      if (path.startsWith('/api/photo/') && method === 'DELETE') {
+        photos.delete(path.split('/')[3]);
         return json({ ok: true });
       }
       return json({ error: 'not found' }, 404);
@@ -79,6 +99,8 @@ async function boot(opts = {}) {
       w.open = (u) => { (w._opened = w._opened || []).push(u); return null; };
       w.scrollTo = () => {};
       w.fetch = (u, o) => server.handle(String(u), o);
+      /* jsdom has no canvas, so the shrink step is stubbed in tests */
+      w.__photos = server.photos;
       w.offline = () => { w.fetch = async () => { throw new Error('offline'); }; };
     }
   });

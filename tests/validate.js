@@ -75,7 +75,9 @@ const NEW = ['undobar', 'undobtn', 'dismiss', 'ub', 'xtrawrap', 'xtrahead', 'xtr
              'mchips', 'mgrid', 'mcard', 'lab', 'val', 'sub2', 'wide', 'dark', 'pos', 'neg',
              'msec', 'mnote', 'bars', 'bar', 'bl', 'bt', 'bf', 'bz', 'bv', 'down',
              'betrack', 'befill', 'short', 'mrow', 'mi', 'mn', 'mm', 'mv', 'mp', 'stale',
-             'prow', 'tot', 'pfoot', 'ch'];
+             'prow', 'tot', 'pfoot', 'ch',
+             'urgent', 'unote', 'miniact', 'picks', 'pick', 'pk', 'pkr', 'pks', 'pickbar',
+             'phgrid', 'ph', 'phwait', 'phsend', 'phdel', 'phadd', 'phcount', 'jobphotos'];
 const unstyledNew = NEW.filter(c => !styled.has(c));
 if (unstyledNew.length) bad('new classes with no CSS rule: ' + unstyledNew.join(', '));
 else ok('all ' + NEW.length + ' new classes are styled');
