@@ -26,7 +26,12 @@ input,select,textarea{font:inherit;color:inherit}
 header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--white);padding:10px 16px;display:flex;gap:10px;align-items:center}
 .brand{font-weight:700;letter-spacing:.14em;font-size:12px;text-transform:uppercase;white-space:nowrap}
 .brand span{color:#8FBCA9}
-@media(max-width:620px){.brand{display:none}}
+@media(max-width:620px){
+  .brand{display:none}
+  header{flex-wrap:wrap;padding:9px 12px;gap:8px}
+  header .searchwrap{order:3;flex:1 0 100%;min-width:0}
+  header #newBtn{margin-left:auto}
+}
 .searchwrap{flex:1;min-width:110px}
 #search{width:100%;padding:9px 12px;background:#233A40;border:1px solid #35545C;border-radius:var(--r);color:var(--white);font-size:15px}
 #search::placeholder{color:#7E999F}
@@ -34,7 +39,8 @@ header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--white)
 .hbtn.primary{background:#4E9E7E;color:#05201A}
 .hbtn.ghost{border:1px solid #35545C;color:#B9CDCB}
 #storeTag{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;padding:4px 8px;border-radius:2px;white-space:nowrap}
-@media(max-width:760px){#storeTag{display:none}}
+@media(max-width:760px) and (min-width:621px){#storeTag{display:none}}
+@media(max-width:620px){#storeTag{margin-right:auto}}
 .st-shop{background:#1E4D3E;color:#8FD9BC}
 .st-device{background:#5A3D10;color:#F0C687}
 .st-none{background:#5A1E1D;color:#F0A9A7}
@@ -45,14 +51,31 @@ header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--white)
 .menu button:last-child{border-bottom:none}
 .menu button:hover{background:var(--float-l)}
 
-.rail{position:sticky;top:56px;z-index:30;background:var(--white);border-bottom:1px solid var(--silver);display:flex;overflow-x:auto;scrollbar-width:none}
+.rail{position:sticky;top:var(--hh,56px);z-index:30;background:var(--white);border-bottom:1px solid var(--silver);display:flex;overflow-x:auto;scrollbar-width:none}
 .rail::-webkit-scrollbar{display:none}
+.railwrap{position:sticky;top:var(--hh,56px);z-index:30}
+.railwrap::after{content:'';position:absolute;top:0;right:0;bottom:1px;width:34px;pointer-events:none;
+  background:linear-gradient(to right,rgba(255,255,255,0),var(--white));transition:opacity .15s}
+.railwrap.atend::after{opacity:0}
+.railwrap .rail{position:static}
 .chip{padding:11px 15px;border-right:1px solid var(--silver2);white-space:nowrap;display:flex;gap:8px;align-items:baseline;color:var(--ink2);font-size:13px;font-weight:500;border-bottom:3px solid transparent}
 .chip b{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--ink)}
 .chip.on{color:var(--ink);border-bottom-color:var(--float);background:var(--float-l)}
 .chip.alert b{color:var(--amber)}
+.src-quoted{background:var(--silver2);color:var(--ink2)}
+a.tel,a.maplink{color:inherit;text-decoration:underline;text-decoration-color:var(--silver);text-underline-offset:2px}
+a.tel:hover,a.maplink:hover{text-decoration-color:currentColor}
 
 main{max-width:1000px;margin:0 auto;padding:16px 12px 100px}
+@media(min-width:1180px){
+  main{max-width:1320px}
+  .jobgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+  .jobgrid .job{margin-bottom:0}
+}
+@media(max-width:620px){
+  main{padding:12px 10px 100px}
+  .banner{font-size:13.5px;padding:9px 12px;margin-bottom:10px}
+}
 .banner{padding:11px 14px;border-radius:var(--r);margin-bottom:14px;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:var(--amber-l);border:1px solid #E8C99A;border-left:4px solid var(--amber)}
 .banner b{color:var(--amber)}
 .banner button{font-weight:600;color:var(--amber);text-decoration:underline;text-underline-offset:2px}
@@ -224,9 +247,13 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
 .dtop h2{font-size:19px;font-weight:600}
 .dnav{display:flex;gap:6px}
 .dnav button{padding:7px 12px;border:1px solid var(--silver);background:var(--white);border-radius:var(--r);font-weight:600;font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--silver);border:1px solid var(--silver);border-radius:var(--r);overflow:hidden}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--silver);border:1px solid var(--silver);border-radius:var(--r);overflow:hidden}
 .gh{background:var(--ink);color:#B9CDCB;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:7px 4px;text-align:center}
-.cell{background:var(--white);min-height:88px;padding:5px 5px 6px;text-align:left;display:block;width:100%}
+.cell{background:var(--white);min-height:88px;padding:5px 5px 6px;text-align:left;display:block;width:100%;min-width:0}
+.cell .dots{display:none;gap:3px;flex-wrap:wrap;margin-top:2px}
+.cell .dot{width:7px;height:7px;border-radius:50%;display:block}
+.cell .dot.ev-fit{background:#7B5BB6}.cell .dot.ev-del{background:var(--blue)}.cell .dot.ev-mea{background:#C2603A}
+.cell .dot.urgent{box-shadow:0 0 0 2px var(--white),0 0 0 3px var(--red)}
 .cell.out{background:#F4F6F5}
 .cell.today{background:var(--float-l)}
 .cell.sel{outline:2px solid var(--float);outline-offset:-2px}
@@ -236,7 +263,14 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
 .ev-fit{background:#EDE7F6;color:#4A3080}
 .ev-del{background:var(--blue-l);color:var(--blue)}
 .cell .more{font-size:10px;color:var(--ink2)}
-@media(max-width:620px){.cell{min-height:66px}.cell .ev{font-size:9.5px}}
+/* On a phone a day is about 50px wide. Names cannot fit, so each booking
+   becomes a coloured dot and the detail is one tap away. */
+@media(max-width:620px){
+  .cell{min-height:54px;padding:4px 3px}
+  .cell .ev,.cell .more{display:none}
+  .cell .dots{display:flex}
+  .gh{font-size:9.5px;letter-spacing:.04em;padding:6px 1px}
+}
 .daypanel{margin-top:14px}
 .slot{display:flex;gap:10px;align-items:flex-start;background:var(--white);border:1px solid var(--silver);border-radius:var(--r);padding:11px 13px;margin-bottom:8px}
 .slot .tm{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;white-space:nowrap}
@@ -244,7 +278,8 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
 .unsched{background:var(--white);border:1px dashed var(--silver);border-radius:var(--r);padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
 
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:var(--white);padding:11px 18px;border-radius:var(--r);font-size:14px;z-index:99;transition:transform .22s ease;max-width:90vw;display:flex;gap:16px;align-items:center}
-#toast.on{transform:translateX(-50%) translateY(0)}
+#toast{visibility:hidden;opacity:0;transition:transform .22s ease,opacity .18s,visibility 0s .22s}
+#toast.on{transform:translateX(-50%) translateY(0);visibility:visible;opacity:1;transition:transform .22s ease,opacity .18s}
 #toast.bad{background:var(--red)}
 /* ---------- a job somebody has flagged ---------- */
 .job.urgent{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red);color:var(--red)}
@@ -273,6 +308,101 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
 .pickbar{display:flex;gap:8px;margin-top:9px}
 .pickbar button{flex:1;padding:6px 10px;border:1px solid var(--silver);border-radius:var(--r);
   background:var(--white);font-size:12px;font-weight:600;color:var(--ink2)}
+
+/* ---------- the day, full screen ----------
+   Laid out like a run sheet: times down the left on a continuous rule,
+   free time shown between stops, and the loud colour kept for one thing
+   only — a job that is booked to go out but is not ready to. */
+#daySheet .sheetbody{max-width:880px;padding-top:18px}
+.dayhd{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.dayhd h1{font-size:28px;font-weight:700;line-height:1.1;letter-spacing:-.01em}
+.dayhd .rel{font-size:14px;font-weight:600;color:var(--float-d);margin-top:3px}
+.daynav{display:flex;gap:6px}
+.daynav button{padding:8px 12px;border:1px solid var(--silver);background:var(--white);border-radius:var(--r);
+  font-weight:600;font-size:13px;white-space:nowrap}
+.daysum{font-size:15.5px;line-height:1.5;color:var(--ink);margin:10px 0 14px;max-width:62ch}
+.daysum b{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.dayacts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.dayacts a,.dayacts button{display:inline-flex;align-items:center;padding:10px 14px;border-radius:var(--r);
+  font-weight:600;font-size:14px;border:1px solid var(--silver);background:var(--white);color:var(--ink);text-decoration:none}
+.dayacts .go{background:var(--float-d);border-color:var(--float-d);color:var(--white)}
+.dayalert{background:#FDECEA;border:1px solid #F0B7B3;border-left:4px solid var(--red);border-radius:var(--r);
+  padding:11px 14px;margin-bottom:18px;font-size:14px;color:var(--ink)}
+.dayalert b{color:var(--red)}
+.dayalert ul{margin:6px 0 0 18px}
+.dayalert li{margin-top:2px}
+
+.tl{position:relative}
+.stop{display:grid;grid-template-columns:86px minmax(0,1fr);gap:0 16px}
+.stime{position:relative;border-right:2px solid var(--silver);padding:2px 14px 18px 0;text-align:right}
+.stime .t0{font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600;line-height:1.1;display:block}
+.stime .t1{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink2);display:block;margin-top:3px}
+.stime::after{content:'';position:absolute;right:-7px;top:7px;width:12px;height:12px;border-radius:50%;
+  background:var(--white);border:2px solid var(--ink2)}
+.stop.k-fit .stime::after{border-color:#7B5BB6}
+.stop.k-deliver .stime::after{border-color:var(--blue)}
+.stop.k-measure .stime::after{border-color:#C2603A}
+.stop.done .stime::after{background:var(--float);border-color:var(--float)}
+.scard{background:var(--white);border:1px solid var(--silver);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.stop.notready .scard{border-color:var(--red);box-shadow:inset 3px 0 0 var(--red)}
+.stop.done .scard{opacity:.62}
+.shead{padding:12px 14px 4px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.shead h3{font-size:18px;font-weight:700;line-height:1.25}
+.shead .jn{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink2);font-weight:500;margin-right:6px}
+.shead .kind{font-size:12px;font-weight:700;padding:3px 8px;border-radius:2px;white-space:nowrap}
+.sbody{padding:2px 14px 12px}
+.saddr{font-size:15px;margin:2px 0 10px;line-height:1.4}
+.sreach{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.sreach a{flex:1 1 0;min-width:0;text-align:center;padding:10px 10px;border:1px solid var(--silver);border-radius:var(--r);
+  font-weight:600;font-size:14.5px;color:var(--ink);text-decoration:none;background:var(--paper)}
+.sreach a:hover{border-color:var(--ink2)}
+.sreach a small{display:block;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:var(--ink2);margin-top:1px}
+.sready{font-size:13.5px;font-weight:600;margin-bottom:10px}
+.sready.ok{color:var(--float-d)}
+.sready.bad{color:var(--red)}
+.sgoing{border-top:1px solid var(--silver2);padding-top:9px}
+.sline{display:flex;gap:12px;align-items:baseline;padding:4px 0}
+.sline .sz{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500;white-space:nowrap}
+.sline .sd{font-size:13.5px;color:var(--ink2);min-width:0}
+.sline .inote{margin-top:3px}
+.sphotos{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.sphotos img{width:64px;height:52px;object-fit:cover;border-radius:2px;border:1px solid var(--silver);cursor:zoom-in}
+.sfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;border-top:1px solid var(--silver2);background:var(--paper)}
+.smoney{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600}
+.smoney.owe{color:var(--red)}
+.smoney.paid{color:var(--float-d)}
+.gapline{display:grid;grid-template-columns:86px minmax(0,1fr);gap:0 16px}
+.gapline .gt{border-right:2px dashed var(--silver);min-height:30px}
+.gapline .gf{align-self:center;font-size:13px;color:var(--ink2);padding:2px 0 12px}
+.gapline.clash .gf{color:var(--red);font-weight:600}
+.notime{margin-top:6px}
+.notime h4{font-size:14px;font-weight:700;margin:14px 0 8px}
+.dayempty{background:var(--white);border:1px dashed var(--silver);border-radius:var(--r);padding:22px 18px}
+.dayempty h3{font-size:17px;margin-bottom:4px}
+.dayempty .waitrow{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:9px 0;border-top:1px solid var(--silver2);font-size:14px}
+@media(max-width:620px){
+  .dayhd h1{font-size:23px}
+  .stop,.gapline{grid-template-columns:62px minmax(0,1fr);gap:0 11px}
+  .stime{padding-right:10px}
+  .stime .t0{font-size:17px}
+  .stime .to{display:none}
+  .shead h3{font-size:16.5px}
+}
+
+/* ---------- a note on one piece ---------- */
+.pnadd{display:inline-block;margin-top:9px;font-size:12.5px;font-weight:600;color:var(--blue);
+  text-decoration:underline;text-underline-offset:2px}
+.pnwrap{margin-top:9px}
+.pnwrap label{font-size:10px}
+.pnwrap textarea{font-size:14px;padding:8px 10px;resize:vertical;min-height:52px}
+.pnhint{font-size:11.5px;color:var(--ink2);margin-top:4px}
+.inote{margin-top:4px;padding:3px 0 3px 8px;border-left:2px solid var(--float);font-size:13px;
+  color:var(--ink);line-height:1.4;white-space:pre-wrap}
+.job.urgent .inote{color:var(--red);border-left-color:var(--red)}
+.wsrow .inote{font-size:13.5px;font-weight:500}
+.pick .inote{font-size:12px;margin-top:3px}
 
 /* ---------- photos ---------- */
 .phgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:8px}
@@ -387,6 +517,9 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
   .pfoot{font-size:10px;margin-top:10px;font-style:italic}
   .pnote{border-left:3px solid #000;padding-left:7px;margin-top:4px;font-size:12px;white-space:pre-wrap}
   .pspec{font-size:12px;font-weight:700}
+  .prun{border:1.5px solid #000;padding:8px 10px;margin-top:10px;page-break-inside:avoid}
+  .prun .pt{font-size:16px;font-weight:700;display:flex;justify-content:space-between}
+  .prun .pwarn{border:2px solid #000;padding:3px 6px;font-weight:700;margin-top:5px}
 }
 </style>
 </head>
@@ -412,7 +545,7 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
   </div>
 </header>
 
-<div class="rail" id="rail"></div>
+<div class="railwrap" id="railwrap"><div class="rail" id="rail"></div></div>
 <main><div id="banner"></div><div id="list"></div></main>
 
 <!-- ============ JOB ============ -->
@@ -533,6 +666,16 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
     <button class="save" id="saveJob">Save job</button>
     <button class="danger" id="delJob" style="display:none">Delete</button>
   </div></div>
+</div>
+
+<!-- ============ ONE DAY, FULL SCREEN ============ -->
+<div class="sheet" id="daySheet">
+  <div class="sheethead"><h2 id="dayTitle">Day</h2>
+    <div style="display:flex;gap:8px">
+      <button class="hbtn ghost" id="dayPrint">Print run sheet</button>
+      <button class="hbtn ghost" id="closeDay">Close</button>
+    </div></div>
+  <div class="sheetbody" id="dayBody"></div>
 </div>
 
 <!-- ============ EMAIL ============ -->
@@ -1512,6 +1655,16 @@ function endTime(t,mins){
 }
 
 const $=id=>document.getElementById(id);
+/* Tappable on a phone, harmless on the counter PC. */
+function dayWord(iso){
+  if(!iso) return '';
+  const off=n=>{const d=new Date(); d.setDate(d.getDate()+n); return ymd(d);};
+  return iso===off(0)?'today':iso===off(1)?'tomorrow':iso===off(-1)?'yesterday':fmtDate(iso);
+}
+const telLink=p=>{const d=String(p||'').replace(/[^\d+]/g,'');
+  return d?`<a class="tel" href="tel:${d}">${esc(fmtPhone(p))}</a>`:'';};
+const mapUrl=a=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a);
+const mapLink=a=>a?`<a class="maplink" data-map="1" href="${mapUrl(a)}" target="_blank" rel="noopener">${esc(a)}</a>`:'';
 const fmtPhone=p=>{const d=String(p||'').replace(/\D/g,'');
   return d.length===11?d.slice(0,5)+' '+d.slice(5,8)+' '+d.slice(8):(p||'');};
 function toast(m,bad,undoLabel){
@@ -1568,7 +1721,9 @@ function matches(j,q){
       || String(j.no||'').includes(q)
       || (j.items||[]).some(i=>prodOf(i.pid).name.toLowerCase().includes(q)
                              ||(i.supplier||'').toLowerCase().includes(q)
-                             ||extraSpec(i).toLowerCase().includes(q));
+                             ||extraSpec(i).toLowerCase().includes(q)
+                             ||(i.note||'').toLowerCase().includes(q))
+      || framesOf(j).some(f=>(f.desc||'').toLowerCase().includes(q)||(f.note||'').toLowerCase().includes(q));
 }
 function bucket(f){
   if(f==='all')     return JOBS.filter(isLive);
@@ -1583,6 +1738,24 @@ function bucket(f){
   return [];
 }
 /* Nag on a Friday, or any day once a week has gone by. */
+/* The header wraps onto two rows on a phone, so its height is measured
+   rather than assumed, and the tab rail sticks just below it. */
+function measureHeader(){
+  const hd=document.querySelector('header');
+  if(hd) document.documentElement.style.setProperty('--hh',hd.offsetHeight+'px');
+}
+/* Fade the rail's right edge while there are more tabs off to the side,
+   and scroll the chosen tab into view if it is hidden. */
+function railEdges(follow){
+  const r=$('rail'), w=$('railwrap'); if(!r||!w) return;
+  if(follow){
+    const on=r.querySelector('.chip.on');
+    if(on&&(on.offsetLeft<r.scrollLeft||on.offsetLeft+on.offsetWidth>r.scrollLeft+r.clientWidth))
+      r.scrollLeft=Math.max(0,on.offsetLeft-24);
+  }
+  w.classList.toggle('atend',r.scrollLeft+r.clientWidth>=r.scrollWidth-2);
+}
+
 function backupDue(){
   if(!JOBS.length) return false;
   if(nagDismissed===ymd(new Date())) return false;
@@ -1590,6 +1763,7 @@ function backupDue(){
   return (new Date().getDay()===5 && days>=1) || days>=7;
 }
 function render(){
+  if(dayViewDate&&$('daySheet').classList.contains('on')) renderDay();
   const q=$('search').value.trim();
   const untold=bucket('told');
 
@@ -1599,6 +1773,7 @@ function render(){
   ].map(x=>`<button class="chip ${filter===x[0]?'on':''} ${x[0]==='told'&&untold.length?'alert':''}" data-f="${x[0]}">${x[1]} <b>${bucket(x[0]).length}</b></button>`).join('')
    +`<button class="chip ${filter==='diary'?'on':''}" data-f="diary">Diary</button>`
    +`<button class="chip ${filter==='money'?'on':''}" data-f="money">Money</button>`;
+  railEdges(true);
 
   const stale=untold.filter(j=>daysAgo(j.readyAt)>=1);
   const bars=[];
@@ -1614,8 +1789,11 @@ function render(){
       ${STORE==='none'?'This browser is also blocking storage, so nothing can be kept at all.'
                       :'You are looking at the last copy saved on this machine. You can read it, but nothing will save until the connection is back.'}</div></div>`);
   if(backupDue())
-    bars.push(`<div class="banner"><div><b>${new Date().getDay()===5?'It is Friday — time to back up the job book.':'The job book has not been backed up for '+daysAgo(lastFull)+' days.'}</b>
-      ${lastFull?'Last full backup '+daysAgo(lastFull)+' days ago.':'It has never been backed up.'} ${JOBS.length} job${JOBS.length===1?'':'s'} would be lost.</div>
+    bars.push(`<div class="banner"><div><b>${
+        !lastFull ? 'The job book has never been backed up.'
+        : new Date().getDay()===5 ? 'It is Friday — time to back up the job book.'
+        : 'Last backed up '+daysAgo(lastFull)+' day'+(daysAgo(lastFull)===1?'':'s')+' ago.'}</b>
+      If this machine failed, ${JOBS.length} job${JOBS.length===1?'':'s'} would be lost.</div>
       <span style="display:flex;gap:14px"><button data-backup="1">Back up now</button><button data-nag="1">Not today</button></span></div>`);
   if(stale.length)
     bars.push(`<div class="banner"><div><b>${stale.length} job${stale.length>1?'s are':' is'}</b> on the rack with nobody told.</div><button data-f="told">Show them</button></div>`);
@@ -1636,7 +1814,7 @@ function render(){
       : `<div class="empty"><h3>Nothing here</h3><p>Press <b>+ New job</b> to quote the next one.</p></div>`;
     return;
   }
-  $('list').innerHTML=show.map(jobCard).join('');
+  $('list').innerHTML='<div class="jobgrid">'+show.map(jobCard).join('')+'</div>';
 }
 function jobCard(j){
   const s=stat(j.status), t=jobTotals(j);
@@ -1652,8 +1830,8 @@ function jobCard(j){
       <div class="ticket">${j.no}</div>
       <div class="who">
         <h3>${esc(j.name)} ${j.trade?'<span class="tag">Trade</span>':''}</h3>
-        <div class="meta"><span class="mono">${esc(fmtPhone(j.phone))}</span>
-          &middot; ${handoverLabel(j)}${j.needsMeasure?' (measure first)':''}${appt?' &middot; '+APPT[appt.kind].label+' '+fmtDate(appt.date)+(appt.time?' '+appt.time:''):(j.wanted?' &middot; wanted '+fmtDate(j.wanted):'')}${j.called?' &middot; told '+(j.toldHow==='email'?'by email':'by phone'):''}</div>
+        <div class="meta"><span class="mono">${telLink(j.phone)}</span>
+          &middot; ${handoverLabel(j)}${j.needsMeasure?' (measure first)':''}${appt?' &middot; '+APPT[appt.kind].label+' '+dayWord(appt.date)+(appt.time?' '+appt.time:''):(j.wanted?' &middot; wanted '+dayWord(j.wanted):'')}${j.called?' &middot; told '+(j.toldHow==='email'?'by email':'by phone'):''}</div>
       </div>
       <div class="stat ${s.cls}">${s.label}</div>
     </div>
@@ -1661,7 +1839,9 @@ function jobCard(j){
       ${(j.items||[]).map((it,n)=>{
         const pi=priceItem(it,j.unit);
         const priced=it.cost!==undefined&&it.cost!=='';
-        const badge = it.src==='order'
+        const badge = !j.confirmed
+          ? '<span class="src src-quoted" title="Not confirmed yet">Quoted</span>'
+          : it.src==='order'
           ? (ost(it)==='arrived'?'<span class="src src-in" title="Arrived">In</span>'
              :ost(it)==='ordered'?`<button class="src src-order" data-pa="${j.id}|${n}" title="Tick off when it arrives">On order</button>`
              :`<span class="src src-price" title="${priced?'Priced — not ordered yet':'Waiting on a price'}">${priced?'Priced':'To price'}</span>`)
@@ -1674,20 +1854,23 @@ function jobCard(j){
           ${extraSpec(it)?`<div class="spec">${esc(extraSpec(it))}</div>`:''}
           ${specMissing(it).length?`<div class="specmiss">Needs ${esc(specMissing(it).join(' and '))}</div>`:''}
           ${pi.addons.length?`<div class="addons">+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}
+          ${it.note?`<div class="inote">${esc(it.note)}</div>`:''}
         </div></div>`;}).join('')}
       ${framesOf(j).map((f,n)=>`<div class="ditem">
-        ${f.arrived?'<span class="src src-in" title="Arrived">In</span>'
+        ${!j.confirmed?'<span class="src src-quoted" title="Not confirmed yet">Quoted</span>'
+          :f.arrived?'<span class="src src-in" title="Arrived">In</span>'
                    :`<button class="src src-order" data-fa="${j.id}|${n}" title="Tick off when it arrives">On order</button>`}
         <div class="body">
           <div class="prod">${esc(f.desc||'Frame')}${f.supplier?' &middot; '+esc(f.supplier):''}</div>
           ${f.w||f.h?`<div class="size">${esc(f.w)}<span class="x">×</span>${esc(f.h)}<span class="qty">×${f.q||1}</span></div>`
                     :`<div class="size"><span class="qty">×${f.q||1}</span></div>`}
+          ${f.note?`<div class="inote">${esc(f.note)}</div>`:''}
         </div></div>`).join('')}
       ${measureOnly(j)?'<div class="sub">Waiting to be measured</div>'
         :`<div class="sub mono" style="margin-top:7px">${kindOf(j)==='glass'?t.area.toFixed(3)+' m²':KINDS[kindOf(j)]}${(j.extras||[]).length?' · '+j.extras.map(x=>esc(x.label)).join(', '):''}</div>`}
       ${j.note?(j.noteUrgent?`<div class="note urgent"><b>Read this first</b>${esc(j.note)}</div>`
                             :`<div class="note">${esc(j.note)}</div>`):''}
-      ${j.handover!=='collection'&&j.addr?`<div class="note">${handoverLabel(j)} — ${esc(j.addr)}</div>`:''}
+      ${j.handover!=='collection'&&j.addr?`<div class="note">${handoverLabel(j)} — ${mapLink(j.addr)}</div>`:''}
       ${(j.photos||[]).length?`<div class="jobphotos">${(j.photos||[]).map(p=>
         `<img src="${PHOTOCACHE[p.id]||''}" alt="${esc(p.name||'Photo')}" data-jph="${p.id}" loading="lazy">`).join('')}</div>`:''}
     </div>
@@ -1743,6 +1926,7 @@ function wsRow(j,it,n,kind){
       ${extraSpec(it)?`<div class="spec">${esc(extraSpec(it))}</div>`:''}
       ${specMissing(it).length?`<div class="specmiss">Needs ${esc(specMissing(it).join(' and '))}</div>`:''}
       ${pi.addons.length?`<div class="ex">+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}
+      ${it.note?`<div class="inote">${esc(it.note)}</div>`:''}
       ${kind==='toprice'?`<div class="pn">We charge ${gbp(pi.total)}${priced?' · margin '+gbp(pi.total-num(it.cost)):''}</div>`:''}
       ${j.note?`<div class="pn ${j.noteUrgent?'unote':''}">${esc(j.note)}</div>`:''}
       ${rest}
@@ -1817,6 +2001,8 @@ function renderDiary(){
       <span class="dn">${d.getDate()}</span>
       ${evs.slice(0,2).map(x=>`<span class="ev ${APPT[x.a.kind].cls}"${x.j.note?' title="'+esc(x.j.note)+'"':''}>${x.a.time?x.a.time+' ':''}${esc(x.j.name)}${x.j.note?`<span class="hasnote ${x.j.noteUrgent?'urgent':''}"> *</span>`:''}</span>`).join('')}
       ${evs.length>2?`<span class="more">+${evs.length-2} more</span>`:''}
+      ${evs.length?`<span class="dots">${evs.map(x=>
+        `<span class="dot ${APPT[x.a.kind].cls} ${x.j.noteUrgent&&x.j.note?'urgent':''}"></span>`).join('')}</span>`:''}
     </button>`;}).join('');
 
   const waiting=JOBS.filter(j=>bookable(j)&&neededAppts(j).length);
@@ -1826,7 +2012,8 @@ function renderDiary(){
   $('list').innerHTML=`
     <div class="dtop">
       <h2>${diaryMonth.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h2>
-      <div class="dnav"><button data-mv="-1">←</button><button data-mv="0">Today</button><button data-mv="1">→</button>
+      <div class="dnav"><button data-dayview="${ymd(new Date())}">Today's run</button>
+        <button data-mv="-1" aria-label="Previous month">←</button><button data-mv="0">This month</button><button data-mv="1" aria-label="Next month">→</button>
         <button class="pri" data-print="diary" style="background:var(--ink);color:#fff;border-color:var(--ink)">Print</button></div>
     </div>
     <div class="grid">
@@ -1838,7 +2025,9 @@ function renderDiary(){
           <h4 style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)">
             ${new Date(selDay).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}
             ${mins?' — '+(mins/60).toFixed(mins%60?1:0)+' hours booked':''}</h4>
-          <button class="act go" data-bookday="${selDay}">+ Book this day</button></div>
+          <span style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="act go" data-dayview="${selDay}">Open full screen</button>
+            <button class="act" data-bookday="${selDay}">+ Book this day</button></span></div>
         ${dayJobs.length?dayJobs.map(x=>`<div class="slot">
             <div class="tm">${x.a.time||'—'}<div class="dur">${DURS[x.a.mins]||((+x.a.mins||0)+' min')}${x.a.time?'<br>to '+endTime(x.a.time,x.a.mins):''}</div></div>
             <div style="flex:1;min-width:0">
@@ -1861,6 +2050,219 @@ function renderDiary(){
           <button class="act go" data-book="${j.id}">Book</button></div>`).join(''):''}
     </div>`;
 }
+
+/* ============================================================
+   ONE DAY, FULL SCREEN
+   What the van needs: who, where, when, what is going, whether it
+   is actually ready, and what to collect. Finished stops stay on the
+   sheet, ticked, so the day can be followed as it goes.
+   ============================================================ */
+let dayViewDate=null, dayBack=false;
+const KIND_STYLE={fit:'k-fit',deliver:'k-deliver',measure:'k-measure'};
+const toMin=t=>{const m=/^(\d{1,2}):(\d{2})/.exec(t||''); return m?(+m[1])*60+(+m[2]):null;};
+const fmtMins=n=>{n=Math.round(n); const h=Math.floor(n/60), m=n%60;
+  return (h?h+' hr':'')+(h&&m?' ':'')+(m?m+' min':'')||'0 min';};
+const shiftDay=(iso,n)=>{const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return ymd(d);};
+const longDate=iso=>new Date(iso+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+const shortDate=iso=>new Date(iso+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric'});
+
+/* Bookings on one day, including jobs already finished, in time order. */
+function apptsOn(date){
+  const out=[];
+  JOBS.filter(j=>j.status!=='lost').forEach(j=>apptsOf(j).forEach((a,i)=>{ if(a.date===date) out.push({j,a,i}); }));
+  return out.sort((p,q)=>(p.a.time||'99').localeCompare(q.a.time||'99'));
+}
+
+/* Is the work for this booking actually ready to go out? A measure
+   visit has nothing to be ready. */
+function readiness(j,a){
+  if(a.kind==='measure') return null;
+  if(j.status==='done') return {ok:true,done:true,problems:[]};
+  const p=[];
+  if(!j.confirmed) p.push('the customer has not confirmed it');
+  const tp=toPrice(j).length, po=pendingOrder(j).length, pf=pendingFrames(j).length, pc=pendingCut(j).length;
+  if(tp) p.push(tp+' piece'+(tp===1?' is':'s are')+' still waiting on a supplier price');
+  if(po) p.push(po+' piece'+(po===1?' is':'s are')+' still on order from '+Object.keys(waitingSuppliers(j)).join(' and '));
+  if(pf) p.push(pf+' frame'+(pf===1?' has':'s have')+' not arrived');
+  if(pc) p.push(pc+' piece'+(pc===1?' is':'s are')+' still to cut');
+  return {ok:!p.length,done:false,problems:p};
+}
+
+function whatsGoing(j){
+  const rows=[];
+  (j.items||[]).forEach(it=>{
+    const pi=priceItem(it,j.unit);
+    rows.push(`<div class="sline"><span class="sz">${pi.p.each?'×'+(it.q||1):esc(it.w)+' × '+esc(it.h)+(+it.q>1?' ×'+it.q:'')}</span>
+      <span class="sd">${esc(pi.p.name)}${extraSpec(it)?' · '+esc(extraSpec(it)):''}
+        ${it.note?`<div class="inote">${esc(it.note)}</div>`:''}</span></div>`);
+  });
+  framesOf(j).forEach(f=>{
+    rows.push(`<div class="sline"><span class="sz">${f.w&&f.h?esc(f.w)+' × '+esc(f.h):''}${+f.q>1?' ×'+f.q:''}</span>
+      <span class="sd">${esc(f.desc||'Frame')}${f.note?`<div class="inote">${esc(f.note)}</div>`:''}</span></div>`);
+  });
+  if(kindOf(j)==='maintenance') (j.extras||[]).forEach(x=>{
+    rows.push(`<div class="sline"><span class="sd">${esc(x.label||'Work')}</span></div>`);
+  });
+  return rows.length?`<div class="sgoing">${rows.join('')}</div>`:'';
+}
+
+function stopCard(x){
+  const j=x.j, a=x.a, r=readiness(j,a), bal=balanceOf(j);
+  const t0=a.time||'', st=toMin(t0), en=st!==null?st+(+a.mins||0):null;
+  const done=j.status==='done';
+  const cls=[KIND_STYLE[a.kind]||'', done?'done':'', r&&!r.ok?'notready':''].join(' ');
+  const money = done&&bal<=0.005 ? `<span class="smoney paid">Paid</span>`
+    : bal>0.005 ? `<span class="smoney owe">${gbp(bal)} ${j.trade?'to invoice':'to collect'}</span>`
+    : `<span class="smoney paid">Paid</span>`;
+  return `<div class="stop ${cls}">
+    <div class="stime"><span class="t0">${t0||'—'}</span>
+      ${en!==null?`<span class="t1"><span class="to">to </span>${endTime(t0,a.mins)}</span><span class="t1">${DURS[a.mins]||fmtMins(+a.mins||0)}</span>`:''}</div>
+    <div class="scard">
+      <div class="shead">
+        <h3><span class="jn">${j.no}</span>${esc(j.name)}${j.trade?' <span class="tag">Trade</span>':''}</h3>
+        <span class="kind ${APPT[a.kind].cls}">${done?doneVerb(j):APPT[a.kind].label}</span>
+      </div>
+      <div class="sbody">
+        <div class="saddr">${j.addr?mapLink(j.addr):'<span class="sub">No address on the job</span>'}</div>
+        <div class="sreach">
+          ${j.phone?`<a class="tel" href="tel:${String(j.phone).replace(/[^\d+]/g,'')}">Call<small>${esc(fmtPhone(j.phone))}</small></a>`:''}
+          ${j.addr?`<a class="maplink" data-map="1" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(j.addr)}" target="_blank" rel="noopener">Directions</a>`:''}
+        </div>
+        ${r?(r.done?`<div class="sready ok">Done${j.doneAt?' at '+new Date(j.doneAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</div>`
+              :r.ok?`<div class="sready ok">Everything is in and ready to go</div>`
+              :`<div class="sready bad">Not ready — ${esc(r.problems.join('; '))}</div>`):''}
+        ${j.note?`<div class="dnote ${j.noteUrgent?'urgent':''}"><b>${j.noteUrgent?'Read this first':'Note'}</b>${esc(j.note)}</div>`:''}
+        ${whatsGoing(j)}
+        ${(j.photos||[]).length?`<div class="sphotos">${j.photos.map(p=>
+          `<img src="${PHOTOCACHE[p.id]||''}" alt="${esc(p.name||'Photo')}" data-jph="${p.id}" loading="lazy">`).join('')}</div>`:''}
+      </div>
+      <div class="sfoot">
+        ${money}
+        <div class="acts">
+          ${!done&&!j.trade&&bal>0.005?`<button class="act warn" data-settle="${j.id}">Take ${gbp(bal)}</button>`:''}
+          ${j.status==='ready'?`<button class="act go" data-coll="${j.id}">${doneVerb(j)}</button>`:''}
+          <button class="act" data-open="${j.id}">Open job</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* A route out from the shop, round every stop in time order, and back.
+   Google takes up to nine stops in a link. */
+function routeUrl(stops){
+  const addrs=stops.filter(x=>x.j.addr&&x.j.status!=='done').map(x=>x.j.addr).slice(0,9);
+  if(!addrs.length) return '';
+  return 'https://www.google.com/maps/dir/?api=1&travelmode=driving'
+    +'&origin='+encodeURIComponent(SHOP.addr)+'&destination='+encodeURIComponent(SHOP.addr)
+    +'&waypoints='+addrs.map(encodeURIComponent).join('%7C');
+}
+
+function renderDay(){
+  const d=dayViewDate; if(!d) return;
+  const all=apptsOn(d);
+  const timed=all.filter(x=>toMin(x.a.time)!==null), untimed=all.filter(x=>toMin(x.a.time)===null);
+  const rel=dayWord(d), isRel=/^(today|tomorrow|yesterday)$/.test(rel);
+  $('dayTitle').textContent='Day sheet';
+
+  const mins=all.reduce((s,x)=>s+(+x.a.mins||0),0);
+  const out=all.filter(x=>x.a.kind!=='measure'&&x.j.status!=='done');
+  const collect=out.filter(x=>!x.j.trade).reduce((s,x)=>s+Math.max(0,balanceOf(x.j)),0);
+  const invoice=out.filter(x=>x.j.trade).reduce((s,x)=>s+Math.max(0,balanceOf(x.j)),0);
+  const left=all.filter(x=>x.j.status!=='done').length;
+  const blocked=all.filter(x=>{const r=readiness(x.j,x.a); return r&&!r.ok;});
+  const first=timed[0], last=timed[timed.length-1];
+  const lastEnd=last?toMin(last.a.time)+(+last.a.mins||0):null;
+  const route=routeUrl(all);
+
+  let tl='';
+  timed.forEach((x,i)=>{
+    if(i>0){
+      const p=timed[i-1], pEnd=toMin(p.a.time)+(+p.a.mins||0), gap=toMin(x.a.time)-pEnd;
+      if(gap<0) tl+=`<div class="gapline clash"><div class="gt"></div><div class="gf">Overlaps the booking before by ${fmtMins(-gap)}</div></div>`;
+      else if(gap>=15) tl+=`<div class="gapline"><div class="gt"></div><div class="gf">${fmtMins(gap)} free</div></div>`;
+    }
+    tl+=stopCard(x);
+  });
+
+  const waiting=JOBS.filter(j=>bookable(j)&&neededAppts(j).length);
+
+  $('dayBody').innerHTML=`
+    <div class="dayhd">
+      <div><h1>${esc(longDate(d))}</h1>${isRel?`<div class="rel">${rel.charAt(0).toUpperCase()+rel.slice(1)}</div>`:''}</div>
+      <div class="daynav">
+        <button data-dayjump="-1" aria-label="Previous day">← ${esc(shortDate(shiftDay(d,-1)))}</button>
+        ${d!==ymd(new Date())?`<button data-dayjump="0">Today</button>`:''}
+        <button data-dayjump="1" aria-label="Next day">${esc(shortDate(shiftDay(d,1)))} →</button>
+      </div>
+    </div>
+    ${all.length?`
+    <p class="daysum">
+      <b>${all.length}</b> booking${all.length===1?'':'s'}${mins?', <b>'+fmtMins(mins)+'</b> of work':''}${first?', from <b>'+first.a.time+'</b> to <b>'+endTime(last.a.time,last.a.mins)+'</b>':''}.
+      ${left<all.length?(all.length-left)+' done, '+left+' to go. ':''}
+      ${collect>0.005?'<b>'+gbp(collect)+'</b> to collect'+(invoice>0.005?', and ':'.'):''}${invoice>0.005?'<b>'+gbp(invoice)+'</b> to invoice to trade.':''}
+    </p>
+    <div class="dayacts">
+      ${route?`<a class="go maplink" data-map="1" href="${route}" target="_blank" rel="noopener">Open the route in Maps</a>`:''}
+      <button data-bookday="${d}">Book something in</button>
+    </div>
+    ${blocked.length?`<div class="dayalert"><b>${blocked.length} booking${blocked.length===1?' is':'s are'} not ready to go out.</b>
+      <ul>${blocked.map(x=>`<li>${x.a.time?x.a.time+' — ':''}${x.j.no} ${esc(x.j.name)}: ${esc(readiness(x.j,x.a).problems.join('; '))}</li>`).join('')}</ul></div>`:''}
+    <div class="tl">${tl}</div>
+    ${untimed.length?`<div class="notime"><h4>No time set</h4>${untimed.map(stopCard).join('')}</div>`:''}
+    `:`
+    <div class="dayempty">
+      <h3>Nothing booked for ${esc(longDate(d))}.</h3>
+      <p class="sub">The whole day is free.</p>
+      <div class="dayacts" style="margin:12px 0 ${waiting.length?'10px':'0'}"><button class="go" data-bookday="${d}">Book something in</button></div>
+      ${waiting.length?`<div style="font-size:13px;font-weight:700;margin-top:6px">Still waiting for a slot</div>`+
+        waiting.slice(0,8).map(j=>`<div class="waitrow"><span>${j.no} · ${esc(j.name)} — needs ${esc(neededAppts(j).map(k=>APPT[k].label.toLowerCase()).join(' and '))}</span>
+          <button class="act go" data-book="${j.id}">Book</button></div>`).join(''):''}
+    </div>`}`;
+  (all.map(x=>x.j.photos||[]).reduce((s,p)=>s.concat(p),[])).filter(p=>!PHOTOCACHE[p.id]).forEach(p=>{
+    loadPhoto(p.id).then(()=>{ const im=document.querySelector('#dayBody [data-jph="'+p.id+'"]'); if(im) im.src=PHOTOCACHE[p.id]; }).catch(()=>{});
+  });
+}
+
+function openDay(date){
+  dayViewDate=date||ymd(new Date());
+  renderDay();
+  showSheet($('daySheet'));
+}
+
+$('closeDay').onclick=()=>{ dayBack=false; dayViewDate=null; hideSheets(); render(); };
+$('daySheet').addEventListener('click',e=>{
+  const dj=e.target.closest('[data-dayjump]');
+  if(dj){ const n=+dj.dataset.dayjump;
+    dayViewDate = n===0 ? ymd(new Date()) : shiftDay(dayViewDate,n);
+    selDay=dayViewDate; renderDay(); window.scrollTo({top:0}); return; }
+  /* leaving the day to open a job or book something should bring you back */
+  if(e.target.closest('[data-open],[data-book],[data-bookday]')) dayBack=true;
+},true);
+
+$('dayPrint').onclick=()=>{
+  const d=dayViewDate; if(!d) return;
+  const all=apptsOn(d);
+  $('printarea').innerHTML=`<div class="ptitle">Run sheet — ${esc(longDate(d))}</div>`+
+    (all.length?all.map(x=>{
+      const j=x.j, a=x.a, r=readiness(j,a), bal=balanceOf(j);
+      return `<div class="prun">
+        <div class="pt"><span>${a.time||'—'}${a.time&&a.mins?' to '+endTime(a.time,a.mins):''} · ${APPT[a.kind].label}</span><span>${j.no}</span></div>
+        <div><b>${esc(j.name)}</b>${j.phone?' · '+esc(fmtPhone(j.phone)):''}</div>
+        <div>${esc(j.addr||'No address')}</div>
+        ${r&&!r.ok?`<div class="pwarn">NOT READY: ${esc(r.problems.join('; '))}</div>`:''}
+        ${(j.items||[]).map(it=>{const pi=priceItem(it,j.unit);
+          return `<div class="psize">${pi.p.each?'×'+(it.q||1):esc(it.w)+' × '+esc(it.h)+(+it.q>1?' ×'+it.q:'')}</div>
+                  <div class="pprod">${esc(pi.p.name)}${extraSpec(it)?' · '+esc(extraSpec(it)):''}</div>
+                  ${it.note?`<div class="pnote">${esc(it.note)}</div>`:''}`;}).join('')}
+        ${framesOf(j).map(f=>`<div class="psize">${esc(f.w||'')}${f.w?' × ':''}${esc(f.h||'')}${+f.q>1?' ×'+f.q:''}</div>
+                              <div class="pprod">${esc(f.desc||'Frame')}</div>${f.note?`<div class="pnote">${esc(f.note)}</div>`:''}`).join('')}
+        ${j.note?`<div class="pnote"><b>${j.noteUrgent?'READ FIRST: ':''}</b>${esc(j.note)}</div>`:''}
+        <div style="margin-top:5px;font-weight:700">${bal>0.005?gbp(bal)+(j.trade?' to invoice':' TO COLLECT'):'Paid'}</div>
+      </div>`;}).join('')
+     :'<p>Nothing booked.</p>');
+  window.print();
+};
 
 /* ============================================================
    MONEY
@@ -2372,13 +2774,20 @@ document.addEventListener('click',async e=>{
   if(!e.target.closest('.menuwrap')) $('menu').classList.remove('on');
   if(!e.target.closest('.suggest')) $('sugg').innerHTML='';
 
+  if(e.target.closest('a.tel,a.maplink')) return;
+
   const un=e.target.closest('[data-undo]');
   if(un){ $('toast').className=''; await runUndo(); return; }
   const ud=e.target.closest('[data-undodrop]');
   if(ud){ UNDO=null; render(); return; }
 
   const f=e.target.closest('[data-f]');
-  if(f){ filter=f.dataset.f; listView='sheet'; $('search').value=''; render(); window.scrollTo({top:0}); return; }
+  if(f){ filter=f.dataset.f; listView='sheet'; $('search').value='';
+    if(filter==='diary'&&!selDay) selDay=ymd(new Date());
+    render(); window.scrollTo({top:0}); return; }
+
+  const dv=e.target.closest('[data-dayview]');
+  if(dv){ selDay=dv.dataset.dayview; openDay(dv.dataset.dayview); return; }
 
   const mk=e.target.closest('[data-mkind]');
   if(mk){ moneyKind=mk.dataset.mkind; moneyOff=0; renderMoney(); return; }
@@ -2570,7 +2979,10 @@ $('viewOrder').onclick=()=>{filter='order';listView='sheet';$('search').value=''
 
 /* ---------- sheets ---------- */
 function showSheet(el){ document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on')); el.classList.add('on'); window.scrollTo({top:0}); }
-function hideSheets(){ document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on')); }
+function hideSheets(){
+  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on'));
+  if(dayBack&&dayViewDate){ dayBack=false; renderDay(); $('daySheet').classList.add('on'); }
+}
 $('closeJob').onclick=hideSheets; $('cancelJob').onclick=hideSheets;
 $('closeRate').onclick=hideSheets; $('closeMail').onclick=hideSheets; $('mBack').onclick=hideSheets;
 
@@ -2621,6 +3033,26 @@ function specBlock(it,i){
     ${miss.length?`<div class="miss">Still needs ${esc(miss.join(' and '))}.</div>`:''}
   </div>`;
 }
+/* A note can be kept on any single piece or frame, as well as on the
+   job. Hidden behind a link until it is wanted, so the sheet does not
+   grow a box per piece that nobody fills in. Keyed by position, so it is
+   forgotten whenever the list is rebuilt, the same as OTHER. */
+let NOTEOPEN={};
+function pieceNote(kind,i,val){
+  const k=kind+':'+i, noun=kind==='frame'?'frame':'piece';
+  if(!val&&!NOTEOPEN[k]) return `<button class="pnadd" data-pnopen="${k}">+ Note for this ${noun}</button>`;
+  return `<div class="pnwrap"><label for="pn${kind}${i}">Note for this ${noun}</label>
+    <textarea class="inp" rows="2" id="pn${kind}${i}" data-pn="${k}"
+      placeholder="${kind==='frame'?'e.g. cill needs replacing, opener on the left':'e.g. polished edges both long sides, pattern runs top to bottom'}">${esc(val||'')}</textarea>
+    <div class="pnhint">${kind==='frame'?'Shown on the job and the day sheet.'
+                                         :'Goes on the cutting list, the order list and the email to the supplier.'}</div></div>`;
+}
+function openPieceNote(k){
+  NOTEOPEN[k]=true;
+  if(k.indexOf('frame:')===0) drawFrames(); else drawItems();
+  const t=document.querySelector('[data-pn="'+k+'"]'); if(t) t.focus();
+}
+
 function drawItems(){
   $('unitPick').innerHTML=`<select id="fUnit" style="border:1px solid var(--silver);border-radius:2px;padding:3px 5px;font-size:11px;text-transform:none;letter-spacing:0">
     ${['mm','cm','inches','feet'].map(u=>`<option ${u===unit?'selected':''}>${u}</option>`).join('')}</select>`;
@@ -2654,11 +3086,13 @@ function drawItems(){
              `<div class="lmwrap"><span>${esc((ADDONS.find(x=>x.id===a.id)||{}).name)} — metres</span>
               <input data-lm="${i}:${a.id}" value="${a.m!==undefined&&a.m!==''?esc(a.m):''}" placeholder="${pi.perim.toFixed(2)}" inputmode="decimal"></div>`).join('')}`}
       ${specBlock(it,i)}
+      ${pieceNote('item',i,it.note)}
       <div class="iline"><span>${pi.area?pi.area.toFixed(3)+' m²':'stock size'}${pi.perim?' · '+pi.perim.toFixed(2)+' lm':''}</span><b>${gbp(pi.total)}</b></div>
     </div>`;}).join('');
 }
 $('items').addEventListener('input',e=>{
   const t=e.target;
+  if(t.dataset.pn!==undefined){ items[+t.dataset.pn.split(':')[1]].note=t.value; return; }
   if(t.dataset.xo!==undefined){ const q=t.dataset.xo.split(':'); items[+q[0]][q[1]]=t.value; return; }
   if(t.dataset.k){ items[+t.dataset.i][t.dataset.k]=t.value; drawCalc(); refreshLines(); return; }
   if(t.dataset.lm){ const parts=t.dataset.lm.split(':');
@@ -2681,8 +3115,10 @@ $('items').addEventListener('change',e=>{
   }
 });
 $('items').addEventListener('click',e=>{
+  const po=e.target.closest('[data-pnopen]');
+  if(po){ openPieceNote(po.dataset.pnopen); return; }
   const rm=e.target.closest('[data-rmi]');
-  if(rm){ items.splice(+rm.dataset.rmi,1); OTHER={}; drawItems(); drawCalc(); return; }
+  if(rm){ items.splice(+rm.dataset.rmi,1); OTHER={}; NOTEOPEN={}; drawItems(); drawCalc(); return; }
   const sc=e.target.closest('[data-src]');
   if(sc){ const parts=sc.dataset.src.split(':'); const i=+parts[0];
     items[i].src=parts[1];
@@ -2705,7 +3141,7 @@ function refreshLines(){
 $('addItem').onclick=()=>{
   const last=items[items.length-1], pid=last?last.pid:'c4mm', src=defaultSrc(pid);
   items.push({pid,w:'',h:'',q:'1',addons:[],src,supplier:src==='order'?supNames()[0]:'',arrived:false,cut:false});
-  OTHER={}; drawItems(); drawCalc();
+  OTHER={}; NOTEOPEN={}; drawItems(); drawCalc();
 };
 
 function drawExtras(){
@@ -2854,15 +3290,19 @@ function drawFrames(){
         <div><label for="fp${i}">Price each, ex VAT</label>
           <input class="inp mono" id="fp${i}" data-fprice="${i}" value="${esc(f.price||'')}" inputmode="decimal" placeholder="£"></div>
       </div>
+      ${pieceNote('frame',i,f.note)}
     </div>`).join('')||'<p class="sub">No frames on this job yet.</p>';
 }
 $('frames').addEventListener('input',e=>{
   const t=e.target, map={fdesc:'desc',fwid:'w',fhgt:'h',fqty:'q',fsup:'supplier',fprice:'price'};
+  if(t.dataset.pn!==undefined){ frames[+t.dataset.pn.split(':')[1]].note=t.value; return; }
   for(const k in map) if(t.dataset[k]!==undefined){ frames[+t.dataset[k]][map[k]]=t.value; drawCalc(); return; }
 });
 $('frames').addEventListener('click',e=>{
+  const po=e.target.closest('[data-pnopen]');
+  if(po){ openPieceNote(po.dataset.pnopen); return; }
   const rm=e.target.closest('[data-rmf]'); if(!rm) return;
-  frames.splice(+rm.dataset.rmf,1); drawFrames(); drawCalc();
+  frames.splice(+rm.dataset.rmf,1); NOTEOPEN={}; drawFrames(); drawCalc();
 });
 $('addFrame').onclick=()=>{ frames.push({desc:'',w:'',h:'',q:'1',supplier:'',price:'',arrived:false});
   drawFrames(); drawCalc(); };
@@ -3093,7 +3533,7 @@ function openJob(j){
   $('fMeasure').checked=j?!!j.needsMeasure:false;
   $('fUrgent').checked=j?!!j.noteUrgent:false;
   costs=j&&j.costs?clone(j.costs):[];
-  OTHER={};
+  OTHER={}; NOTEOPEN={};
   setTrade(j?!!j.trade:false);
   setHandover(j?(j.handover||(j.deliver?'delivery':'collection')):'collection');
   setKind(j?kindOf(j):'glass');
@@ -3109,10 +3549,12 @@ $('saveJob').onclick=async()=>{
   const clean=jobKind==='glass'?items.filter(it=>{
     const p=prodOf(it.pid);
     return p.each?(parseInt(it.q)||0)>0:(parseFloat(it.w)>0&&parseFloat(it.h)>0);
-  }).map(it=>Object.assign({cut:false,arrived:false},it)):[];
+  }).map(it=>{ const c=Object.assign({cut:false,arrived:false},it);
+      c.note=(c.note||'').trim(); if(!c.note) delete c.note; return c; }):[];
   const cleanFrames=jobKind==='frames'
     ? frames.filter(f=>(f.desc||'').trim()||num(f.price)||parseFloat(f.w)>0)
-        .map(f=>Object.assign({arrived:false},f,{price:num(f.price)}))
+        .map(f=>{ const c=Object.assign({arrived:false},f,{price:num(f.price)});
+            c.note=(c.note||'').trim(); if(!c.note) delete c.note; return c; })
     : [];
   if(jobKind==='glass' && !clean.length && !$('fMeasure').checked){
     toast('Add a size, or tick "needs measuring first" to book a measure',true); return; }
@@ -3284,6 +3726,7 @@ function buildSupplierText(name,kind,rows){
       L.push('   Bar colour: '+(it.dgBar||'TO CONFIRM'));
     }
     if(needsObscure(it)) L.push('   Obscure pattern: '+(it.obsType||'TO CONFIRM'));
+    if(it.note) L.push('   Note: '+String(it.note).replace(/\s*\n\s*/g,' / '));
     pi.addons.forEach(a=>L.push('   + '+a.name+(a.charge==='lm'?'  ('+a.qty.toFixed(2)+' m)':'')));
     if(kind==='po'&&it.cost!==undefined&&it.cost!=='') L.push('   Agreed price: '+gbp(it.cost));
     L.push('   Our ref: job '+r.j.no+(r.j.wanted?'   wanted by '+new Date(r.j.wanted).toLocaleDateString('en-GB'):''));
@@ -3326,6 +3769,7 @@ function drawPicks(){
         <span class="pkr">${r.j.no} &middot; ${esc(r.j.name)}</span>
         <span class="pks">${pi.p.each?(r.it.q||1)+' off':esc(r.it.w)+' × '+esc(r.it.h)+' × '+(r.it.q||1)}</span>
         <span class="pks">${esc(pi.p.name)}${extraSpec(r.it)?' · '+esc(extraSpec(r.it)):''}</span>
+        ${r.it.note?`<span class="inote">${esc(r.it.note)}</span>`:''}
       </span></label>`;}).join('');
   $('pickCount').textContent=mailPick.size+' of '+mailRows.length;
   $('pickCount').style.cssText='font-size:11px;font-weight:700;text-transform:none;letter-spacing:.04em';
@@ -3532,7 +3976,7 @@ function jobsCSV(){
 function piecesCSV(){
   const head=['Job no','Customer','Job status','Product','Category','Width','Height','Qty','Unit',
     'Chargeable m2','Cut or ordered','Supplier','Piece state','Edgework',
-    'Unit thickness','Bar colour','Obscure pattern','We charge','Their cost',
+    'Unit thickness','Bar colour','Obscure pattern','Piece note','We charge','Their cost',
     'Wanted by','Notes'];
   const rows=[head];
   JOBS.slice().sort((a,b)=>a.no-b.no).forEach(j=>{
@@ -3546,6 +3990,7 @@ function piecesCSV(){
         pi.addons.map(a=>a.name+(a.charge==='lm'?' '+r2(a.qty)+'m':'')).join('; '),
         isDGU(it)?(it.dgThick||''):'', isDGU(it)?(it.dgBar||''):'',
         needsObscure(it)?(it.obsType||''):'',
+        (it.note||'').replace(/\s+/g,' '),
         r2(pi.total), it.cost===''||it.cost===undefined?'':r2(it.cost),
         j.wanted, (j.note||'').replace(/\s+/g,' ')]);
     });
@@ -3681,6 +4126,7 @@ function pieceLine(j,it){
   return `<div class="pprod">${esc(p.name)}</div>
     <div class="psize">${p.each?(it.q||1)+' off':esc(it.w)+' × '+esc(it.h)+' × '+(it.q||1)+' '+(j.unit||'mm')}</div>
     ${extraSpec(it)?`<div class="pspec">${esc(extraSpec(it))}</div>`:''}
+    ${it.note?`<div class="pnote">${esc(it.note)}</div>`:''}
     ${pi.addons.length?`<div>+ ${pi.addons.map(a=>esc(a.name)+(a.charge==='lm'?' ('+a.qty.toFixed(2)+'m)':'')).join(', ')}</div>`:''}`;
 }
 $('printCut').onclick=()=>{
@@ -3775,12 +4221,20 @@ $('printDiary').onclick=()=>{
 };
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape') hideSheets();
+  const typing=/input|textarea|select/i.test(e.target.tagName);
+  if($('daySheet').classList.contains('on')&&!typing&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){
+    dayViewDate=shiftDay(dayViewDate,e.key==='ArrowLeft'?-1:1); selDay=dayViewDate; renderDay(); return; }
+  if(e.key==='Escape'){
+    if($('daySheet').classList.contains('on')){ dayBack=false; dayViewDate=null; hideSheets(); render(); return; }
+    hideSheets(); }
   if(e.key==='/'&&!/input|textarea|select/i.test(e.target.tagName)){ e.preventDefault(); $('search').focus(); }
 });
 
 /* ---------- boot ---------- */
 (async()=>{
+  measureHeader();
+  window.addEventListener('resize',()=>{ measureHeader(); railEdges(false); });
+  $('rail').addEventListener('scroll',()=>railEdges(false),{passive:true});
   await initStore();
   await loadAll();
   render();

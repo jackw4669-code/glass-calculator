@@ -167,8 +167,13 @@ const done = (over = {}) => job(Object.assign({
     await click(w, q(w, '[data-f="money"]'));
     ok(/Money/.test(txt(q(w, '.dtop h2'))), 'the Money tab opens');
 
+    /* worked out from today, so this does not go stale at the end of the month */
     const r = JSON.parse(w.eval("JSON.stringify(periodRange('month',0))"));
-    ok(r.from === '2026-09-01' && r.to === '2026-09-30', 'this month is September 2026');
+    const d = new Date(), pad = n => String(n).padStart(2, '0');
+    const first = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-01';
+    const lastD = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    const last = lastD.getFullYear() + '-' + pad(lastD.getMonth() + 1) + '-' + pad(lastD.getDate());
+    ok(r.from === first && r.to === last, 'this month runs from the 1st to the last day of the current month');
 
     const aug = JSON.parse(w.eval("JSON.stringify(moneyFor('2026-08-01','2026-08-31').jobs.map(j=>j.id))"));
     ok(aug.length === 1 && aug[0] === 'a', 'only the job finished in August counts to August');
@@ -215,7 +220,7 @@ const done = (over = {}) => job(Object.assign({
 
   {
     /* finished inside the period the tab opens on, so it is actually counted */
-    const j = done({ doneAt: '2026-09-01T12:00:00.000Z',
+    const j = done({ doneAt: new Date().toISOString(),
       items: [{ pid: 'dgclear', w: '1000', h: '1000', q: '1', addons: [], src: 'order', supplier: 'Firmans', ostate: 'arrived', arrived: true }] });
     const { w } = await boot({ seed: [j] });
     await click(w, q(w, '[data-f="money"]'));

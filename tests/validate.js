@@ -59,6 +59,12 @@ const collect = src => {
 };
 collect(markup); collect(script);
 /* className='on bad' style assignments */
+/* class lists assembled first and dropped in by variable:
+   [a, b?'x':'', c].join(' ')  and  const KIND_STYLE={fit:'k-fit', ...} */
+for (const m of script.matchAll(/\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\.join\(' '\)/g))
+  for (const s of m[1].matchAll(/'([a-z][\w-]*)'/g)) used.add(s[1]);
+for (const m of script.matchAll(/const \w*STYLE\s*=\s*\{([^}]*)\}/g))
+  for (const s of m[1].matchAll(/:\s*'([a-z][\w-]*)'/g)) used.add(s[1]);
 for (const m of script.matchAll(/className\s*=\s*['"]([^'"]*)['"]/g))
   m[1].split(/\s+/).filter(Boolean).forEach(c => used.add(c));
 for (const m of script.matchAll(/\?\s*'([a-z][\w ]*)'\s*:\s*'([a-z][\w ]*)'/g)) {
@@ -77,7 +83,14 @@ const NEW = ['undobar', 'undobtn', 'dismiss', 'ub', 'xtrawrap', 'xtrahead', 'xtr
              'betrack', 'befill', 'short', 'mrow', 'mi', 'mn', 'mm', 'mv', 'mp', 'stale',
              'prow', 'tot', 'pfoot', 'ch',
              'urgent', 'unote', 'miniact', 'picks', 'pick', 'pk', 'pkr', 'pks', 'pickbar',
-             'phgrid', 'ph', 'phwait', 'phsend', 'phdel', 'phadd', 'phcount', 'jobphotos'];
+             'phgrid', 'ph', 'phwait', 'phsend', 'phdel', 'phadd', 'phcount', 'jobphotos',
+             'dots', 'dot', 'railwrap', 'atend', 'tel', 'maplink', 'src-quoted', 'jobgrid',
+             'pnadd', 'pnwrap', 'pnhint', 'inote',
+             'dayhd', 'rel', 'daynav', 'daysum', 'dayacts', 'dayalert', 'tl', 'stop', 'stime',
+             't0', 't1', 'to', 'scard', 'shead', 'jn', 'kind', 'sbody', 'saddr', 'sreach',
+             'sready', 'sgoing', 'sline', 'sz', 'sd', 'sphotos', 'sfoot', 'smoney', 'gapline',
+             'gt', 'gf', 'clash', 'notime', 'dayempty', 'waitrow', 'notready', 'k-fit',
+             'k-deliver', 'k-measure', 'prun', 'pt', 'pwarn'];
 const unstyledNew = NEW.filter(c => !styled.has(c));
 if (unstyledNew.length) bad('new classes with no CSS rule: ' + unstyledNew.join(', '));
 else ok('all ' + NEW.length + ' new classes are styled');
