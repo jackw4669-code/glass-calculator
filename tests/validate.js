@@ -75,22 +75,16 @@ for (const m of script.matchAll(/\?\s*'([a-z][\w ]*)'\s*:\s*'([a-z][\w ]*)'/g)) 
 const unstyled = [...used].filter(c => !styled.has(c)).sort();
 if (unstyled.length) console.log('  note  classes with no rule: ' + unstyled.join(', '));
 
-const NEW = ['undobar', 'undobtn', 'dismiss', 'ub', 'xtrawrap', 'xtrahead', 'xtra',
-             'xtrahint', 'spec', 'specmiss', 'miss', 'dnote', 'hasnote', 'pnote', 'pspec',
-             'payrow', 'amt', 'payacts', 'owing', 'clear',
-             'mchips', 'mgrid', 'mcard', 'lab', 'val', 'sub2', 'wide', 'dark', 'pos', 'neg',
-             'msec', 'mnote', 'bars', 'bar', 'bl', 'bt', 'bf', 'bz', 'bv', 'down',
-             'betrack', 'befill', 'short', 'mrow', 'mi', 'mn', 'mm', 'mv', 'mp', 'stale',
-             'prow', 'tot', 'pfoot', 'ch',
-             'urgent', 'unote', 'miniact', 'picks', 'pick', 'pk', 'pkr', 'pks', 'pickbar',
-             'phgrid', 'ph', 'phwait', 'phsend', 'phdel', 'phadd', 'phcount', 'jobphotos',
-             'dots', 'dot', 'railwrap', 'atend', 'tel', 'maplink', 'src-quoted', 'jobgrid',
-             'pnadd', 'pnwrap', 'pnhint', 'inote',
-             'dayhd', 'rel', 'daynav', 'daysum', 'dayacts', 'dayalert', 'tl', 'stop', 'stime',
-             't0', 't1', 'to', 'scard', 'shead', 'jn', 'kind', 'sbody', 'saddr', 'sreach',
-             'sready', 'sgoing', 'sline', 'sz', 'sd', 'sphotos', 'sfoot', 'smoney', 'gapline',
-             'gt', 'gf', 'clash', 'notime', 'dayempty', 'waitrow', 'notready', 'k-fit',
-             'k-deliver', 'k-measure', 'prun', 'pt', 'pwarn'];
+const NEW = ['undobar', 'undobtn', 'dismiss', 'ub', 'xtrawrap', 'xtrahead', 'xtra', 'xtrahint', 'spec',
+             'specmiss', 'miss', 'dnote', 'hasnote', 'pnote', 'pspec', 'payrow', 'amt', 'payacts',
+             'owing', 'clear', 'urgent', 'unote', 'miniact', 'picks', 'pick', 'pk', 'pkr',
+             'pks', 'pickbar', 'phgrid', 'ph', 'phwait', 'phsend', 'phdel', 'phadd', 'phcount',
+             'jobphotos', 'dots', 'dot', 'railwrap', 'atend', 'tel', 'maplink', 'src-quoted', 'jobgrid',
+             'pnadd', 'pnwrap', 'pnhint', 'inote', 'dayhd', 'rel', 'daynav', 'daysum', 'dayacts',
+             'dayalert', 'tl', 'stop', 'stime', 't0', 't1', 'to', 'scard', 'shead',
+             'jn', 'kind', 'sbody', 'saddr', 'sreach', 'sready', 'sgoing', 'sline', 'sz',
+             'sd', 'sphotos', 'sfoot', 'smoney', 'gapline', 'gt', 'gf', 'clash', 'notime',
+             'dayempty', 'waitrow', 'notready', 'k-fit', 'k-deliver', 'k-measure', 'prun', 'pt', 'pwarn'];
 const unstyledNew = NEW.filter(c => !styled.has(c));
 if (unstyledNew.length) bad('new classes with no CSS rule: ' + unstyledNew.join(', '));
 else ok('all ' + NEW.length + ' new classes are styled');

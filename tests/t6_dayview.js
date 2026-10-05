@@ -71,7 +71,7 @@ const cutPiece = (o = {}) => Object.assign(
                 ostate: 'toprice', dgThick: '24 mm (4-16-4)', dgBar: 'White', note: 'Georgian bars, 3 by 2' }] });
     const { w } = await boot({ seed: [j] });
     await click(w, q(w, '[data-f="pricing"]'));
-    await click(w, q(w, '[data-rfq]'));
+    await click(w, q(w, '[data-po]'));
     ok(/Note: Georgian bars, 3 by 2/.test($(w, 'mPrev').textContent), 'it goes to the supplier with the piece');
     ok(/Georgian/.test(txt(q(w, '.pick .inote'))), 'and shows in the tick list');
     await click(w, $(w, 'closeMail'));

@@ -103,7 +103,7 @@ const piece = (over = {}) => Object.assign(
     });
     const { w } = await boot({ seed: [j] });
     await click(w, q(w, '[data-f="pricing"]'));
-    await click(w, q(w, '[data-rfq]'));
+    await click(w, q(w, '[data-po]'));
     const body = $(w, 'mPrev').textContent;
     ok(/Overall thickness: 28 mm \(4-20-4\)/.test(body), 'the price request states the thickness');
     ok(/Bar colour: Grey/.test(body), 'and the bar colour');
@@ -119,7 +119,7 @@ const piece = (over = {}) => Object.assign(
     });
     const { w } = await boot({ seed: [j] });
     await click(w, q(w, '[data-f="pricing"]'));
-    await click(w, q(w, '[data-rfq]'));
+    await click(w, q(w, '[data-po]'));
     ok(/Obscure pattern: TO CONFIRM/.test($(w, 'mPrev').textContent),
        'an unanswered pattern goes out as TO CONFIRM');
     const warn = q(w, '#mWarn .warnbox');

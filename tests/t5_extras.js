@@ -179,7 +179,7 @@ const addPhoto = async (w, name) => {
   {
     const { w, server } = await boot({ seed: [twoPieces()] });
     await click(w, q(w, '[data-f="pricing"]'));
-    await click(w, q(w, '[data-rfq]'));
+    await click(w, q(w, '[data-po]'));
     ok($(w, 'pickCard').style.display !== 'none', 'the email asks which pieces it covers');
     ok(qa(w, '[data-mpick]').length === 2, 'listing both');
     ok(qa(w, '[data-mpick]').every(c => c.checked), 'both ticked to start with');
@@ -264,7 +264,7 @@ const addPhoto = async (w, name) => {
     const id = cur(server, 'j1').photos[0].id;
 
     await click(w, q(w, '[data-f="pricing"]'));
-    await click(w, q(w, '[data-rfq]'));
+    await click(w, q(w, '[data-po]'));
     ok($(w, 'mPrev').textContent.indexOf('/p/' + id) > 0, 'the price request links the photo');
     ok(/PHOTOS/.test($(w, 'mPrev').textContent), 'under a heading');
     ok(/cannot carry attachments/.test(txt($(w, 'mWarn'))),
