@@ -88,7 +88,9 @@ async function boot(opts = {}) {
     pretendToBeVisual: true,
     url: 'https://glass-calculator.test/',
     beforeParse(w) {
-      const mem = {};
+      /* pass opts.mem to share one device's storage between two sessions,
+         the way a page reload would */
+      const mem = opts.mem || {};
       w.storage = {                                   // shop-wide store stub
         async get(k) { return k in mem ? { value: mem[k] } : null; },
         async set(k, v) { mem[k] = v; return { key: k }; },

@@ -75,7 +75,7 @@ for (const m of script.matchAll(/\?\s*'([a-z][\w ]*)'\s*:\s*'([a-z][\w ]*)'/g)) 
 const unstyled = [...used].filter(c => !styled.has(c)).sort();
 if (unstyled.length) console.log('  note  classes with no rule: ' + unstyled.join(', '));
 
-const NEW = ['undobar', 'undobtn', 'dismiss', 'ub', 'xtrawrap', 'xtrahead', 'xtra', 'xtrahint', 'spec',
+const NEW = ['invtick', 'invstate', 'tag-inv', 'istamp', 'undobar', 'undobtn', 'dismiss', 'ub', 'xtrawrap', 'xtrahead', 'xtra', 'xtrahint', 'spec',
              'specmiss', 'miss', 'dnote', 'hasnote', 'pnote', 'pspec', 'payrow', 'amt', 'payacts',
              'owing', 'clear', 'urgent', 'unote', 'miniact', 'picks', 'pick', 'pk', 'pkr',
              'pks', 'pickbar', 'phgrid', 'ph', 'phwait', 'phsend', 'phdel', 'phadd', 'phcount',
