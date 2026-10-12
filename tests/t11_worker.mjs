@@ -28,14 +28,25 @@ if (!WORKER || !MIGRATIONS) {
 }
 console.log('checking ' + WORKER + ' against ' + MIGRATIONS + '/');
 
+/* The Worker uses numbered placeholders (?1, ?2 ...), which D1 supports.
+   Node 22.13 to 22.19 cannot fill those in from a plain list of values,
+   but every version can when they are handed over by name. */
+function params(sql, args) {
+  const nums = [...new Set([...sql.matchAll(/\?(\d+)/g)].map(m => +m[1]))];
+  if (!nums.length) return args;
+  const named = {};
+  nums.forEach(n => { named['?' + n] = args[n - 1]; });
+  return [named];
+}
+
 /* D1, closely enough: prepare, bind, all, first, run and batch */
 function d1(db) {
   const stmt = (sql, args = []) => ({
     bind: (...a) => stmt(sql, a),
-    exec() { return db.prepare(sql).run(...args); },
-    async all() { return { results: db.prepare(sql).all(...args) }; },
-    async first() { return db.prepare(sql).get(...args) ?? null; },
-    async run() { return { meta: { changes: Number(db.prepare(sql).run(...args).changes) } }; }
+    exec() { return db.prepare(sql).run(...params(sql, args)); },
+    async all() { return { results: db.prepare(sql).all(...params(sql, args)) }; },
+    async first() { return db.prepare(sql).get(...params(sql, args)) ?? null; },
+    async run() { return { meta: { changes: Number(db.prepare(sql).run(...params(sql, args)).changes) } }; }
   });
   return {
     prepare: sql => stmt(sql),
@@ -64,12 +75,16 @@ async function call(method, path, body) {
     body: body === undefined ? undefined : JSON.stringify(body)
   }), env, {});
   const type = res.headers.get('content-type') || '';
-  return { status: res.status, type, body: type.includes('json') ? await res.json() : new Uint8Array(await res.arrayBuffer()) };
+  const out = { status: res.status, type, body: type.includes('json') ? await res.json() : new Uint8Array(await res.arrayBuffer()) };
+  if (res.status >= 500 && !workerError) workerError = (out.body && out.body.error) || 'status ' + res.status;
+  return out;
 }
+let workerError = '', oldWorker = false;
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 await section('one shared price list', async () => {
   let r = await call('GET', '/api/settings');
+  oldWorker = !(r.body && r.body._versions);
   ok(r.status === 200 && JSON.stringify(r.body) === '{"_versions":{}}', 'nothing is shared to start with');
 
   r = await call('PUT', '/api/settings/shop', { value: { prices: { c4mm: 50 } }, base: null });
@@ -131,5 +146,9 @@ await section('everything else', async () => {
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);
-if (fail) console.log('Do not deploy. If src/index.js is still the old one, replace it with index_worker.js\n(renamed to index.js) and run this again.');
+if (fail) {
+  console.log('Do not deploy yet.');
+  if (oldWorker) console.log('src/index.js looks like the old one. Replace it with index_worker.js, renamed to index.js, and run this again.');
+  else if (workerError) console.log('The Worker said: ' + workerError);
+}
 process.exit(fail ? 1 : 0);
