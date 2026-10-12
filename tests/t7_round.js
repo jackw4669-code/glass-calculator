@@ -236,7 +236,9 @@ const toOrder = (o = {}) => Object.assign({ pid: 'dgclear', w: '900', h: '600', 
     ok(/Email Firmans to order/.test(txt(em)), 'and the email button is for ordering');
     await click(w, em);
     const body = $(w, 'mPrev').textContent;
-    ok(/ORDER —/.test(body) && /supply the items/.test(body), 'the email is an order');
+    ok(/^Hello,\n\nI'd like to order the following please:\n/.test(body) && /Many thanks,\nKeith\nWilson's Glass$/.test(body),
+       'the email is a plain order: hello, the glass, thanks');
+    ok(/\nReference: Dave\n/.test(body) && !/job \d|ORDER —/.test(body), 'referenced by the customer, not a job number');
     ok(!/price|quoted|Agreed|Order total/i.test(body), 'with nothing about prices in it');
     ok(/Mark these as ordered/.test(txt($(w, 'mTold'))), 'and the button underneath marks them ordered');
     w.close();

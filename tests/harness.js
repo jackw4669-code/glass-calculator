@@ -12,9 +12,11 @@ function makeServer() {
   const rows = new Map();          // id -> {data, version}
   const photos = new Map();
   const settings = new Map();
+  const settingsV = new Map();      // key -> version, as updated_at in D1
+  let vcount = 0;
   const log = [];
   return {
-    rows, settings, log, photos,
+    rows, settings, settingsV, log, photos,
     seed(job) { rows.set(job.id, { data: JSON.stringify(job), version: 1 }); },
     async handle(url, opt) {
       if (this._photoRoute) { const r = this._photoRoute(url, opt); if (r) return r; }
@@ -29,10 +31,22 @@ function makeServer() {
       if (path === '/api/jobs' && method === 'GET')
         return json([...rows.values()].map(r => ({ ...JSON.parse(r.data), _v: r.version })));
 
+      /* the same rules as the real Worker: a version per setting, and a
+         save is refused unless it names the version it was editing */
       if (path === '/api/settings' && method === 'GET') {
-        const out = {};
-        settings.forEach((v, k) => { out[k] = JSON.parse(v); });
+        const out = { _versions: {} };
+        settings.forEach((v, k) => { out[k] = JSON.parse(v); out._versions[k] = settingsV.get(k) || 'seed'; });
         return json(out);
+      }
+      if (path.startsWith('/api/settings/') && method === 'PUT') {
+        const key = decodeURIComponent(path.slice('/api/settings/'.length));
+        const body = JSON.parse(opt.body);
+        const have = settings.has(key), cur = have ? (settingsV.get(key) || 'seed') : null;
+        if (have && (body.base ?? null) !== cur)
+          return json({ conflict: true, current: { value: JSON.parse(settings.get(key)), version: cur } }, 409);
+        const ver = new Date().toISOString().replace('Z', String(++vcount).padStart(4, '0') + 'Z');
+        settings.set(key, JSON.stringify(body.value)); settingsV.set(key, ver);
+        return json({ ok: true, version: ver });
       }
 
       if (path.startsWith('/api/jobs/') && method === 'PUT') {

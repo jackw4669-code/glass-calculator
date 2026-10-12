@@ -151,12 +151,12 @@ const cutPiece = (o = {}) => Object.assign(
     ok(route.indexOf(encodeURIComponent('14 Hall Lane, RM14 1AU')) > 0 && /waypoints=/.test(route),
        'calling at each stop');
 
-    await click(w, stops[1].querySelector('[data-coll]'));
-    ok(cur(server, 'b').status === 'done', 'a job can be marked done from the day');
+    /* changed on request: a completed stop now comes off the day sheet */
+    await click(w, stops[1].querySelector('[data-stopdone]'));
+    ok(cur(server, 'b').status === 'done', 'a job can be marked completed from the day');
     const after = qa(w, '#dayBody .tl .stop');
-    ok(after.length === 2, 'and it stays on the sheet');
-    ok(after[1].classList.contains('done'), 'shown as done');
-    ok(/1 done, 1 to go/.test(txt(q(w, '.daysum'))), 'and the summary keeps count');
+    ok(after.length === 1, 'and it comes off the sheet');
+    ok(/1 done, 1 to go/.test(txt(q(w, '.daysum'))), 'while the summary keeps count');
 
     await click(w, after[0].querySelector('[data-open]'));
     ok($(w, 'jobSheet').classList.contains('on'), 'opening a job from the day shows the job');

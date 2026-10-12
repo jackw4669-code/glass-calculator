@@ -266,7 +266,7 @@ const addPhoto = async (w, name) => {
     await click(w, q(w, '[data-f="pricing"]'));
     await click(w, q(w, '[data-po]'));
     ok($(w, 'mPrev').textContent.indexOf('/p/' + id) > 0, 'the price request links the photo');
-    ok(/\nPhotos\n/.test($(w, 'mPrev').textContent), 'under a heading');
+    ok(/\nPhoto: https?:\/\/[^\n]*\/p\//.test($(w, 'mPrev').textContent), 'on a line of its own');
     ok(/cannot carry attachments/.test(txt($(w, 'mWarn'))),
        'and the sheet is straight about attachments not being possible');
     ok($(w, 'mPhotos').style.display !== 'none', 'offering to save them instead');

@@ -208,13 +208,16 @@ const toOrder = (o = {}) => Object.assign({ pid: 'dgclear', w: '900', h: '600', 
     await click(w, q(w, '[data-f="pricing"]'));
     await click(w, q(w, '[data-po="Firmans"]'));
     const body = $(w, 'mPrev').textContent;
+    /* the whole email, word for word, in the layout asked for */
+    const want = "Hello,\n\nI'd like to order the following please:\n\nReference: Brian Okafor\nType of glass: Double glazed unit (Clear × 4 MM)\nSize: 900 x 600mm\nThickness: 24 mm (4-16-4)\nBar colour: White\n\n----------------------------\n\nReference: Brian Okafor\nType of glass: Toughened obscured\nSize: 820 x 610mm\nThickness: 6 mm\nObscure pattern: Stippolyte\nNote: Pattern runs / top to bottom\n\n----------------------------\n\nReference: Hall Lane Builders\nType of glass: Double glazed unit (Clear × 4 MM)\nSize: 1190 x 890mm\nThickness: TO CONFIRM\nBar colour: TO CONFIRM\n\n----------------------------\n\nMany thanks,\nKeith\nWilson's Glass";
+    ok(body === want, 'the order email reads exactly as laid out');
+    if (body !== want) console.log('---- got ----\n' + body + '\n---- wanted ----\n' + want);
     ok(/^Hello,\n\n/.test(body), 'it opens with Hello,');
-    ok(/Many thanks,\nKeith$/.test(body), 'and ends Many thanks, Keith');
-    ok(/Ref: Brian Okafor\n- 1 off 900 x 600mm Clear × 4 MM double glazed unit, 24 mm \(4-16-4\), White bar/.test(body),
-       "each customer's glass sits under their name as the reference");
-    ok(/- 1 off 820 x 610mm 6 MM OBSCURED toughened, Stippolyte\n  Note: Pattern runs \/ top to bottom/.test(body),
-       'toughened glass says so, with the pattern and the note');
-    ok(/Ref: Hall Lane Builders\n- 1 off 1190 x 890mm .*thickness TO CONFIRM, bar colour TO CONFIRM/.test(body),
+    ok(/Many thanks,\nKeith\nWilson's Glass$/.test(body), 'and ends Many thanks, Keith, Wilson\'s Glass');
+    ok(/Reference: Brian Okafor\nType of glass: Double glazed unit/.test(body), "each piece starts with the customer's name as the reference");
+    ok(/Type of glass: Toughened obscured\nSize: 820 x 610mm\nThickness: 6 mm\nObscure pattern: Stippolyte\nNote: Pattern runs \/ top to bottom/.test(body),
+       'toughened glass says so, with its thickness, pattern and note each on a line');
+    ok(/Reference: Hall Lane Builders\n[^-]*Thickness: TO CONFIRM\nBar colour: TO CONFIRM/.test(body),
        'anything not filled in still goes out marked TO CONFIRM');
     ok(!/job 17|Our ref|ORDER|Deliver to|Contact:/.test(body), 'no job numbers or letterhead');
     ok(body.indexOf(w.eval('SHOP.addr')) < 0, 'and no address block');
@@ -222,7 +225,7 @@ const toOrder = (o = {}) => Object.assign({ pid: 'dgclear', w: '900', h: '600', 
     /* the tick list redraws after each change, so look each box up afresh */
     for (const i of [0, 1]) await tick(w, q(w, '[data-mpick="' + i + '"]'), false);
     const less = $(w, 'mPrev').textContent;
-    ok(!/Brian Okafor/.test(less) && /Ref: Hall Lane Builders/.test(less), "unticking a customer's pieces drops their reference too");
+    ok(!/Brian Okafor/.test(less) && /Reference: Hall Lane Builders/.test(less), "unticking a customer's pieces drops their reference too");
     w.close();
   }
 
@@ -234,7 +237,7 @@ const toOrder = (o = {}) => Object.assign({ pid: 'dgclear', w: '900', h: '600', 
     await click(w, $(w, 'saveRates'));
     await click(w, q(w, '[data-f="pricing"]'));
     await click(w, q(w, '[data-po="Firmans"]'));
-    ok(/Many thanks,\nDave$/.test($(w, 'mPrev').textContent), 'and the email follows it');
+    ok(/Many thanks,\nDave\nWilson's Glass$/.test($(w, 'mPrev').textContent), 'and the email follows it');
     await click(w, $(w, 'closeMail'));
     await click(w, $(w, 'rateBtn'));
     await type(w, $(w, 'fSign'), '   ');

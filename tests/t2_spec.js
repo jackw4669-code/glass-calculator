@@ -106,7 +106,7 @@ const piece = (over = {}) => Object.assign(
     await click(w, q(w, '[data-po]'));
     const body = $(w, 'mPrev').textContent;
     ok(/28 mm \(4-20-4\)/.test(body), 'the order states the thickness');
-    ok(/Grey bar/.test(body), 'and the bar colour');
+    ok(/\nBar colour: Grey\n/.test(body), 'and the bar colour');
     ok(!q(w, '#mWarn .warnbox'), 'no warning when everything is filled in');
     w.close();
   }
@@ -120,7 +120,7 @@ const piece = (over = {}) => Object.assign(
     const { w } = await boot({ seed: [j] });
     await click(w, q(w, '[data-f="pricing"]'));
     await click(w, q(w, '[data-po]'));
-    ok(/obscure pattern TO CONFIRM/.test($(w, 'mPrev').textContent),
+    ok(/\nObscure pattern: TO CONFIRM\n/.test($(w, 'mPrev').textContent),
        'an unanswered pattern goes out as TO CONFIRM');
     const warn = q(w, '#mWarn .warnbox');
     ok(!!warn, 'and the shop is warned before sending');

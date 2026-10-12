@@ -124,31 +124,53 @@ export default {
       }
 
       // ---- prices, suppliers, settings ----
+      // _versions says which copy of each setting a machine is looking at,
+      // so it can say which copy it was editing when it saves.
       if (path === '/api/settings' && request.method === 'GET') {
         const { results } = await env.DB
-          .prepare('SELECT key, value FROM settings').all();
-        const out = {};
-        results.forEach(r => { out[r.key] = JSON.parse(r.value); });
+          .prepare('SELECT key, value, updated_at FROM settings').all();
+        const out = { _versions: {} };
+        results.forEach(r => {
+          out[r.key] = JSON.parse(r.value);
+          out._versions[r.key] = r.updated_at;
+        });
         return json(out);
       }
 
-      if (path === '/api/settings' && request.method === 'PUT') {
+      // One setting, saved only if nobody has saved it since this machine
+      // loaded it. `base` is the version the machine was editing, or null
+      // if nothing had been shared yet. The first machine to save sets it;
+      // a save from an older copy gets 409 and the current one back,
+      // instead of quietly undoing somebody else's change.
+      //
+      // This replaces the old PUT /api/settings, which saved without any
+      // check. The app never called it.
+      if (path.startsWith('/api/settings/') && request.method === 'PUT') {
+        const key = decodeURIComponent(path.slice('/api/settings/'.length));
+        if (!/^[a-z][a-z0-9_-]{0,31}$/.test(key)) return json({ error: 'bad key' }, 400);
         const body = await request.json();
+        if (body.value === undefined) return json({ error: 'no value' }, 400);
         const now = new Date().toISOString();
-        await env.DB.batch(Object.entries(body).map(([k, v]) =>
-          env.DB.prepare(`
-            INSERT INTO settings (key,value,updated_at) VALUES (?1,?2,?3)
-            ON CONFLICT(key) DO UPDATE SET value=?2, updated_at=?3
-          `).bind(k, JSON.stringify(v), now)
-        ));
-        return json({ ok: true });
+        const res = await env.DB.prepare(`
+          INSERT INTO settings (key,value,updated_at) VALUES (?1,?2,?3)
+          ON CONFLICT(key) DO UPDATE SET value=?2, updated_at=?3
+          WHERE settings.updated_at = ?4
+        `).bind(key, JSON.stringify(body.value), now, body.base ?? null).run();
+
+        if (res.meta.changes === 0) {
+          const cur = await env.DB
+            .prepare('SELECT value, updated_at FROM settings WHERE key=?')
+            .bind(key).first();
+          return json({
+            conflict: true,
+            current: cur ? { value: JSON.parse(cur.value), version: cur.updated_at } : null
+          }, 409);
+        }
+        return json({ ok: true, version: now });
       }
 
       // ---- who owes us money ----
-      // The Money tab works this out in the browser, because every job is
-      // loaded there anyway and it still works with the connection down.
-      // This is the same question asked of the database instead, and it is
-      // what you would use once the book is too big to load in one go.
+      // Not used by the app any more. Kept because it is harmless.
       if (path === '/api/owing' && request.method === 'GET') {
         const { results } = await env.DB.prepare(`
           SELECT id, no, name, phone, trade, total, paid, balance, done_at
@@ -161,10 +183,7 @@ export default {
       }
 
       // ---- money by month ----
-      // Grouping four hundred jobs by month is the one thing the database
-      // is plainly better at than the browser. cost and net are only
-      // filled in on jobs saved since the money columns were added, so
-      // `complete` says whether the profit figures can be trusted yet.
+      // Not used by the app any more. Kept because it is harmless.
       if (path === '/api/summary' && request.method === 'GET') {
         const { results } = await env.DB.prepare(`
           SELECT substr(done_at,1,7)          AS month,

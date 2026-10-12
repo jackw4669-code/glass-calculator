@@ -187,6 +187,7 @@ label{display:block;font-size:12.5px;font-weight:700;letter-spacing:.09em;text-t
 .calcrow{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:14px;padding:3px 0;color:#C3D5D3;gap:10px}
 .calcrow.tot{border-top:1px solid #35545C;margin-top:8px;padding-top:9px;font-size:21px;font-weight:600;color:var(--white)}
 .calchint{font-size:13.5px;color:#7E999F;margin-top:8px;line-height:1.4}
+.calchint button{color:#8FD9BC;font-weight:700;font-size:inherit;text-decoration:underline;text-underline-offset:2px;padding:2px 0}
 .split{margin-top:12px;padding-top:10px;border-top:1px solid #35545C;font-size:13.5px;color:#8FBCA9;line-height:1.5}
 .suggest{position:relative}
 .slist{position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--float);border-top:none;max-height:230px;overflow-y:auto;z-index:6}
@@ -729,7 +730,7 @@ body.lbopen{overflow:hidden}
         <div class="fgroup"><label>What are you sending?</label><div class="toggle" id="mKind">
           <button data-k="quote">Quote</button><button data-k="confirm">Order taken</button><button data-k="ready" class="on">Ready</button><button data-k="balance">Balance</button>
         </div></div>
-        <div class="fgroup"><label for="mMsg">Covering note</label><textarea class="inp" id="mMsg" rows="8"></textarea></div>
+        <div class="fgroup"><label for="mMsg">Opening</label><textarea class="inp" id="mMsg" rows="4"></textarea></div>
         <div id="mWarn"></div>
       </div>
     </div>
@@ -825,20 +826,23 @@ body.lbopen{overflow:hidden}
 <div class="sheet" id="rateSheet">
   <div class="sheethead"><h2>Prices &amp; suppliers</h2><button class="hbtn ghost" id="closeRate">Close</button></div>
   <div class="sheetbody">
+    <div id="rateShare"></div>
+    <div id="rateWarn"></div>
     <div class="card">
       <h4>Move all prices at once</h4>
       <div style="max-width:220px"><label for="fAdj">Adjustment %</label><input class="inp mono" id="fAdj" inputmode="decimal"></div>
       <p style="font-size:14px;color:var(--ink2);margin-top:8px">Applies on top of every price below, glass and edgework alike. Leave at 0 to charge the list price.</p>
+      <p class="sub" style="margin-top:8px"><b>Changing a price only changes new quotes.</b> A job that has already been quoted keeps the price it was given. To bring one up to date, open it and press <b>Use today's prices</b>.</p>
     </div>
     <div class="card"><h4>Glass — £ per m², before VAT</h4><table class="ptbl" id="pTbl"></table></div>
     <div class="card"><h4>Edgework and extras</h4><table class="ptbl" id="aTbl"></table></div>
     <div class="card"><h4>Suppliers</h4><div id="supTbl"></div></div>
-    <div class="card"><h4>Order emails</h4>
+    <div class="card"><h4>Emails</h4>
       <div style="max-width:320px"><label for="fSign">Sign them off as</label>
         <input class="inp" id="fSign" autocomplete="off" placeholder="Keith"></div>
-      <p class="sub" style="margin-top:8px">Every order email ends &ldquo;Many thanks,&rdquo; and then this name.</p></div>
+      <p class="sub" style="margin-top:8px">Every email, to suppliers and to customers, ends &ldquo;Many thanks,&rdquo; then this name, then Wilson&rsquo;s Glass.</p></div>
   </div>
-  <div class="sheetfoot"><div class="footinner"><button class="save" id="saveRates">Save</button></div></div>
+  <div class="sheetfoot"><div class="footinner"><button class="save" id="saveRates">Save for the whole shop</button></div></div>
 </div>
 
 <div id="toast"></div>
@@ -939,6 +943,11 @@ const HORT_PRODUCTS = HORTICULTURAL.map(h => (
   { id:h.id, name:h.name, category:'Horticultural (stock sizes)', price:h.price, each:true }
 ));
 const ALL_PRODUCTS = PRODUCTS.concat(HORT_PRODUCTS);
+/* The price list exactly as it stood before prices were locked onto
+   jobs. Every job quoted before then was worked out from these, so they
+   are kept here as they were, whatever later happens to the list. */
+const LEGACY_RATE={"c2mm":51.61,"c2mmrf":66.31,"c4mm":48.63,"c6mm":80.04,"c8mm":127.33,"c10mm":147.62,"w-ps":217.31,"w-cast":133.43,"o4mm":66.72,"o6mm":84.89,"o4oriel":425.92,"oacid":114.4,"a4mm":105.93,"a6mm":179.95,"s64l":106.61,"s64w":173.15,"s730":424.41,"t4mm":93.37,"t6mm":115.95,"t4o":111.66,"t6o":139.21,"t8mm":193.53,"t10mm":167.03,"t6tint":157.88,"t6sb":187.0,"m4mm":81.49,"m6mm":113.23,"m4s":100.33,"m4b":165.0,"m6b":207.11,"m6t":133.34,"m6a":354.96,"sb4mm":120.53,"sb6mm":144.3,"pimg":356.5,"pral":305.57,"dgclear":113.16,"dglead":165.0,"dgtuf":132.0,"dglam":165.0,"dgleadt":187.0,"dglowe":132.0,"dglowet":154.0,"dglowel":181.5,"dglowelt":203.5,"h1":8.8,"h2":9.9,"h3":25.85};
+const LEGACY_ADDON={"pol-std":5.5,"pol-10":9.9,"bev-str":14.3,"bev-shp":28.6,"leading":51.99,"obsunit":11.0};
 
 
 const SHOP={ name:"Wilson's Glass", addr:"6 St Mary's Lane, Upminster, Essex",
@@ -1491,22 +1500,44 @@ const priceOf=id=>{const p=ALL_PRODUCTS.find(x=>x.id===id);return PRICES[id]!==u
 const addonPrice=id=>{const a=ADDONS.find(x=>x.id===id);return PRICES['a:'+id]!==undefined?PRICES['a:'+id]:(a?a.price:0);};
 
 const rate=p=>p*(1+num(ADJ)/100);
+/* ---------- prices are locked onto each job ----------
+   A piece keeps the rate it was quoted at, so changing the price list
+   only changes new quotes. Before this, every job was worked out again
+   from today's list each time it was shown, so a price rise added money
+   to old quotes and to jobs that had already been paid for. */
+const lockedNum=v=>v!==undefined&&v!==null&&v!==''&&isFinite(+v);
+const r4=n=>Math.round(num(n)*10000)/10000;
+const todayRate=pid=>rate(priceOf(prodOf(pid).id));
+const todayAddonRate=id=>rate(addonPrice(id));
+const glassRate=it=>lockedNum(it.rate)?+it.rate:todayRate(it.pid);
+const addonRate=a=>lockedNum(a.rate)?+a.rate:todayAddonRate(a.id);
+/* anything not locked yet is locked at today's prices */
+function lockRates(list){
+  (list||[]).forEach(it=>{
+    if(!lockedNum(it.rate)) it.rate=r4(todayRate(it.pid));
+    (it.addons||[]).forEach(a=>{ if(!lockedNum(a.rate)) a.rate=r4(todayAddonRate(a.id)); });
+  });
+  return list;
+}
+/* the same pieces with the locks taken off, so priced at today's list */
+const unlocked=list=>(list||[]).map(it=>{ const c=clone(it); delete c.rate;
+  (c.addons||[]).forEach(a=>{ delete a.rate; }); return c; });
 const toMm=(v,u)=>{const n=parseFloat(v); if(!n) return 0; u=u||unit;
   return u==='mm'?n:u==='cm'?n*10:u==='inches'?n*25.4:n*304.8;};
 
 function priceItem(it,u){
   const p=prodOf(it.pid);
   const q=Math.max(1,parseInt(it.q)||1);
-  if(p.each){const c=rate(priceOf(p.id))*q;return {p,area:0,perim:0,glass:c,addons:[],total:c};}
+  if(p.each){const c=glassRate(it)*q;return {p,area:0,perim:0,glass:c,addons:[],total:c};}
   const h=toMm(it.h,u), w=toMm(it.w,u);
   const raw=(h*w)/1000000;
   const minA=MIN_AREA[p.category]!==undefined?MIN_AREA[p.category]:MIN_AREA.DEFAULT;
   const area=raw>0?Math.max(raw,minA)*q:0;
   const perim=(h&&w)?((h*2+w*2)/1000)*q:0;
-  const glass=rate(priceOf(p.id))*area;
+  const glass=glassRate(it)*area;
   const addons=(it.addons||[]).map(a=>{
     const A=ADDONS.find(x=>x.id===a.id); if(!A) return null;
-    const r=rate(addonPrice(A.id));
+    const r=addonRate(a);
     const qty=A.charge==='lm'?((a.m===undefined||a.m==='')?perim:(parseFloat(a.m)||0)):A.charge==='m2'?area:q;
     return {id:A.id,name:A.name,charge:A.charge,rate:r,qty,cost:r*qty};
   }).filter(Boolean);
@@ -1636,6 +1667,10 @@ function normalise(j){
     if(!i.src) i.src=defaultSrc(i.pid);
     if(i.src==='cut'&&i.cut===undefined) i.cut=!!j.cutDone;
     if(i.src==='order'&&!i.ostate) i.ostate=i.arrived?'arrived':'toprice';
+    /* quoted before prices were locked: lock it at the list it was quoted
+       from, so it reads the same on every machine and never moves */
+    if(!lockedNum(i.rate)){ const lr=LEGACY_RATE[prodOf(i.pid).id]; i.rate=lr===undefined?0:lr; }
+    (i.addons||[]).forEach(a=>{ if(!lockedNum(a.rate)&&LEGACY_ADDON[a.id]!==undefined) a.rate=LEGACY_ADDON[a.id]; });
   });
   if(!j.appts){
     j.appts = j.schedDate
@@ -2418,6 +2453,27 @@ async function readLocalSuppliers(){
       SETTINGS=Object.assign(SETTINGS,p.settings||{}); } }catch(e){}
 }
 
+/* ---------- one price list for the whole shop ----------
+   Prices and suppliers are kept in the job book with the jobs, so every
+   machine has the same list. SHOPV is the version this machine loaded, or
+   null while nothing has been shared yet. A save names the version it
+   was editing, so a machine looking at an out-of-date copy is told,
+   instead of quietly undoing a newer change. Each machine keeps its own
+   copy too, for when the connection is down. */
+let SHOPV=null, MIRRORSHOP='';
+function applyShop(v){
+  if(!v) return;
+  PRICES=v.prices||{}; ADJ=num(v.adj);
+  if(Array.isArray(v.suppliers)&&v.suppliers.length) SUPPLIERS=v.suppliers;
+  SETTINGS=Object.assign(SETTINGS,v.settings||{});
+}
+async function mirrorShop(){
+  const p=JSON.stringify({prices:PRICES,adj:ADJ}), s=JSON.stringify({suppliers:SUPPLIERS,settings:SETTINGS});
+  if(p+s===MIRRORSHOP) return;
+  MIRRORSHOP=p+s;
+  try{ await sSet(KEY_PRICES,p); await sSet(KEY_SUP,s); }catch(e){}
+}
+
 async function loadAll() {
   try {
     const r = await fetch(API + '/jobs');
@@ -2425,16 +2481,22 @@ async function loadAll() {
     JOBS = (await r.json()).map(normalise);
 
     const s = await (await fetch(API + '/settings')).json();
-    /* Prices and suppliers only come from the shared book once something
-       has been saved there. Until then this machine's own saved copy is
-       used. Before, that copy was skipped whenever the app was online, so
-       a change to prices or suppliers was lost on the next reload. */
-    if (s.prices) { PRICES = s.prices.prices || {}; ADJ = num(s.prices.adj); }
-    else await readLocalPrices();
-    if (s.suppliers) { SUPPLIERS = s.suppliers.suppliers || SUPPLIERS;
-      SETTINGS = Object.assign(SETTINGS, s.suppliers.settings || {}); }
-    else await readLocalSuppliers();
+    const ver = (s && s._versions) || {};
+    if (s.shop) {
+      applyShop(s.shop);
+      SHOPV = ver.shop || null;
+    } else {
+      /* Nothing shared yet. Use an older shared copy if there is one,
+         otherwise this machine's own saved copy. */
+      SHOPV = null;
+      if (s.prices) { PRICES = s.prices.prices || {}; ADJ = num(s.prices.adj); }
+      else await readLocalPrices();
+      if (s.suppliers) { SUPPLIERS = s.suppliers.suppliers || SUPPLIERS;
+        SETTINGS = Object.assign(SETTINGS, s.suppliers.settings || {}); }
+      else await readLocalSuppliers();
+    }
     ensureSuppliers();
+    if (s.shop) await mirrorShop();
     ONLINE = true;
 
     /* Keep a copy on this machine so the counter can still look things up
@@ -2883,6 +2945,7 @@ $('items').addEventListener('change',e=>{
   if(e.target.dataset.pid!==undefined){
     const i=+e.target.dataset.pid;
     items[i].pid=e.target.value;
+    delete items[i].rate;          /* a different product, so today's price */
     items[i].src=defaultSrc(e.target.value);
     if(items[i].src==='order'&&!items[i].supplier) items[i].supplier=supNames()[0];
     drawItems(); drawCalc(); return;
@@ -3447,8 +3510,24 @@ function drawCalc(){
   $('calcSplit').innerHTML=(nc||no)
     ? `${nc?nc+' piece'+(nc>1?'s':'')+' onto the cutting list':''}${nc&&no?'<br>':''}${no?no+' piece'+(no>1?'s':'')+' onto the order list ('+esc(sup.join(', '))+')':''}`
     : '';
-  $('calcHint').textContent=ADJ?`List prices are running ${ADJ>0?'+':''}${ADJ}% — change that under Prices.`:'';
+  /* a job priced at older rates says so, and can be brought up to date */
+  const notes=[];
+  if(jobKind==='glass'&&items.length){
+    const now=totals(unlocked(items),extras,$('fDisc').value,$('fCard').checked,unit,{frames:[],noVat:$('fNoVat').checked});
+    if(Math.abs(now.grand-t.grand)>0.005)
+      notes.push(`Priced at the rates it was quoted at. At today's prices it would be ${gbp(now.grand)}. <button type="button" data-reprice="1">Use today's prices</button>`);
+  }
+  if(ADJ) notes.push(esc(`List prices are running ${ADJ>0?'+':''}${ADJ}% — change that under Prices.`));
+  $('calcHint').innerHTML=notes.join('<br>');
 }
+
+$('calcHint').addEventListener('click',e=>{
+  if(!e.target.closest('[data-reprice]')) return;
+  items.forEach(it=>{ it.rate=r4(todayRate(it.pid));
+    (it.addons||[]).forEach(a=>{ a.rate=r4(todayAddonRate(a.id)); }); });
+  drawItems(); drawCalc(); drawPayBal(); draftSoon();
+  toast("Now at today's prices — save the job to keep them");
+});
 
 /* ---------- customer autocomplete ---------- */
 $('fName').addEventListener('input',()=>{
@@ -3523,6 +3602,7 @@ $('saveJob').onclick=async()=>{
     return p.each?(parseInt(it.q)||0)>0:(parseFloat(it.w)>0&&parseFloat(it.h)>0);
   }).map(it=>{ const c=Object.assign({cut:false,arrived:false},it);
       c.note=(c.note||'').trim(); if(!c.note) delete c.note; return c; }):[];
+  lockRates(clean);
   const cleanFrames=jobKind==='frames'
     ? frames.filter(f=>(f.desc||'').trim()||num(f.price)||parseFloat(f.w)>0)
         .map(f=>{ const c=Object.assign({arrived:false},f,{price:num(f.price)});
@@ -3587,87 +3667,90 @@ function composeLinks(to,subject,body){
            gmail:'https://mail.google.com/mail/?view=cm&fs=1&to='+t+'&su='+s+'&body='+b,
            length:b.length };
 }
+/* everything after the opening */
 function buildJobText(j,kind){
-  const W=52, row=(l,v)=>l+' '.repeat(Math.max(2,W-10-l.length))+String(v).padStart(10);
-  const t=jobTotals(j), L=[];
-  L.push(SHOP.name.toUpperCase()); L.push(SHOP.addr); L.push(SHOP.tel+'   '+SHOP.email); L.push('');
-  const bare=!(j.items||[]).length;
-  L.push((bare?'VISIT ':kind==='quote'?'QUOTE ':'JOB ')+j.no);
-  L.push('Date: '+new Date().toLocaleDateString('en-GB'));
-  if(j.name) L.push('Customer: '+j.name);
-  L.push(''); L.push('='.repeat(W));
-  if(bare){
-    L.push('We will come and measure up, then send you a price.');
-    L.push('');
-    apptsOf(j).forEach(a=>L.push(APPT[a.kind].label+': '+new Date(a.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+(a.time?' at '+a.time:'')));
-    if(j.addr) L.push('At: '+j.addr);
-    L.push(''); L.push('Thank you for choosing '+SHOP.name+'.');
-    return L.join('\n');
+  const parts=[];
+  if(!measureOnly(j)){
+    customerBlocks(j).forEach(b=>parts.push(b,RULE));
+    parts.push(totalLines(j,kind).join('\n'),RULE);
   }
-  framesOf(j).forEach((f,n)=>{
-    L.push((n+1)+'. '+(f.desc||'Frame'));
-    L.push('   '+((f.w&&f.h)?f.w+(j.unit||'mm')+' x '+f.h+(j.unit||'mm')+'   ':'')+(f.q||1)+' off');
-  });
-  (j.items||[]).forEach((it,n)=>{
-    const pi=priceItem(it,j.unit), p=pi.p;
-    L.push((n+1)+'. '+p.name);
-    L.push('   '+(p.each?(it.q||1)+' off'
-      :it.w+(j.unit||'mm')+' x '+it.h+(j.unit||'mm')+(+it.q>1?'   '+it.q+' off':'')));
-    if(extraSpec(it)) L.push('   '+extraSpec(it,', '));
-    pi.addons.forEach(a=>L.push('   + '+a.name+(a.charge==='lm'?'  ('+a.qty.toFixed(2)+' m)':'')));
-    L.push(row('',gbp(pi.total))); L.push('');
-  });
-  L.push('='.repeat(W));
-  L.push(row('Subtotal',gbp(t.subtotal)));
-  if(num(j.discountPct)>0){
-    L.push(row('Discount '+num(j.discountPct)+'%','-'+gbp(t.discountAmount)));
-    L.push(row('After discount',gbp(t.subtotal-t.discountAmount)));
-  }
-  (j.extras||[]).forEach(x=>L.push(row(x.label||'Extra',gbp(x.amount))));
-  if(!t.noVat) L.push(row('VAT 20%',gbp(t.vat)));
-  if(j.cardFee) L.push(row('Card surcharge 2%',gbp(t.cardAmount)));
-  L.push('-'.repeat(W));
-  L.push(row('TOTAL',gbp(t.grand)));
-  if(kind!=='quote'&&paidOf(j)>0){
-    paymentsOf(j).forEach(p=>L.push(row(
-      'Paid '+new Date(p.date).toLocaleDateString('en-GB')+(p.method?' ('+p.method+')':''),
-      '-'+gbp(p.amount))));
-    L.push(row('BALANCE',gbp(balanceOf(j))));
-  }
-  L.push('');
-  if(j.handover!=='collection'&&j.addr) L.push(handoverLabel(j)+' at '+j.addr);
-  if(j.handover==='fitting'&&j.durMins) L.push('Allow roughly '+(DURS[j.durMins]||j.durMins+' min')+' on site.');
-  apptsOf(j).forEach(a=>L.push(APPT[a.kind].label+': '+new Date(a.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+(a.time?' at '+a.time:'')));
-  if(kind==='quote'){ L.push(''); L.push('Valid for 30 days.'); }
-  L.push('Thank you for choosing '+SHOP.name+'.');
-  return L.join('\n');
+  const v=visitLines(j);
+  if(v.length) parts.push(v.join('\n'),RULE);
+  parts.push(closingLine(j,kind),signLines());
+  return parts.join('\n\n');
 }
+/* ---------- to a customer ---------- */
+/* "Hello Brian," or "Hello Mrs Doyle," — and for a business, "Hello," */
+function greetingFor(j){
+  const w=String(j.name||'').trim().split(/\s+/).filter(Boolean);
+  if(j.trade||!w.length) return 'Hello,';
+  const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+  if(/^(mr|mrs|ms|miss|mx|dr)\.?$/i.test(w[0]))
+    return w.length>1?'Hello '+cap(w[0].replace(/\.$/,''))+' '+cap(w[w.length-1])+',':'Hello,';
+  return 'Hello '+cap(w[0])+',';
+}
+const nextMeasure=j=>apptsOf(j).find(a=>a.kind==='measure'&&!a.doneAt);
+/* the opening: hello, and one line saying what this is */
 function defaultMessage(j,kind){
-  const first=(j.name||'').split(' ')[0];
-  const hi='Hi'+(first?' '+first:'')+',\n\n';
-  const sign='\n\nKind regards,\n'+SHOP.name;
-  const bal=balanceOf(j);
-  if(!(j.items||[]).length){
-    const a=apptsOf(j).find(x=>x.kind==='measure');
-    return hi+'Thanks for your enquiry. '+
-      (a?'We have you booked in for '+new Date(a.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+(a.time?' at '+a.time:'')+' to measure up.'
-        :'We will be in touch to arrange a time to come and measure up.')+
-      '\n\nOnce we have the sizes we will send you a price. Any questions, call us on '+SHOP.tel+'.'+sign;
+  const hi=greetingFor(j)+'\n\n';
+  if(measureOnly(j)) return hi+(nextMeasure(j)
+    ? 'Thanks for your enquiry. Here are the details of our visit to measure up:'
+    : 'Thanks for your enquiry. We will be in touch to arrange a time to come and measure up.');
+  if(kind==='quote')   return hi+'Here is your quote, reference '+j.no+':';
+  if(kind==='confirm') return hi+'Thanks for your order. We have booked it in as job '+j.no+':';
+  if(kind==='balance') return hi+'Here is the balance for job '+j.no+':';
+  const k=kindOf(j);
+  return hi+(k==='maintenance'?'We are ready to do the work for job '+j.no+':'
+            :k==='frames'?'Your frames are ready, job '+j.no+':'
+            :'Your glass is ready, job '+j.no+':');
+}
+const VISIT_WORD={measure:'Measuring date',fit:'Fitting date',deliver:'Delivery date'};
+const visitDate=a=>new Date(a.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+(a.time?' at '+a.time:'');
+function visitLines(j){
+  const L=apptsOf(j).filter(a=>!a.doneAt)
+    .sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))
+    .map(a=>(VISIT_WORD[a.kind]||'Visit')+': '+visitDate(a));
+  if(L.length&&j.addr) L.push('Address: '+j.addr);
+  return L;
+}
+/* a block for each frame, piece of work or piece of glass */
+function customerBlocks(j){
+  const B=[];
+  framesOf(j).forEach(f=>{
+    const q=Math.max(1,parseInt(f.q)||1), L=['Frame: '+(f.desc||'Frame')];
+    if(f.w||f.h) L.push('Size: '+sizeText(f.w,f.h,j.unit));
+    if(q>1) L.push('Quantity: '+q);
+    L.push('Price: '+gbp(num(f.price)*q));
+    B.push(L.join('\n'));
+  });
+  if(kindOf(j)==='maintenance') (j.extras||[]).forEach(x=>B.push('Work: '+(x.label||'Work')+'\nPrice: '+gbp(x.amount)));
+  (j.items||[]).forEach(it=>B.push(pieceLines(it,j.unit,'to be confirmed')
+    .concat(['Price: '+gbp(priceItem(it,j.unit).total)]).join('\n')));
+  return B;
+}
+function totalLines(j,kind){
+  const t=jobTotals(j), L=[];
+  if(t.discountAmount>0.005) L.push('Discount ('+num(j.discountPct)+'%): -'+gbp(t.discountAmount));
+  if(kindOf(j)!=='maintenance') (j.extras||[]).forEach(x=>L.push((x.label||'Extra')+': '+gbp(x.amount)));
+  if(!t.noVat){ L.push('Before VAT: '+gbp(t.net)); L.push('VAT (20%): '+gbp(t.vat)); }
+  if(t.cardAmount>0.005) L.push('Card payment (2%): '+gbp(t.cardAmount));
+  L.push('Total: '+gbp(t.grand));
+  if(kind!=='quote'){
+    const paid=paidOf(j), bal=balanceOf(j);
+    if(paid>0.005) L.push('Paid: '+gbp(paid));
+    L.push(bal>0.005?'Balance: '+gbp(bal):'Paid in full');
   }
-  if(kind==='quote') return hi+
-    'Thanks for your enquiry. Your quote is below, reference '+j.no+'.\n\n'+
-    'If you are happy to go ahead, just reply to this email or call us on '+SHOP.tel+
-    ' and we will get it ordered and cut. If anything needs changing, let us know.'+sign;
-  if(kind==='confirm') return hi+
-    'Thanks for your order. We have booked it in as job '+j.no+' and the details are below.\n\n'+
-    'We will be in touch as soon as it is ready. If anything needs changing, reply to this email or call us on '+SHOP.tel+'.'+sign;
-  if(kind==='balance') return hi+
-    'The balance on job '+j.no+' is '+gbp(bal)+'. The details are below for your records.\n\n'+
-    'Any questions, reply to this email or call us on '+SHOP.tel+'.'+sign;
-  return hi+
-    'Your glass is ready'+(j.deliver?' and we will be in touch about delivery':' to collect from the shop')+'. Job '+j.no+' — details below.\n\n'+
-    (bal>0.005?'There is '+gbp(bal)+' left to pay'+(j.trade?', which we will invoice.':' on collection.')+'\n\n':'')+
-    'We are at '+SHOP.addr+'. Any questions, call us on '+SHOP.tel+'.'+sign;
+  return L;
+}
+function closingLine(j,kind){
+  const call='call us on '+SHOP.tel;
+  if(measureOnly(j)) return 'Once we have the sizes we will send you a price. Any questions, '+call+'.';
+  if(kind==='quote')   return "If you'd like to go ahead, just reply to this email or "+call+'. The quote is valid for 30 days.';
+  if(kind==='confirm') return 'We will be in touch as soon as it is ready. If anything needs changing, reply to this email or '+call+'.';
+  if(kind==='balance') return 'Any questions, reply to this email or '+call+'.';
+  if(j.handover==='collection') return 'It is ready to collect from the shop at '+SHOP.addr+'. Any questions, '+call+'.';
+  if(apptsOf(j).some(a=>!a.doneAt&&a.kind!=='measure')) return 'See you then. Any questions, '+call+'.';
+  return 'We will be in touch to arrange '+(j.handover==='fitting'?'the fitting':'delivery')+'. Any questions, '+call+'.';
 }
 /* ---------- supplier email ----------
    po = place the order. (Price requests were dropped when the shop
@@ -3686,41 +3769,78 @@ function supplierRows(name,kind){
   });
   return rows;
 }
-/* ---------- the order email ----------
-   Written the way it would be by hand: hello, the glass, thanks. The
-   glass is grouped under each customer's name, because the name is the
-   reference it comes back labelled with. */
+/* ============================================================
+   EMAILS
+   Every email is laid out the same way, the way it would be written
+   by hand: hello, a line saying what it is, a short block for each
+   item with one fact to a line, a dashed line after each block, and
+   then Many thanks, the name, and the shop.
+   ============================================================ */
 const signOff=()=>(SETTINGS.signOff||'').trim()||'Keith';
-/* "6 MM OBSCURED" exists as ordinary and as toughened glass, and a unit's
-   name read on its own sounds like a single pane, so the type is spelled
-   out where the name alone would be ambiguous. */
-function supplierProduct(p){
-  if(p.category===DGU_CAT) return p.name+' double glazed unit';
-  if(p.category==='Toughened') return p.name+' toughened';
-  return p.name;
+const RULE='----------------------------';
+const signLines=()=>'Many thanks,\n'+signOff()+'\n'+SHOP.name;
+const sizeText=(w,h,u)=>{ u=u||'mm'; return w+' x '+h+(u==='mm'||u==='cm'?u:' '+u); };
+
+/* The price list names glass the way the shop reads it, such as
+   "6 MM OBSCURED" under Toughened. In an email the thickness gets its
+   own line, so that comes out as "Toughened obscured" and "6 mm". A name
+   with no thickness in it is used as it is. */
+function glassFacts(it){
+  const p=prodOf(it.pid);
+  if(p.category===DGU_CAT) return {type:'Double glazed unit ('+p.name.replace(/\s+units?$/i,'')+')',thick:''};
+  if(p.each) return {type:'Horticultural glass',thick:'',stock:p.name};
+  const m=/^(\d+(?:\.\d+)?)\s*MM\b[\s,]*/i.exec(p.name);
+  const rest=m?p.name.slice(m[0].length).trim():p.name;
+  const tidy=s=>(/[a-z]/.test(s)?s:s.toLowerCase()).replace(/^./,c=>c.toUpperCase());
+  let type=rest?tidy(rest):'';
+  if(p.category==='Clear Float Glass'&&/^glass$/i.test(rest)) type='Clear float glass';
+  else if(p.category==='Toughened'&&!/tough/i.test(rest)) type=type?'Toughened '+type.charAt(0).toLowerCase()+type.slice(1):'Toughened';
+  else if(p.category==='Mirrors'&&!/mirror/i.test(rest)) type=type+' mirror';
+  return {type:type||p.name, thick:m?m[1]+' mm':''};
 }
-/* trade shorthand: "1 off 900 x 600mm 4 MM GLASS" */
-function supplierLine(r){
-  const pi=priceItem(r.it,r.j.unit), p=pi.p, it=r.it, u=r.j.unit||'mm';
-  const size=p.each?'':it.w+' x '+it.h+(u==='mm'||u==='cm'?u:' '+u)+' ';
-  const bits=[supplierProduct(p)];
+
+/* One fact to a line. `missing` is how an unanswered question reads:
+   TO CONFIRM to a supplier, so it stands out; "to be confirmed" to a
+   customer. */
+function pieceLines(it,u,missing){
+  const f=glassFacts(it), pi=priceItem(it,u), L=[];
+  L.push('Type of glass: '+f.type);
+  L.push('Size: '+(f.stock?f.stock+' (stock size)':sizeText(it.w,it.h,u)));
+  if((parseInt(it.q)||1)>1) L.push('Quantity: '+parseInt(it.q));
   if(isDGU(it)){
-    bits.push(it.dgThick||'thickness TO CONFIRM');
-    bits.push(it.dgBar?it.dgBar+' bar':'bar colour TO CONFIRM');
-  }
-  if(needsObscure(it)) bits.push(it.obsType||'obscure pattern TO CONFIRM');
-  pi.addons.forEach(a=>bits.push(a.name+(a.charge==='lm'?' '+a.qty.toFixed(2)+'m':'')));
-  const out=['- '+(it.q||1)+' off '+size+bits.join(', ')];
-  if(it.note) out.push('  Note: '+String(it.note).replace(/\s*\n\s*/g,' / '));
-  return out.join('\n');
+    L.push('Thickness: '+(it.dgThick||missing));
+    L.push('Bar colour: '+(it.dgBar||missing));
+  } else if(f.thick) L.push('Thickness: '+f.thick);
+  if(needsObscure(it)) L.push('Obscure pattern: '+(it.obsType||missing));
+  const edge=[], other=[];
+  pi.addons.forEach(a=>{
+    if(a.id==='obsunit') return;              /* the pattern line says it */
+    const A=ADDONS.find(x=>x.id===a.id)||{};
+    (A.group==='Edgework'?edge:other).push(a.name+(a.charge==='lm'?' ('+a.qty.toFixed(2)+' m)':''));
+  });
+  if(edge.length) L.push('Edgework: '+edge.join(', '));
+  if(other.length) L.push('Extras: '+other.join(', '));
+  return L;
+}
+
+/* ---------- to a supplier ----------
+   The reference is the customer's name, which is what the glass comes
+   back labelled with. A job's photos go with its first piece. */
+function supplierBlock(r,photos){
+  const L=['Reference: '+(((r.j.name||'').trim())||'Job '+r.j.no)].concat(pieceLines(r.it,r.j.unit,'TO CONFIRM'));
+  if(r.it.note) L.push('Note: '+String(r.it.note).replace(/\s*\n\s*/g,' / '));
+  (photos||[]).forEach(p=>L.push('Photo: '+location.origin+'/p/'+p.id));
+  return L.join('\n');
 }
 function buildSupplierText(name,kind,rows){
-  const refs=[], by={};
-  rows.forEach(r=>{ const k=(r.j.name||'').trim()||'Job '+r.j.no;
-    if(!by[k]){ by[k]=[]; refs.push(k); } by[k].push(r); });
-  return refs.map(k=>'Ref: '+k+'\n'+by[k].map(supplierLine).join('\n')).join('\n\n');
+  const seen={};
+  return rows.map(r=>{
+    let ph=[];
+    if(!seen[r.j.id]){ seen[r.j.id]=1; ph=(r.j.photos||[]).filter(p=>p.send!==false); }
+    return supplierBlock(r,ph);
+  }).join('\n\n'+RULE+'\n\n');
 }
-function supplierMessage(){ return 'Hello,'; }
+function supplierMessage(){ return "Hello,\n\nI'd like to order the following please:"; }
 /* Which of the supplier's outstanding pieces this email actually covers.
    Everything is ticked to start with, because that is the usual case, but
    a piece the customer has not confirmed yet can be left out and stays on
@@ -3774,13 +3894,13 @@ function openMail(j){
   $('pickCard').style.display='none';
   $('mKind').style.display='';
   $('mTold').textContent='Mark customer told';
-  mailKind = !(j.items||[]).length ? 'quote'
+  mailKind = measureOnly(j) ? 'quote'
            : j.status==='quote'||j.status==='lost' ? 'quote'
            : j.status==='ready' ? 'ready'
            : j.status==='done'  ? 'balance' : 'confirm';
   $('mailTitle').textContent='Email job '+j.no+' — '+j.name;
   $('mTo').value=j.email||'';
-  $('mSubj').value=((j.items||[]).length?(mailKind==='quote'?'Quote ':'Job '):'Visit ')+j.no+' from '+SHOP.name;
+  $('mSubj').value=(measureOnly(j)?'Visit ':mailKind==='quote'?'Quote ':'Job ')+j.no+' from '+SHOP.name;
   $('mMsg').value=defaultMessage(j,mailKind);
   Array.prototype.forEach.call($('mKind').children,b=>b.classList.toggle('on',b.dataset.k===mailKind));
   drawMail(); showSheet($('mailSheet'));
@@ -3790,7 +3910,7 @@ $('mKind').addEventListener('click',e=>{
   mailKind=b.dataset.k;
   Array.prototype.forEach.call($('mKind').children,x=>x.classList.toggle('on',x===b));
   $('mMsg').value=defaultMessage(mailJob,mailKind);
-  $('mSubj').value=(mailKind==='quote'?'Quote ':'Job ')+mailJob.no+' from '+SHOP.name;
+  $('mSubj').value=(measureOnly(mailJob)?'Visit ':mailKind==='quote'?'Quote ':'Job ')+mailJob.no+' from '+SHOP.name;
   drawMail();
 });
 /* The photos belonging to whatever is ticked, in job order, once each. */
@@ -3807,14 +3927,13 @@ function mailPhotos(){
 
 function mailBody(){
   if(mailMode==='supplier'){
-    const ps=mailPhotos();
-    const parts=[$('mMsg').value.trim(), buildSupplierText(mailSup,mailKind,activeRows())];
-    if(ps.length) parts.push('Photos\n'+ps.map(p=>p.who+': '+location.origin+'/p/'+p.id).join('\n'));
-    parts.push('Many thanks,\n'+signOff());
-    return parts.filter(Boolean).join('\n\n');
+    const rows=activeRows();
+    return [$('mMsg').value.trim()]
+      .concat(rows.length?[buildSupplierText(mailSup,mailKind,rows),RULE]:[])
+      .concat([signLines()]).filter(Boolean).join('\n\n');
   }
   const doc = mailJob ? buildJobText(mailJob,mailKind) : '';
-  return $('mMsg').value.trim()+'\n\n'+doc;
+  return [$('mMsg').value.trim(),doc].filter(Boolean).join('\n\n');
 }
 function drawMail(){
   $('mPrev').textContent=mailBody();
@@ -3831,7 +3950,7 @@ function drawMail(){
   const ps=mailPhotos();
   $('mPhotos').style.display = ps.length?'':'none';
   if(ps.length) w.push(`<div class="warnbox">
-    <b>${ps.length} photo${ps.length===1?' is':'s are'} linked at the bottom of the message.</b>
+    <b>${ps.length} photo${ps.length===1?' is':'s are'} linked in the message, with each customer's glass.</b>
     An email you open from here cannot carry attachments — no mail app accepts them from a
     pre-filled message. The links work for anyone you send them to, unless the job book is behind
     Cloudflare Access, which blocks outsiders. If your supplier cannot open them, press
@@ -4038,7 +4157,20 @@ $('expFile').addEventListener('change',e=>{
 });
 
 /* ---------- prices ---------- */
-$('rateBtn').onclick=()=>{
+function drawRateShare(){
+  const el=$('rateShare');
+  if(!ONLINE){ el.innerHTML=`<div class="warnbox" style="margin:0 0 14px">The job book cannot be reached, so prices and suppliers cannot be changed right now. Every machine shares them, so a change has to reach the job book.</div>`; return; }
+  if(SHOPV===null){ el.innerHTML=`<div class="warnbox" style="margin:0 0 14px"><b>These are this machine's own prices and suppliers.</b> The shop does not have a shared list yet. Saving makes this list the shop's, on every machine, so do it first on the counter PC, where the prices are right.</div>`; return; }
+  const d=new Date(SHOPV);
+  el.innerHTML=`<p class="sub" style="margin:0 0 14px">Shared with every machine${isNaN(d)?'':'. Last changed '+esc(d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' at '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}))}.</p>`;
+}
+function rateWarn(m){
+  $('rateWarn').innerHTML=`<div class="warnbox" style="margin:0 0 14px">${m}</div>`;
+  $('rateSheet').scrollTop=0;
+}
+function openRates(){
+  $('rateWarn').innerHTML='';
+  drawRateShare();
   $('fAdj').value=ADJ||'';
   const cats=[];
   ALL_PRODUCTS.forEach(p=>{let c=cats.find(x=>x.n===p.category);if(!c){c={n:p.category,items:[]};cats.push(c);}c.items.push(p);});
@@ -4057,20 +4189,40 @@ $('rateBtn').onclick=()=>{
       <input class="inp" data-se="${i}" value="${esc(s.email)}" inputmode="email" placeholder="Email"></div>
       ${s.tel||s.addr?`<div class="sub" style="margin-top:4px">${esc(s.tel)}${s.tel&&s.addr?' · ':''}${esc(s.addr)}</div>`:''}</div>`).join('');
   showSheet($('rateSheet'));
-};
+}
+$('rateBtn').onclick=openRates;
 $('saveRates').onclick=async()=>{
-  Array.prototype.forEach.call($('supTbl').querySelectorAll('[data-sn]'),i=>{SUPPLIERS[+i.dataset.sn].name=i.value.trim()||SUPPLIERS[+i.dataset.sn].name;});
-  Array.prototype.forEach.call($('supTbl').querySelectorAll('[data-se]'),i=>{const s=SUPPLIERS[+i.dataset.se];s.email=i.value.trim();delete s.check;});
-  SETTINGS.signOff=$('fSign').value.trim()||'Keith';
-  try{ await sSet(KEY_SUP,JSON.stringify({suppliers:SUPPLIERS,settings:SETTINGS})); }catch(e){}
-  ADJ=num($('fAdj').value);
-  Array.prototype.forEach.call(document.querySelectorAll('[data-p]'),i=>{
-    PRICES[i.dataset.p]=num(i.value);
-  });
-  try{ await sSet(KEY_PRICES,JSON.stringify({prices:PRICES,adj:ADJ}));
-       toast(STORE==='shop'?'Prices saved for the whole shop':'Prices saved on this device'); }
-  catch(e){ toast('Could not save prices',true); }
+  /* read the sheet into copies: nothing changes here until the shop's
+     copy has been saved */
+  const sup=clone(SUPPLIERS);
+  Array.prototype.forEach.call($('supTbl').querySelectorAll('[data-sn]'),i=>{ const s=sup[+i.dataset.sn]; if(s) s.name=i.value.trim()||s.name; });
+  Array.prototype.forEach.call($('supTbl').querySelectorAll('[data-se]'),i=>{ const s=sup[+i.dataset.se]; if(s){ s.email=i.value.trim(); delete s.check; } });
+  const prices=Object.assign({},PRICES);
+  Array.prototype.forEach.call($('rateSheet').querySelectorAll('[data-p]'),i=>{ prices[i.dataset.p]=num(i.value); });
+  const value={prices, adj:num($('fAdj').value), suppliers:sup,
+               settings:Object.assign({},SETTINGS,{signOff:$('fSign').value.trim()||'Keith'})};
+
+  if(!ONLINE){ rateWarn('The job book cannot be reached, so nothing was saved. Prices and suppliers can only be changed while it is connected.'); return; }
+  if(SHOPV===null&&!window.confirm("Make these the shop's prices and suppliers?\n\nEvery machine will switch to them. Do this on the counter PC, where the prices are right.")) return;
+
+  let r;
+  try{ r=await fetch(API+'/settings/shop',{method:'PUT',headers:{'content-type':'application/json'},
+                                             body:JSON.stringify({value,base:SHOPV})}); }
+  catch(e){ rateWarn('The job book could not be reached, so nothing was saved. Check the connection and try again.'); return; }
+
+  if(r.status===409){
+    let cur=null; try{ cur=(await r.json()).current; }catch(e){}
+    if(cur){ applyShop(cur.value); SHOPV=cur.version; ensureSuppliers(); await mirrorShop(); }
+    openRates();
+    rateWarn('<b>Nothing was saved.</b> Prices or suppliers were changed on another machine while you had this open. This now shows their version, so make your change again.');
+    return;
+  }
+  if(!r.ok){ rateWarn('The job book would not save these, so nothing has changed.'); return; }
+
+  let version=null; try{ version=(await r.json()).version; }catch(e){}
+  applyShop(value); SHOPV=version; ensureSuppliers(); await mirrorShop();
   hideSheets(); render();
+  toast('Saved for the whole shop');
 };
 
 /* ---------- printing ---------- */
