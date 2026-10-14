@@ -568,6 +568,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   input,select,textarea{font-size:16px!important}
   .dims .inp{font-size:17px!important}
 }
+
+/* ---------- needs attention ---------- */
+.chip.attnchip.alert,.chip.attnchip.alert b{color:var(--red)}
+.chip.attnchip.alert:not(.on){background:#FDECEA}
+.invtick.attntick.on{border-color:var(--red);background:#FDECEA}
+.attnwrap{margin-top:10px}
+.attnwrap textarea{min-height:64px}
+.attn{background:#FDECEA;border:1px solid #F0B7B3;border-left:4px solid var(--red);border-radius:var(--r);
+  padding:9px 12px;margin:0 0 10px;font-size:15px;line-height:1.4;color:var(--ink);white-space:pre-wrap}
+.attn b{display:block;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:2px}
+.attn .attnwhen{display:block;font-size:13px;color:var(--ink2);margin-top:4px;white-space:normal}
 </style>
 </head>
 <body>
@@ -617,6 +628,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
           <div class="toggle"><button id="tRetail" class="on">Retail</button><button id="tTrade">Trade</button></div>
           <label class="invtick" id="invTick"><input type="checkbox" id="fInvoice"> Needs invoice?</label>
           <div class="invstate" id="invState"></div>
+        </div>
+        <div class="fgroup" style="margin-bottom:0">
+          <label class="invtick attntick" id="attnTick"><input type="checkbox" id="fAttn"> Needs attention?</label>
+          <div class="attnwrap" id="attnWrap" style="display:none">
+            <label for="fAttnText">What needs doing?</label>
+            <textarea class="inp" id="fAttnText" rows="2" placeholder="e.g. Order the toughened glass from Firmans"></textarea>
+            <div class="invstate" id="attnState"></div>
+          </div>
         </div>
       </div>
 
@@ -1124,7 +1143,7 @@ const stat=k=>STATUSES.find(s=>s.k===k)||STATUSES[0];
 const DURS={30:'30 min',60:'1 hr',90:'1½ hr',120:'2 hr',180:'3 hr',240:'Half day',360:'6 hr',480:'Full day'};
 
 let JOBS=[], CUSTOMERS=[], PRICES={}, ADJ=0, filter='all', editing=null, mailJob=null, mailKind='ready';
-let items=[], extras=[], costs=[], pays=[], frames=[], jobKind='glass', formInvoicedAt='', formMeasuredAt='';
+let items=[], extras=[], costs=[], pays=[], frames=[], jobKind='glass', formInvoicedAt='', formMeasuredAt='', formAttnAt='';
 let isTrade=false, handover='collection', unit='mm';
 let diaryMonth=new Date(), selDay=null, listView='sheet';
 let lastFull=null, lastAny=null, nagDismissed='';
@@ -1728,6 +1747,13 @@ const balanceOf=j=>jobTotals(j).grand-paidOf(j);
 /* Anything under half a penny is rounding, not a debt. */
 const owes=j=>balanceOf(j)>0.005;
 
+/* ---------- needs attention ----------
+   Jobs come in from whoever is at the counter, but one person does most of
+   the ordering. Anybody can flag a job and say what needs doing; it sits
+   in Needs attention, first in the row of tabs, until somebody marks it
+   sorted. j.attn = {text, at}, where at is when it was flagged. */
+const needsAttn=j=>!!(j.attn&&String(j.attn.text||'').trim());
+
 /* ---------- appointments ---------- */
 const APPT={measure:{label:'Measure',cls:'ev-mea'},fit:{label:'Fit',cls:'ev-fit'},deliver:{label:'Deliver',cls:'ev-del'}};
 const apptsOf=j=>(j.appts||[]);
@@ -1862,6 +1888,7 @@ function matches(j,q){
   const digits=q.replace(/\D/g,'');
   return (j.name||'').toLowerCase().includes(q)
       || (j.email||'').toLowerCase().includes(q)
+      || (needsAttn(j)&&j.attn.text.toLowerCase().includes(q))
       || (digits.length>=3 && String(j.phone||'').replace(/\D/g,'').includes(digits))
       || String(j.no||'').includes(q)
       || (j.items||[]).some(i=>prodOf(i.pid).name.toLowerCase().includes(q)
@@ -1871,6 +1898,8 @@ function matches(j,q){
       || framesOf(j).some(f=>(f.desc||'').toLowerCase().includes(q)||(f.note||'').toLowerCase().includes(q));
 }
 function bucket(f){
+  /* every flagged job, open or closed: somebody asked for something */
+  if(f==='attn')    return JOBS.filter(needsAttn);
   if(f==='all')     return JOBS.filter(isLive);
   /* Anything still needing a measure, a fitting or a delivery put in the
      diary — the same set as "Needs a slot" on the diary page. */
@@ -1918,9 +1947,9 @@ function render(){
   const untold=bucket('told');
 
   $('rail').innerHTML=[
-    ['all','Live'],['book','To be booked in'],['quote','Quotes'],['pricing','To be ordered'],['order','On order'],['cut','To cut'],
+    ['attn','Needs attention'],['all','Live'],['book','To be booked in'],['quote','Quotes'],['pricing','To be ordered'],['order','On order'],['cut','To cut'],
     ['ready','Ready'],['told','Not told'],['invoice','To invoice'],['closed','Closed']
-  ].map(x=>`<button class="chip ${filter===x[0]?'on':''} ${(x[0]==='told'&&untold.length)||(x[0]==='invoice'&&bucket('invoice').some(j=>j.status==='done'))?'alert':''}" data-f="${x[0]}">${x[1]} <b>${bucket(x[0]).length}</b></button>`).join('')
+  ].map(x=>`<button class="chip ${filter===x[0]?'on':''} ${x[0]==='attn'?'attnchip':''} ${(x[0]==='attn'&&bucket('attn').length)||(x[0]==='told'&&untold.length)||(x[0]==='invoice'&&bucket('invoice').some(j=>j.status==='done'))?'alert':''}" data-f="${x[0]}">${x[1]} <b>${bucket(x[0]).length}</b></button>`).join('')
    +`<button class="chip ${filter==='diary'?'on':''}" data-f="diary">Diary</button>`;
   railEdges(true);
 
@@ -1956,12 +1985,16 @@ function render(){
   const ord={measure:0,quote:1,pricing:2,order:3,cut:4,ready:5,done:6,lost:7};
   /* waiting to be booked: soonest wanted-by first, so the urgent ones lead */
   if(filter==='book'&&!q) show.sort((a,b)=>(a.wanted||'9999').localeCompare(b.wanted||'9999')||a.no-b.no);
+  /* the longest waiting first */
+  else if(filter==='attn'&&!q) show.sort((a,b)=>(a.attn.at||'').localeCompare(b.attn.at||'')||a.no-b.no);
   else if(filter==='invoice'&&!q) show.sort((a,b)=>((b.status==='done')-(a.status==='done'))||(a.doneAt||a.takenAt||'').localeCompare(b.doneAt||b.takenAt||''));
   else show.sort((a,b)=>(ord[a.status]-ord[b.status])||(b.no-a.no));
 
   if(!show.length){
     $('list').innerHTML=q
       ? `<div class="empty"><h3>Nothing matching &ldquo;${esc(q)}&rdquo;</h3><p>Try a name, part of a phone number, or a job number.</p></div>`
+      : filter==='attn'
+      ? `<div class="empty"><h3>Nothing needs attention</h3><p>Tick <b>Needs attention?</b> on a job and say what needs doing. It waits here until somebody marks it sorted.</p></div>`
       : filter==='invoice'
       ? `<div class="empty"><h3>Nothing to invoice</h3><p>Tick <b>Needs invoice?</b> on a job and it waits here until it is marked invoiced.</p></div>`
       : filter==='book'
@@ -1969,7 +2002,9 @@ function render(){
       : `<div class="empty"><h3>Nothing here</h3><p>Press <b>+ New job</b> to quote the next one.</p></div>`;
     return;
   }
-  const intro = filter==='book'&&!q
+  const intro = filter==='attn'&&!q
+    ? `<p class="sub" style="margin:0 0 12px">${show.length} job${show.length===1?' needs':'s need'} something doing. Longest waiting first. Press <b>Mark sorted</b> once it is done.</p>`
+    : filter==='book'&&!q
     ? `<p class="sub" style="margin:0 0 12px">${show.length} job${show.length===1?' needs':'s need'} a measure, fitting or delivery putting in the diary. Soonest wanted first.</p>`
     : filter==='invoice'&&!q
     ? `<p class="sub" style="margin:0 0 12px">${show.length} job${show.length===1?' needs':'s need'} an invoice. Finished work first, longest waiting first.</p>` : '';
@@ -1995,6 +2030,7 @@ function jobCard(j){
       <div class="stat ${s.cls}">${s.label}</div>
     </div>
     <div class="docket">
+      ${needsAttn(j)?`<div class="attn"><b>Needs attention</b>${esc(j.attn.text.trim())}${realDate(j.attn.at)?`<span class="attnwhen">Flagged ${esc(whenText(j.attn.at))}</span>`:''}</div>`:''}
       ${(j.items||[]).map((it,n)=>{
         const pi=priceItem(it,j.unit);
         const badge = awaitingMeasure(j)&&!isMeasured(j)
@@ -2045,6 +2081,7 @@ function jobCard(j){
         ${(j.status==='quote'||j.status==='measure')&&realDate(j.measuredAt)?`<div><span class="ostamp mstamp">Measured on ${esc(fullDate(j.measuredAt))}</span></div>`:''}
       </div>
       <div class="acts">
+        ${needsAttn(j)?`<button class="act go" data-sorted="${j.id}">Mark sorted</button>`:''}
         ${j.status==='measure'&&!isMeasured(j)?(measureOnly(j)
             ? `<button class="act go" data-open="${j.id}">Add sizes</button><button class="act" data-measured="${j.id}">Mark as measured</button>`
             : `<button class="act go" data-measured="${j.id}">Mark as measured</button>`)
@@ -2895,6 +2932,14 @@ document.addEventListener('click',async e=>{
     render(); toast(n+' piece'+(n===1?'':'s')+' booked in from '+name,false,ok?'Undo':'');
     return;
   }
+  const srt=e.target.closest('[data-sorted]');
+  if(srt){
+    const j=JOBS.find(x=>x.id===srt.dataset.sorted); if(!j||!needsAttn(j)) return;
+    const snap=snapshot('Job '+j.no+' marked sorted',[j]);
+    delete j.attn;
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Job '+j.no+' sorted',false,'Undo'); }
+    return;
+  }
   const msd=e.target.closest('[data-measured]');
   if(msd){
     const j=JOBS.find(x=>x.id===msd.dataset.measured); if(!j||isMeasured(j)) return;
@@ -3416,13 +3461,14 @@ function collectForm(){
     payments:clone(pays), handover, addr:$('fAddr').value, wanted:$('fWanted').value,
     note:$('fNote').value, needsMeasure:$('fMeasure').checked, measured:$('fMeasured').checked, noteUrgent:$('fUrgent').checked,
     needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt,
+    attnOn:$('fAttn').checked, attnText:$('fAttnText').value,
     photos:photoList.filter(p=>!p.isNew).map(p=>({id:p.id,name:p.name,w:p.w,h:p.h,send:p.send!==false}))
   };
 }
 /* A blank new job is not worth keeping. */
 function hasContent(f){
   return !!((f.name||'').trim()||(f.phone||'').trim()||(f.email||'').trim()||(f.addr||'').trim()
-    ||(f.note||'').trim()||(f.items||[]).some(i=>i.w||i.h||i.note)
+    ||(f.note||'').trim()||(f.attnText||'').trim()||(f.items||[]).some(i=>i.w||i.h||i.note)
     ||(f.frames||[]).some(x=>x.desc||x.w||x.h||x.price)||(f.extras||[]).some(x=>x.label||x.amount)
     ||(f.payments||[]).some(p=>num(p.amount))||photoList.some(p=>p.isNew));
 }
@@ -3449,7 +3495,7 @@ function saveDraftNow(){
 const draftSoon=()=>{ clearTimeout(draftTimer); draftTimer=setTimeout(saveDraftNow,700); };
 
 const whenText=iso=>{
-  const d=iso.slice(0,10), t=new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const d=ymd(new Date(iso)), t=new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   const w=dayWord(d); return (/^(today|yesterday)$/.test(w)?w:'on '+w)+' at '+t;
 };
 /* a job edited elsewhere after the draft was made */
@@ -3615,6 +3661,15 @@ function drawInvState(){
     : on ? 'Waits in <b>To invoice</b> until it is marked invoiced.' : '';
 }
 $('fInvoice').addEventListener('change',drawInvState);
+function drawAttn(){
+  const on=$('fAttn').checked;
+  $('attnTick').classList.toggle('on',on);
+  $('attnWrap').style.display=on?'':'none';
+  $('attnState').textContent = !on ? ''
+    : formAttnAt ? 'Flagged '+whenText(formAttnAt)+'. Untick it once it is sorted.'
+    : 'It goes first, in Needs attention, until somebody marks it sorted.';
+}
+$('fAttn').addEventListener('change',()=>{ drawAttn(); if($('fAttn').checked) $('fAttnText').focus(); });
 $('invState').addEventListener('click',e=>{
   if(e.target.closest('[data-uninv]')){ formInvoicedAt=''; drawInvState(); }
 });
@@ -3873,6 +3928,11 @@ function fillForm(j){
   $('fInvoice').checked=j?!!j.needsInvoice:false;
   formInvoicedAt=j&&j.invoicedAt?j.invoicedAt:'';
   drawInvState();
+  /* a draft carries the tick and the words as typed */
+  formAttnAt=j&&j.attn&&j.attn.at?j.attn.at:'';
+  $('fAttn').checked=j?(j.attnOn!==undefined?!!j.attnOn:needsAttn(j)):false;
+  $('fAttnText').value=j?(j.attnText!==undefined?j.attnText:(j.attn&&j.attn.text)||''):'';
+  drawAttn();
   $('fUrgent').checked=j?!!j.noteUrgent:false;
   costs=j&&j.costs?clone(j.costs):[];
   OTHER={}; NOTEOPEN={};
@@ -3886,6 +3946,8 @@ $('newBtn').onclick=()=>openJob(null);
 $('saveJob').onclick=async()=>{
   const name=$('fName').value.trim();
   if(!name){ toast('Needs a customer name',true); $('fName').focus(); return; }
+  const attnOn=$('fAttn').checked, attnText=$('fAttnText').value.trim();
+  if(attnOn&&!attnText){ toast('Say what needs doing, or untick Needs attention',true); $('fAttnText').focus(); return; }
   const clean=jobKind==='glass'?items.filter(it=>{
     const p=prodOf(it.pid);
     return p.each?(parseInt(it.q)||0)>0:(parseFloat(it.w)>0&&parseFloat(it.h)>0);
@@ -3925,6 +3987,8 @@ $('saveJob').onclick=async()=>{
     handover, deliver:handover==='delivery', addr:$('fAddr').value.trim(),
     needsMeasure:$('fMeasure').checked, noteUrgent:$('fUrgent').checked, photos,
     needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt||undefined,
+    /* flagged when first ticked; changing the words keeps that time */
+    attn: attnOn ? {text:attnText, at:(editing&&needsAttn(editing)&&editing.attn.at)||new Date().toISOString()} : undefined,
     appts: editing?clone(apptsOf(editing)):[],
     costs: costs.filter(c=>c.label||num(c.amount)),
     wanted:$('fWanted').value, note:$('fNote').value.trim(),
