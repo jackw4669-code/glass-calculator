@@ -344,7 +344,6 @@ pre.preview{background:var(--white);border:1px solid var(--silver);border-radius
 .stop.done .stime::after{background:var(--float);border-color:var(--float)}
 .scard{background:var(--white);border:1px solid var(--silver);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
 .stop.notready .scard{border-color:var(--red);box-shadow:inset 3px 0 0 var(--red)}
-.stop.done .scard{opacity:.62}
 .shead{padding:12px 14px 4px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .shead h3{font-size:18px;font-weight:700;line-height:1.25}
 .shead .jn{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink2);font-weight:500;margin-right:6px}
@@ -536,6 +535,39 @@ body.lbopen{overflow:hidden}
   .prun .pt{font-size:16px;font-weight:700;display:flex;justify-content:space-between}
   .prun .pwarn{border:2px solid #000;padding:3px 6px;font-weight:700;margin-top:5px}
 }
+
+/* ---------- measured ---------- */
+.ostamp.mstamp{border-color:#2C5A80;color:#2C5A80;margin-top:6px}
+
+/* ---------- finished stops on the day sheet ---------- */
+.stop.done .scard{background:var(--pane);border-style:dashed}
+.stop.done .shead h3,.stop.done .saddr,.stop.done .stime .t0,.stop.done .stime .t1{color:var(--ink2)}
+.stop.done .shead h3,.stop.done .saddr{opacity:.75}
+.shead .kind.kdone{background:var(--float-d);color:var(--white)}
+.sdonewhen{font-size:14px;font-weight:600;color:var(--float-d);margin-bottom:2px}
+
+/* ---------- moving a job ---------- */
+.movelist{display:flex;flex-direction:column;gap:8px}
+.movelist .mv{display:block;width:100%;text-align:left;padding:12px 14px;background:var(--white);
+  border:1px solid var(--silver);border-radius:var(--r);color:var(--ink)}
+.movelist .mv:hover{border-color:var(--ink2)}
+.movelist .mv.now{background:var(--float-l);border-color:var(--float);cursor:default}
+.mv .mvl{display:block;font-size:16px;font-weight:700}
+.mv .mvd{display:block;font-size:14px;color:var(--ink2);margin-top:2px;line-height:1.35}
+.mv .mvnow{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:2px;font-size:12.5px;
+  background:var(--float);color:var(--white);vertical-align:2px}
+.mvh{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin:20px 0 9px}
+
+/* ---------- phones: no zooming in by itself ----------
+   An iPhone zooms the page in when a box with text under 16px is tapped,
+   and leaves it zoomed in. On a touch screen every box is at least 16px,
+   and a quick double tap no longer zooms either. Pinching still zooms. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+*{touch-action:manipulation}
+@media (hover:none),(pointer:coarse){
+  input,select,textarea{font-size:16px!important}
+  .dims .inp{font-size:17px!important}
+}
 </style>
 </head>
 <body>
@@ -659,6 +691,12 @@ body.lbopen{overflow:hidden}
         <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink);margin-bottom:14px">
           <input type="checkbox" id="fMeasure" style="width:17px;height:17px"> Needs measuring first
         </label>
+        <div id="measWrap" style="display:none;margin:-6px 0 14px 25px">
+          <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink);margin-bottom:4px">
+            <input type="checkbox" id="fMeasured" style="width:17px;height:17px"> Measured — the sizes are in
+          </label>
+          <div class="sub" id="measState"></div>
+        </div>
         <div class="fgroup" id="apptWrap"></div>
         <div class="fgroup"><label for="fWanted">Wanted by</label><input class="inp" id="fWanted" type="date"></div>
         <div class="fgroup"><label for="fNote">Notes</label><textarea class="inp" id="fNote" rows="3" placeholder="Anything the workshop or counter needs to know"></textarea></div>
@@ -684,6 +722,12 @@ body.lbopen{overflow:hidden}
 <div class="sheet" id="draftSheet">
   <div class="sheethead"><h2>Drafts</h2><button class="hbtn ghost" id="closeDrafts">Close</button></div>
   <div class="sheetbody" style="max-width:760px" id="draftBody"></div>
+</div>
+
+<!-- ============ MOVE A JOB ============ -->
+<div class="sheet" id="moveSheet">
+  <div class="sheethead"><h2 id="moveTitle">Move job</h2><button class="hbtn ghost" id="closeMove">Close</button></div>
+  <div class="sheetbody" style="max-width:600px" id="moveBody"></div>
 </div>
 
 <!-- ============ PHOTO VIEWER ============ -->
@@ -1080,7 +1124,7 @@ const stat=k=>STATUSES.find(s=>s.k===k)||STATUSES[0];
 const DURS={30:'30 min',60:'1 hr',90:'1½ hr',120:'2 hr',180:'3 hr',240:'Half day',360:'6 hr',480:'Full day'};
 
 let JOBS=[], CUSTOMERS=[], PRICES={}, ADJ=0, filter='all', editing=null, mailJob=null, mailKind='ready';
-let items=[], extras=[], costs=[], pays=[], frames=[], jobKind='glass', formInvoicedAt='';
+let items=[], extras=[], costs=[], pays=[], frames=[], jobKind='glass', formInvoicedAt='', formMeasuredAt='';
 let isTrade=false, handover='collection', unit='mm';
 let diaryMonth=new Date(), selDay=null, listView='sheet';
 let lastFull=null, lastAny=null, nagDismissed='';
@@ -1581,9 +1625,13 @@ const pendingOrder=j=>(j.items||[]).filter(i=>i.src==='order'&&ost(i)==='ordered
 const notArrived  =j=>(j.items||[]).filter(i=>i.src==='order'&&ost(i)!=='arrived');
 const pendingCut  =j=>(j.items||[]).filter(i=>i.src==='cut'&&!i.cut);
 const isLive=j=>j.status!=='done'&&j.status!=='lost';
-const isWorking=j=>isLive(j)&&j.confirmed&&!measureOnly(j);
-/* a measure visit is booked before anyone has confirmed anything */
-const bookable=j=>isLive(j)&&(j.confirmed||measureOnly(j));
+/* At work: confirmed, and measured if it needed measuring. A job the
+   customer said yes to before anyone measured it stays off the order and
+   cutting lists until it has been. */
+const isWorking=j=>isLive(j)&&j.confirmed&&!awaitingMeasure(j);
+/* A measure visit is booked before anyone has confirmed anything. A
+   fitting or delivery waits until the customer has said yes. */
+const bookable=j=>isLive(j)&&(j.confirmed||awaitingMeasure(j));
 
 /* Is there anything on this job yet? For glass that means pieces, for
    frames it means frames, for maintenance it means a price. Until there
@@ -1595,9 +1643,45 @@ function hasWork(j){
   return (j.items||[]).length>0;
 }
 const measureOnly=j=>!hasWork(j);
+
+/* ---------- measuring ----------
+   A job booked in to measure stays To measure until it is marked as
+   measured, whatever sizes are on it, because the shop puts 1 x 1 in
+   until the visit. Marking it measured, on the job card, with the tick in
+   the job, or with Mark completed in the diary, makes it a quote like any
+   other, still waiting for the customer to say yes.
+   measuredAt is null on a job this version saved before it was measured.
+   A job saved by an older version has none at all, and normalise sorts
+   those out. */
+const isMeasured=j=>!!j.measuredAt;
+const awaitingMeasure=j=>!hasWork(j)||(!!j.needsMeasure&&!isMeasured(j));
+const realDate=s=>typeof s==='string'&&!isNaN(new Date(s));
+/* pieces still at a stand-in size such as 1 x 1 */
+function unsized(j){
+  const small=v=>num(v)<=1;
+  return (j.items||[]).filter(it=>!prodOf(it.pid).each&&(small(it.w)||small(it.h))).length
+       + framesOf(j).filter(f=>(f.w||f.h)&&(small(f.w)||small(f.h))).length;
+}
+/* asks first when the sizes are not all in yet; true means go ahead */
+function okToMarkMeasured(j){
+  const who=j.no?'Job '+j.no:'This job', n=unsized(j);
+  if(!hasWork(j)) return window.confirm(who+' has no sizes on it yet.\n\nMark it as measured anyway?');
+  if(n) return window.confirm(who+' still has '+n+' piece'+(n===1?'':'s')+' at 1 x 1, so the sizes are not all in yet.\n\nMark it as measured anyway?');
+  return true;
+}
+function markMeasured(j,now){
+  now=now||new Date().toISOString();
+  j.needsMeasure=true; j.measuredAt=now;
+  apptsOf(j).forEach(a=>{ if(a.kind==='measure'&&!a.doneAt) a.doneAt=now; });
+  applyStatus(j);
+}
+const measuredToast=j=>!hasWork(j)?'Job '+j.no+' measured — add the sizes'
+  : j.status==='quote'?'Job '+j.no+' measured — still a quote until the customer confirms'
+  : 'Job '+j.no+' measured — '+stat(j.status).label.toLowerCase();
+
 function autoStatus(j){
   if(j.status==='done'||j.status==='lost') return j.status;
-  if(measureOnly(j)) return 'measure';      // nothing to price until it's been measured
+  if(awaitingMeasure(j)) return 'measure';  // not priced for real until it has been measured
   if(!j.confirmed) return 'quote';
   if(toPrice(j).length) return 'pricing';
   if(pendingOrder(j).length||pendingFrames(j).length) return 'order';
@@ -1650,9 +1734,11 @@ const apptsOf=j=>(j.appts||[]);
 const hasAppt=(j,k)=>apptsOf(j).some(a=>a.kind===k);
 function neededAppts(j){
   const n=[];
-  if((j.needsMeasure||measureOnly(j))&&!hasAppt(j,'measure')) n.push('measure');
-  if(j.handover==='fitting'&&!hasAppt(j,'fit')) n.push('fit');
-  if(j.handover==='delivery'&&!hasAppt(j,'deliver')) n.push('deliver');
+  /* still to be measured, with no visit booked that has yet to happen */
+  if(awaitingMeasure(j)&&!isMeasured(j)&&!apptsOf(j).some(a=>a.kind==='measure'&&!a.doneAt)) n.push('measure');
+  /* the fitting or delivery is booked once the customer has said yes */
+  if(j.confirmed&&j.handover==='fitting'&&!hasAppt(j,'fit')) n.push('fit');
+  if(j.confirmed&&j.handover==='delivery'&&!hasAppt(j,'deliver')) n.push('deliver');
   return n;
 }
 const nextAppt=j=>apptsOf(j).filter(a=>!a.doneAt).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0];
@@ -1677,6 +1763,20 @@ function normalise(j){
       ? [{kind:j.handover==='fitting'?'fit':'deliver',date:j.schedDate,time:j.schedTime||'',mins:+j.durMins||60}]
       : [];
   }
+  /* From before measuring was recorded. A completed measure visit counts
+     as measured, and so does anything finished. A job with its real sizes
+     in counts too: confirmed ones stay where they are, and quotes do
+     unless their measure visit is still to come. Anything with 1 x 1 still
+     in is To measure, confirmed or not, so it cannot be ordered or cut at
+     that size. */
+  if(j.measuredAt===undefined){
+    const seen=apptsOf(j).filter(a=>a.kind==='measure'&&a.doneAt).map(a=>a.doneAt).sort()[0];
+    const visitDue=apptsOf(j).some(a=>a.kind==='measure'&&!a.doneAt&&a.date>=ymd(new Date()));
+    if(seen) j.measuredAt=seen;
+    else if(j.needsMeasure&&(!isLive(j)||(hasWork(j)&&!unsized(j)&&(j.confirmed||!visitDue)))) j.measuredAt='before';
+  }
+  if(isLive(j)&&awaitingMeasure(j)) j.status='measure';
+  else if(j.status==='measure') j.status=autoStatus(Object.assign({},j,{status:'quote'}));
   /* A record taken before payments existed carries its deposit across as
      the first payment, dated when the job was taken. Nothing is lost and
      the balance still comes out the same. */
@@ -1775,7 +1875,8 @@ function bucket(f){
   /* Anything still needing a measure, a fitting or a delivery put in the
      diary — the same set as "Needs a slot" on the diary page. */
   if(f==='book')   return JOBS.filter(j=>bookable(j)&&neededAppts(j).length);
-  if(f==='quote')  return JOBS.filter(j=>j.status==='quote');
+  /* still to measure, or measured and waiting on the customer */
+  if(f==='quote')  return JOBS.filter(j=>j.status==='quote'||j.status==='measure');
   if(f==='pricing')return JOBS.filter(j=>isWorking(j)&&toPrice(j).length);
   if(f==='order')  return JOBS.filter(j=>isWorking(j)&&pendingOrder(j).length);
   if(f==='cut')    return JOBS.filter(j=>isWorking(j)&&pendingCut(j).length);
@@ -1875,7 +1976,7 @@ function render(){
   $('list').innerHTML=intro+'<div class="jobgrid">'+show.map(jobCard).join('')+'</div>';
 }
 function jobCard(j){
-  const s=stat(j.status), t=jobTotals(j);
+  const s=j.status==='measure'&&isMeasured(j)?{label:'Measured',cls:'s-measure'}:stat(j.status), t=jobTotals(j);
   const bal=balanceOf(j);
   const flag=j.status==='ready'&&!j.called;
   const sup=orderedSuppliers(j);
@@ -1889,14 +1990,16 @@ function jobCard(j){
       <div class="who">
         <h3>${esc(j.name)} ${j.trade?'<span class="tag">Trade</span>':''}${j.needsInvoice&&!j.invoicedAt?' <span class="tag tag-inv">To invoice</span>':''}</h3>
         <div class="meta"><span class="mono">${telLink(j.phone)}</span>
-          &middot; ${handoverLabel(j)}${j.needsMeasure?' (measure first)':''}${appt?' &middot; '+APPT[appt.kind].label+' '+dayWord(appt.date)+(appt.time?' '+appt.time:''):(j.wanted?' &middot; wanted '+dayWord(j.wanted):'')}${j.called?' &middot; told '+(j.toldHow==='email'?'by email':'by phone'):''}</div>
+          &middot; ${handoverLabel(j)}${j.needsMeasure&&!isMeasured(j)?' (measure first)':''}${appt?' &middot; '+APPT[appt.kind].label+' '+dayWord(appt.date)+(appt.time?' '+appt.time:''):(j.wanted?' &middot; wanted '+dayWord(j.wanted):'')}${j.called?' &middot; told '+(j.toldHow==='email'?'by email':'by phone'):''}</div>
       </div>
       <div class="stat ${s.cls}">${s.label}</div>
     </div>
     <div class="docket">
       ${(j.items||[]).map((it,n)=>{
         const pi=priceItem(it,j.unit);
-        const badge = !j.confirmed
+        const badge = awaitingMeasure(j)&&!isMeasured(j)
+          ? '<span class="src src-quoted" title="Not measured yet">To measure</span>'
+          : !j.confirmed
           ? '<span class="src src-quoted" title="Not confirmed yet">Quoted</span>'
           : it.src==='order'
           ? (ost(it)==='arrived'?'<span class="src src-in" title="Arrived">In</span>'
@@ -1915,7 +2018,8 @@ function jobCard(j){
           ${orderStamp(it)}
         </div></div>`;}).join('')}
       ${framesOf(j).map((f,n)=>`<div class="ditem">
-        ${!j.confirmed?'<span class="src src-quoted" title="Not confirmed yet">Quoted</span>'
+        ${awaitingMeasure(j)&&!isMeasured(j)?'<span class="src src-quoted" title="Not measured yet">To measure</span>'
+          :!j.confirmed?'<span class="src src-quoted" title="Not confirmed yet">Quoted</span>'
           :f.arrived?'<span class="src src-in" title="Arrived">In</span>'
                    :`<button class="src src-order" data-fa="${j.id}|${n}" title="Tick off when it arrives">On order</button>`}
         <div class="body">
@@ -1924,7 +2028,7 @@ function jobCard(j){
                     :`<div class="size"><span class="qty">×${f.q||1}</span></div>`}
           ${f.note?`<div class="inote">${esc(f.note)}</div>`:''}
         </div></div>`).join('')}
-      ${measureOnly(j)?'<div class="sub">Waiting to be measured</div>'
+      ${measureOnly(j)?'<div class="sub">'+(isMeasured(j)?'Measured — the sizes still need adding':'Waiting to be measured')+'</div>'
         :`<div class="sub mono" style="margin-top:7px">${kindOf(j)==='glass'?t.area.toFixed(3)+' m²':KINDS[kindOf(j)]}${(j.extras||[]).length?' · '+j.extras.map(x=>esc(x.label)).join(', '):''}</div>`}
       ${j.note?(j.noteUrgent?`<div class="note urgent"><b>Read this first</b>${esc(j.note)}</div>`
                             :`<div class="note">${esc(j.note)}</div>`):''}
@@ -1934,13 +2038,18 @@ function jobCard(j){
     </div>
     <div class="jobfoot">
       <div>${measureOnly(j)
-        ? `<span class="sub">No sizes yet — price once it has been measured</span>`
-        : `<span class="money">${gbp(t.grand)}</span><span class="sub"> ${t.noVat?'no VAT':'inc VAT'}</span>
-           ${bal>0.005?`<span class="owed">${gbp(bal)} ${j.trade?'to invoice':'to pay'}</span>`:`<span class="paid">Paid</span>`}`}
+        ? `<span class="sub">${isMeasured(j)?'No sizes yet — add them to price it':'No sizes yet — price once it has been measured'}</span>`
+        : `<span class="money">${gbp(t.grand)}</span><span class="sub"> ${t.noVat?'no VAT':'inc VAT'}${awaitingMeasure(j)?' · before measuring':''}</span>
+           ${awaitingMeasure(j)?'':bal>0.005?`<span class="owed">${gbp(bal)} ${j.trade?'to invoice':'to pay'}</span>`:`<span class="paid">Paid</span>`}`}
         ${j.invoicedAt?`<div><span class="ostamp istamp">Invoiced on ${esc(fullDate(j.invoicedAt))}</span></div>`:''}
+        ${(j.status==='quote'||j.status==='measure')&&realDate(j.measuredAt)?`<div><span class="ostamp mstamp">Measured on ${esc(fullDate(j.measuredAt))}</span></div>`:''}
       </div>
       <div class="acts">
-        ${j.status==='measure'?`<button class="act go" data-open="${j.id}">Add sizes</button>
+        ${j.status==='measure'&&!isMeasured(j)?(measureOnly(j)
+            ? `<button class="act go" data-open="${j.id}">Add sizes</button><button class="act" data-measured="${j.id}">Mark as measured</button>`
+            : `<button class="act go" data-measured="${j.id}">Mark as measured</button>`)
+          +`<button class="act" data-lost="${j.id}">Not going ahead</button>`:''}
+        ${j.status==='measure'&&isMeasured(j)?`<button class="act go" data-open="${j.id}">Add sizes</button>
                                 <button class="act" data-lost="${j.id}">Not going ahead</button>`:''}
         ${j.status==='quote'?`<button class="act go" data-conf="${j.id}">Customer confirmed</button>
                               <button class="act" data-lost="${j.id}">Not going ahead</button>`:''}
@@ -1953,6 +2062,7 @@ function jobCard(j){
         ${j.needsInvoice&&!j.invoicedAt&&j.status!=='lost'?`<button class="act blue" data-inv="${j.id}">Mark invoiced</button>`:''}
         ${(j.status==='ready'||j.status==='done')&&owes(j)?`<button class="act warn" data-settle="${j.id}">Take ${gbp(balanceOf(j))}</button>`:''}
         ${j.status==='ready'?`<button class="act go" data-coll="${j.id}">${doneVerb(j)}</button>`:''}
+        <button class="act" data-move="${j.id}">Move</button>
         <button class="act" data-mail="${j.id}">Email</button>
         <button class="act" data-open="${j.id}">Edit</button>
       </div>
@@ -2108,6 +2218,111 @@ function renderDiary(){
 }
 
 /* ============================================================
+   MOVE A JOB
+   Any job can be put at any stage, forwards or back, for when a button
+   was pressed by mistake or things have changed. Where a job is comes from
+   its pieces, so moving it sets the pieces to match. Back to Quotes takes
+   the glass off order and unticks anything cut. On to To cut books the
+   glass in. Undo works the same as for any other button.
+   ============================================================ */
+let moveJobId=null;
+const MOVES=[
+  {k:'measure',label:'To measure',d:'Still to be measured. Stays off the order and cutting lists until it is.'},
+  {k:'quote',  label:'Quotes',d:'Waiting for the customer to say yes.'},
+  {k:'pricing',label:'To be ordered',d:'The customer has said yes. Glass from a supplier not ordered yet.'},
+  {k:'order',  label:'On order',d:'Ordered, waiting for it to come in.'},
+  {k:'cut',    label:'To cut',d:'Everything is in. Still to cut.'},
+  {k:'ready',  label:'Ready',d:'Everything is in and cut, ready to go out.'},
+  {k:'done',   label:'Closed',d:'Collected, fitted or delivered. Comes off the live list.'},
+  {k:'lost',   label:'Not going ahead',d:'The customer said no. Comes off the live list.'}
+];
+function canMoveTo(j,k){
+  if(k==='measure'||k==='lost') return true;
+  if(!hasWork(j)) return false;
+  const o=(j.items||[]).some(i=>i.src==='order'), c=(j.items||[]).some(i=>i.src==='cut');
+  if(k==='pricing') return o;
+  if(k==='order') return o||framesOf(j).length>0;
+  if(k==='cut') return c;
+  return true;
+}
+function moveJob(j,k){
+  const now=new Date().toISOString();
+  const op=(j.items||[]).filter(i=>i.src==='order'), cp=(j.items||[]).filter(i=>i.src==='cut');
+  const notOrdered=i=>{ i.ostate='toprice'; i.arrived=false; delete i.orderedAt; delete i.arrivedAt; };
+  const onOrder=i=>{ i.ostate='ordered'; i.arrived=false; if(!i.orderedAt) i.orderedAt=now; delete i.arrivedAt; };
+  const gotIn=i=>{ if(ost(i)!=='arrived'){ i.ostate='arrived'; i.arrived=true; if(!i.orderedAt) i.orderedAt=now; i.arrivedAt=now; } };
+  const framesIn=v=>framesOf(j).forEach(f=>{
+    if(v){ if(!f.arrived){ f.arrived=true; f.arrivedAt=now; } } else { f.arrived=false; delete f.arrivedAt; } });
+  const sayYes=()=>{ if(!j.confirmed){ j.confirmed=true; j.confirmedAt=now; }
+    if(j.needsMeasure&&!j.measuredAt) j.measuredAt=now; };
+  /* anything closed is opened again first */
+  if(j.status==='done'||j.status==='lost'){ j.status='quote'; delete j.doneAt; }
+  if(k==='lost'){ j.status='lost'; j.confirmed=false; return; }
+  if(k==='done'){ sayYes(); j.status='done'; j.doneAt=now; return; }
+  /* going back before Ready means telling the customer again when it is */
+  if(k!=='ready'){ j.called=false; delete j.toldHow; delete j.calledAt; }
+  if(k==='measure'||k==='quote'){
+    j.confirmed=false; delete j.confirmedAt;
+    op.forEach(notOrdered); cp.forEach(i=>{ i.cut=false; }); framesIn(false);
+    if(k==='measure'){ j.needsMeasure=true; j.measuredAt=null; }
+    else if(j.needsMeasure&&!j.measuredAt) j.measuredAt=now;
+  } else {
+    sayYes();
+    if(k==='pricing') op.forEach(notOrdered);
+    if(k==='order'){ op.forEach(onOrder); framesIn(false); }
+    if(k==='cut'){ op.forEach(gotIn); framesIn(true); if(!cp.some(i=>!i.cut)) cp.forEach(i=>{ i.cut=false; }); }
+    if(k==='ready'){ op.forEach(gotIn); framesIn(true); cp.forEach(i=>{ i.cut=true; }); }
+  }
+  applyStatus(j);
+}
+function openMove(j){
+  moveJobId=j.id;
+  $('moveTitle').textContent='Move job '+j.no+' — '+j.name;
+  drawMoveSheet(); showSheet($('moveSheet'));
+}
+function drawMoveSheet(){
+  const j=JOBS.find(x=>x.id===moveJobId); if(!j) return;
+  /* a job measured but with no sizes yet is not really To measure */
+  const now=j.status==='measure'&&isMeasured(j)?'':j.status;
+  const side=[];
+  if(j.status==='ready'&&j.called) side.push(['untold','Back on Not told','Marked as told by mistake. It shows again until the customer is told.']);
+  if(j.needsInvoice&&j.invoicedAt) side.push(['uninv','Back on To invoice','Marked as invoiced by mistake.']);
+  if(!j.needsInvoice&&j.status!=='lost') side.push(['inv','Add to To invoice','Ticks Needs invoice? on the job.']);
+  $('moveBody').innerHTML=`<p class="sub" style="margin:0 0 12px">Where should it be? Moving a job back undoes what came after:
+      back to Quotes takes the glass off order and unticks anything cut. Wrong one? Undo puts it back.</p>
+    <div class="movelist">${MOVES.filter(m=>canMoveTo(j,m.k)).map(m=>
+      `<button class="mv ${m.k===now?'now':''}" data-moveto="${m.k}"${m.k===now?' disabled':''}>
+        <span class="mvl">${esc(m.label)}${m.k===now?' <span class="mvnow">Now</span>':''}</span>
+        <span class="mvd">${esc(m.d)}</span></button>`).join('')}</div>
+    ${!hasWork(j)?'<p class="sub" style="margin-top:10px">There are no sizes on it yet, so it can only be measured or closed off.</p>':''}
+    ${side.length?`<h4 class="mvh">Other lists</h4><div class="movelist">${side.map(s=>
+      `<button class="mv" data-moveside="${s[0]}"><span class="mvl">${esc(s[1])}</span><span class="mvd">${esc(s[2])}</span></button>`).join('')}</div>`:''}`;
+}
+$('closeMove').onclick=hideSheets;
+$('moveBody').addEventListener('click',async e=>{
+  const j=JOBS.find(x=>x.id===moveJobId); if(!j) return;
+  const b=e.target.closest('[data-moveto]'), sb=e.target.closest('[data-moveside]');
+  if(!b&&!sb) return;
+  const now=j.status==='measure'&&isMeasured(j)?'':j.status;
+  if(b&&b.dataset.moveto===now) return;
+  const m=b?MOVES.find(x=>x.k===b.dataset.moveto):null; if(b&&!m) return;
+  const side=sb?sb.dataset.moveside:'';
+  const what=m?'Job '+j.no+' moved to '+m.label
+    :side==='untold'?'Job '+j.no+' back on Not told'
+    :side==='uninv'?'Job '+j.no+' back on To invoice':'Job '+j.no+' added to To invoice';
+  const snap=snapshot(what,[j]);
+  if(m) moveJob(j,m.k);
+  else if(side==='untold'){ j.called=false; delete j.toldHow; delete j.calledAt; }
+  else if(side==='uninv') delete j.invoicedAt;
+  else if(side==='inv') j.needsInvoice=true;
+  const still=m&&/^(measure|quote|lost)$/.test(m.k)&&apptsOf(j).some(a=>!a.doneAt&&a.kind!=='measure');
+  if(await pushJob(j)){
+    UNDO=snap; hideSheets(); render();
+    toast(what+(still?'. It is still booked in the diary':''),false,'Undo');
+  }
+});
+
+/* ============================================================
    ONE DAY, FULL SCREEN
    What the van needs: who, where, when, what is going, whether it
    is actually ready, and what to collect. Finished stops stay on the
@@ -2122,7 +2337,8 @@ const shiftDay=(iso,n)=>{const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate(
 const longDate=iso=>new Date(iso+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
 const shortDate=iso=>new Date(iso+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric'});
 /* A stop is finished once its booking is marked completed, or once the
-   whole job has been closed off. Finished stops come off the day sheet. */
+   whole job has been closed off. Finished stops stay on the day sheet,
+   greyed out and marked completed, so the day can be followed as it goes. */
 const stopDone=x=>!!x.a.doneAt||x.j.status==='done';
 /* the same Undo as the job list, so a slip in the van can be put right
    without leaving the day */
@@ -2147,6 +2363,7 @@ function readiness(j,a){
   if(j.status==='done') return {ok:true,done:true,problems:[]};
   const p=[];
   if(!j.confirmed) p.push('the customer has not confirmed it');
+  if(awaitingMeasure(j)) p.push('it has not been measured');
   const tp=toPrice(j).length, po=pendingOrder(j).length, pf=pendingFrames(j).length, pc=pendingCut(j).length;
   if(tp) p.push(tp+' piece'+(tp===1?' has':'s have')+' not been ordered yet');
   if(po) p.push(po+' piece'+(po===1?' is':'s are')+' still on order from '+Object.keys(waitingSuppliers(j)).join(' and '));
@@ -2155,11 +2372,18 @@ function readiness(j,a){
   return {ok:!p.length,done:false,problems:p};
 }
 
+/* "900 × 600", or "to measure" while a 1 x 1 stands in for the size */
+function stopSize(j,it,pi){
+  const n=+it.q>1?' ×'+it.q:'';
+  if(pi.p.each) return '×'+(it.q||1);
+  if(awaitingMeasure(j)&&!isMeasured(j)&&(num(it.w)<=1||num(it.h)<=1)) return 'to measure'+n;
+  return esc(it.w)+' × '+esc(it.h)+n;
+}
 function whatsGoing(j){
   const rows=[];
   (j.items||[]).forEach(it=>{
     const pi=priceItem(it,j.unit);
-    rows.push(`<div class="sline"><span class="sz">${pi.p.each?'×'+(it.q||1):esc(it.w)+' × '+esc(it.h)+(+it.q>1?' ×'+it.q:'')}</span>
+    rows.push(`<div class="sline"><span class="sz">${stopSize(j,it,pi)}</span>
       <span class="sd">${esc(pi.p.name)}${extraSpec(it)?' · '+esc(extraSpec(it)):''}
         ${it.note?`<div class="inote">${esc(it.note)}</div>`:''}</span></div>`);
   });
@@ -2174,20 +2398,45 @@ function whatsGoing(j){
 }
 
 function stopCard(x){
-  const j=x.j, a=x.a, r=readiness(j,a), bal=balanceOf(j);
+  const j=x.j, a=x.a, finished=stopDone(x), r=finished?null:readiness(j,a), bal=balanceOf(j);
   const t0=a.time||'', st=toMin(t0), en=st!==null?st+(+a.mins||0):null;
-  const done=j.status==='done';
-  const cls=[KIND_STYLE[a.kind]||'', done?'done':'', r&&!r.ok?'notready':''].join(' ');
-  const money = done&&bal<=0.005 ? `<span class="smoney paid">Paid</span>`
+  const closed=j.status==='done';
+  const cls=[KIND_STYLE[a.kind]||'', finished?'done':'', r&&!r.ok?'notready':''].join(' ');
+  /* nothing is collected at a measure visit, so it has no money line */
+  const money = a.kind==='measure' ? '<span></span>'
     : bal>0.005 ? `<span class="smoney owe">${gbp(bal)} ${j.trade?'to invoice':'to collect'}</span>`
     : `<span class="smoney paid">Paid</span>`;
-  return `<div class="stop ${cls}">
-    <div class="stime"><span class="t0">${t0||'—'}</span>
-      ${en!==null?`<span class="t1"><span class="to">to </span>${endTime(t0,a.mins)}</span><span class="t1">${DURS[a.mins]||fmtMins(+a.mins||0)}</span>`:''}</div>
+  const times=`<div class="stime"><span class="t0">${t0||'—'}</span>
+      ${en!==null?`<span class="t1"><span class="to">to </span>${endTime(t0,a.mins)}</span><span class="t1">${DURS[a.mins]||fmtMins(+a.mins||0)}</span>`:''}</div>`;
+  if(finished){
+    /* a finished stop keeps its place, cut down to who and where */
+    const when=a.doneAt||(closed?j.doneAt:'');
+    const at=realDate(when)?' at '+new Date(when).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+    const word=closed&&a.kind!=='measure'?doneVerb(j):a.kind==='measure'?'Measured':'Completed';
+    return `<div class="stop ${cls}">
+    ${times}
     <div class="scard">
       <div class="shead">
         <h3><span class="jn">${j.no}</span>${esc(j.name)}${j.trade?' <span class="tag">Trade</span>':''}</h3>
-        <span class="kind ${APPT[a.kind].cls}">${done?doneVerb(j):APPT[a.kind].label}</span>
+        <span class="kind kdone">✓ ${word}</span>
+      </div>
+      <div class="sbody">
+        <div class="saddr">${j.addr?esc(j.addr):'<span class="sub">No address on the job</span>'}</div>
+        <div class="sdonewhen">${APPT[a.kind].label} completed${at}${closed&&a.kind!=='measure'?' — job closed off':''}</div>
+      </div>
+      <div class="sfoot">
+        ${money}
+        <div class="acts"><button class="act" data-open="${j.id}">Open job</button></div>
+      </div>
+    </div>
+  </div>`;
+  }
+  return `<div class="stop ${cls}">
+    ${times}
+    <div class="scard">
+      <div class="shead">
+        <h3><span class="jn">${j.no}</span>${esc(j.name)}${j.trade?' <span class="tag">Trade</span>':''}</h3>
+        <span class="kind ${APPT[a.kind].cls}">${APPT[a.kind].label}</span>
       </div>
       <div class="sbody">
         <div class="saddr">${j.addr?mapLink(j.addr):'<span class="sub">No address on the job</span>'}</div>
@@ -2195,8 +2444,7 @@ function stopCard(x){
           ${j.phone?`<a class="tel" href="tel:${String(j.phone).replace(/[^\d+]/g,'')}">Call<small>${esc(fmtPhone(j.phone))}</small></a>`:''}
           ${j.addr?`<a class="maplink" data-map="1" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(j.addr)}" target="_blank" rel="noopener">Directions</a>`:''}
         </div>
-        ${r?(r.done?`<div class="sready ok">Done${j.doneAt?' at '+new Date(j.doneAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</div>`
-              :r.ok?`<div class="sready ok">Everything is in and ready to go</div>`
+        ${r?(r.ok?`<div class="sready ok">Everything is in and ready to go</div>`
               :`<div class="sready bad">Not ready — ${esc(r.problems.join('; '))}</div>`):''}
         ${j.note?`<div class="dnote ${j.noteUrgent?'urgent':''}"><b>${j.noteUrgent?'Read this first':'Note'}</b>${esc(j.note)}</div>`:''}
         ${whatsGoing(j)}
@@ -2206,8 +2454,8 @@ function stopCard(x){
       <div class="sfoot">
         ${money}
         <div class="acts">
-          ${!done&&!j.trade&&bal>0.005?`<button class="act warn" data-settle="${j.id}">Take ${gbp(bal)}</button>`:''}
-          ${!done?`<button class="act go" data-stopdone="${j.id}|${x.i}">Mark completed</button>`:''}
+          ${a.kind!=='measure'&&!j.trade&&bal>0.005?`<button class="act warn" data-settle="${j.id}">Take ${gbp(bal)}</button>`:''}
+          <button class="act go" data-stopdone="${j.id}|${x.i}">Mark completed</button>
           <button class="act" data-open="${j.id}">Open job</button>
         </div>
       </div>
@@ -2228,10 +2476,11 @@ function routeUrl(stops){
 function renderDay(){
   const d=dayViewDate; if(!d) return;
   const all=apptsOn(d);
-  /* finished stops come off the sheet; the summary still counts them */
+  /* finished stops stay where they were, greyed out; the summary, the
+     route and the warnings are about what is still to do */
   const todo=all.filter(x=>!stopDone(x));
   const allTimed=all.filter(x=>toMin(x.a.time)!==null);
-  const timed=todo.filter(x=>toMin(x.a.time)!==null), untimed=todo.filter(x=>toMin(x.a.time)===null);
+  const timed=allTimed, untimed=all.filter(x=>toMin(x.a.time)===null);
   const rel=dayWord(d), isRel=/^(today|tomorrow|yesterday)$/.test(rel);
   $('dayTitle').textContent='Day sheet';
 
@@ -2323,7 +2572,7 @@ $('dayPrint').onclick=()=>{
         <div>${esc(j.addr||'No address')}</div>
         ${r&&!r.ok?`<div class="pwarn">NOT READY: ${esc(r.problems.join('; '))}</div>`:''}
         ${(j.items||[]).map(it=>{const pi=priceItem(it,j.unit);
-          return `<div class="psize">${pi.p.each?'×'+(it.q||1):esc(it.w)+' × '+esc(it.h)+(+it.q>1?' ×'+it.q:'')}</div>
+          return `<div class="psize">${stopSize(j,it,pi)}</div>
                   <div class="pprod">${esc(pi.p.name)}${extraSpec(it)?' · '+esc(extraSpec(it)):''}</div>
                   ${it.note?`<div class="pnote">${esc(it.note)}</div>`:''}`;}).join('')}
         ${framesOf(j).map(f=>`<div class="psize">${esc(f.w||'')}${f.w?' × ':''}${esc(f.h||'')}${+f.q>1?' ×'+f.q:''}</div>
@@ -2646,6 +2895,17 @@ document.addEventListener('click',async e=>{
     render(); toast(n+' piece'+(n===1?'':'s')+' booked in from '+name,false,ok?'Undo':'');
     return;
   }
+  const msd=e.target.closest('[data-measured]');
+  if(msd){
+    const j=JOBS.find(x=>x.id===msd.dataset.measured); if(!j||isMeasured(j)) return;
+    if(!okToMarkMeasured(j)) return;
+    const snap=snapshot('Job '+j.no+' marked as measured',[j]);
+    markMeasured(j);
+    if(await pushJob(j)){ UNDO=snap; render(); toast(measuredToast(j),false,'Undo'); }
+    return;
+  }
+  const mvb=e.target.closest('[data-move]');
+  if(mvb){ const j=JOBS.find(x=>x.id===mvb.dataset.move); if(j) openMove(j); return; }
   const conf=e.target.closest('[data-conf]');
   if(conf){
     const j=JOBS.find(x=>x.id===conf.dataset.conf); if(!j) return;
@@ -2654,7 +2914,9 @@ document.addEventListener('click',async e=>{
     if(j.status==='lost') j.status='quote';
     applyStatus(j);
     if(await pushJob(j)){ UNDO=snap; render();
-      toast('Job '+j.no+' confirmed — '+stat(j.status).label.toLowerCase(),false,'Undo'); }
+      const nb=neededAppts(j).filter(k=>k!=='measure');
+      toast('Job '+j.no+' confirmed — '+stat(j.status).label.toLowerCase()
+        +(nb.length?'. Now book the '+(nb[0]==='fit'?'fitting':'delivery'):''),false,'Undo'); }
     return;
   }
   const lost=e.target.closest('[data-lost]');
@@ -2747,19 +3009,24 @@ document.addEventListener('click',async e=>{
       if(!j.trade&&bal>0.005) worry.push(gbp(bal)+' is still to collect');
     }
     if(worry.length&&!window.confirm('Before you mark '+j.name+' completed:\n\n- '+worry.join('\n- ')+'\n\nMark it completed anyway?')) return;
-    /* a measure visit never closes the job — the sizes and the quote come
-       next. A fitting or delivery closes it, unless another is still booked */
+    /* completing the measure marks the job as measured, so it asks first
+       if the sizes are still 1 x 1 */
+    if(a.kind==='measure'&&!isMeasured(j)&&!okToMarkMeasured(j)) return;
+    /* a measure visit never closes the job: it is a quote until the
+       customer says yes. A fitting or delivery closes it, unless another
+       is still booked */
     const more=a.kind!=='measure'&&apptsOf(j).some(b=>b!==a&&b.kind!=='measure'&&!b.doneAt);
     const closes=a.kind!=='measure'&&!more;
     const snap=snapshot(closes?'Job '+j.no+' '+doneVerb(j).toLowerCase()
                         :a.kind==='measure'?'Measure for job '+j.no+' done':'Booking for job '+j.no+' done',[j]);
     const now=new Date().toISOString();
     a.doneAt=now;
+    if(a.kind==='measure'&&!isMeasured(j)) markMeasured(j,now);
     if(closes){ j.status='done'; j.doneAt=now; }
     if(await pushJob(j)){
       UNDO=snap; render();
       toast(closes?'Job '+j.no+' '+doneVerb(j).toLowerCase()+' and closed off'
-           :a.kind==='measure'?'Measure done — add the sizes to job '+j.no
+           :a.kind==='measure'?measuredToast(j)
            :'Done for this visit — job '+j.no+' has another booking',false,'Undo');
     }
     return;
@@ -3147,7 +3414,7 @@ function collectForm(){
     unit, kind:jobKind, items:clone(items), frames:clone(frames), extras:clone(extras),
     discountPct:$('fDisc').value, cardFee:$('fCard').checked, noVat:$('fNoVat').checked,
     payments:clone(pays), handover, addr:$('fAddr').value, wanted:$('fWanted').value,
-    note:$('fNote').value, needsMeasure:$('fMeasure').checked, noteUrgent:$('fUrgent').checked,
+    note:$('fNote').value, needsMeasure:$('fMeasure').checked, measured:$('fMeasured').checked, noteUrgent:$('fUrgent').checked,
     needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt,
     photos:photoList.filter(p=>!p.isNew).map(p=>({id:p.id,name:p.name,w:p.w,h:p.h,send:p.send!==false}))
   };
@@ -3464,22 +3731,41 @@ function setTrade(v){isTrade=v;$('tTrade').classList.toggle('on',v);$('tRetail')
 function setHandover(v){
   handover=v;
   Array.prototype.forEach.call($('hoPick').children,b=>b.classList.toggle('on',b.dataset.h===v));
-  $('addrWrap').style.display = v==='collection'?'none':'block';
+  drawAddr();
   drawAppts();
+}
+/* the address is wanted for a measure visit as well */
+function drawAddr(){ $('addrWrap').style.display = handover==='collection'&&!$('fMeasure').checked?'none':'block'; }
+function drawMeasure(){
+  const on=$('fMeasure').checked, m=$('fMeasured').checked, conf=!!(editing&&editing.confirmed);
+  $('measWrap').style.display=on?'':'none';
+  const after=conf?'':' It stays a quote until the customer confirms.';
+  $('measState').textContent = !on ? ''
+    : m&&formMeasuredAt ? (realDate(formMeasuredAt)?'Measured on '+fullDate(formMeasuredAt)+'.':'Measured.')+after
+    : m ? 'Saving marks it as measured.'+after
+    : 'Tick this once the sizes are in, or press Mark completed in the diary.';
 }
 /* appointments live on the job; the job sheet just shows them */
 function drawAppts(){
   const list=editing?apptsOf(editing):[];
-  const need=editing?neededAppts(Object.assign({},editing,{handover,needsMeasure:$('fMeasure').checked})):[];
+  const need=editing?neededAppts(Object.assign({},editing,{handover,needsMeasure:$('fMeasure').checked,
+    measuredAt:$('fMeasured').checked?(editing.measuredAt||'now'):null})):[];
+  const later=editing&&!editing.confirmed&&handover!=='collection'&&!hasAppt(editing,handover==='fitting'?'fit':'deliver');
   $('apptWrap').innerHTML =
     (list.length?`<label>In the diary</label>`+list.map((a,i)=>
       `<div class="unsched" style="margin-bottom:6px"><div><b>${APPT[a.kind].label}</b> — ${new Date(a.date).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}${a.time?' at '+a.time:''}
         ${a.mins?'<div class="sub">'+(DURS[a.mins]||a.mins+' min')+'</div>':''}</div>
         <button class="act" data-delappt="${editing.id}|${i}">Remove</button></div>`).join(''):'')
     + (editing&&need.length?`<button class="addbtn" data-book="${editing.id}">+ Book ${need.map(k=>APPT[k].label.toLowerCase()).join(' / ')}</button>`
-       :!editing&&handover!=='collection'?`<p class="sub">Save the job first, then book it into the diary.</p>`:'');
+       :!editing&&(handover!=='collection'||$('fMeasure').checked)?`<p class="sub">Save the job first, then book it into the diary.</p>`:'')
+    + (later?`<p class="sub" style="margin-top:6px">Book the ${handover==='fitting'?'fitting':'delivery'} once the customer has confirmed.</p>`:'');
 }
-$('fMeasure').addEventListener('change',drawAppts);
+$('fMeasure').addEventListener('change',()=>{
+  /* a job measured on site is one we fit, so it starts as a fitting */
+  if($('fMeasure').checked&&handover==='collection') setHandover('fitting');
+  drawMeasure(); drawAddr(); drawAppts();
+});
+$('fMeasured').addEventListener('change',()=>{ drawMeasure(); drawAppts(); });
 $('hoPick').addEventListener('click',e=>{const b=e.target.closest('[data-h]'); if(b) setHandover(b.dataset.h);});
 $('tTrade').onclick=()=>setTrade(true); $('tRetail').onclick=()=>setTrade(false);
 $('fDisc').addEventListener('input',()=>{drawCalc();drawPayBal();});
@@ -3581,6 +3867,9 @@ function fillForm(j){
   drawPhotos();
   $('fAddr').value=j?(j.addr||''):''; $('fWanted').value=j?(j.wanted||''):''; $('fNote').value=j?(j.note||''):'';
   $('fMeasure').checked=j?!!j.needsMeasure:false;
+  formMeasuredAt=j&&j.measuredAt?j.measuredAt:'';
+  $('fMeasured').checked=j?(j.measured!==undefined?!!j.measured:!!j.measuredAt):false;
+  drawMeasure();
   $('fInvoice').checked=j?!!j.needsInvoice:false;
   formInvoicedAt=j&&j.invoicedAt?j.invoicedAt:'';
   drawInvState();
@@ -3614,6 +3903,10 @@ $('saveJob').onclick=async()=>{
     toast('Add a frame, or tick "needs measuring first" to book a measure',true); return; }
   if(jobKind==='maintenance' && !extras.filter(x=>x.label||num(x.amount)).length && !$('fMeasure').checked){
     toast('Put what you are charging under "The work"',true); return; }
+  const wasMeasured=editing&&editing.measuredAt?editing.measuredAt:null;
+  const markNow=$('fMeasure').checked&&$('fMeasured').checked&&!wasMeasured;
+  if(markNow&&!okToMarkMeasured({no:editing?editing.no:0,kind:jobKind,items:clean,frames:cleanFrames,
+      extras:extras.filter(x=>x.label||num(x.amount))})) return;
   const jobId = editing?editing.id:'j'+Date.now()+Math.random().toString(36).slice(2,6);
   const photos = await syncPhotos(jobId);
   const job=Object.assign({},editing||{},{
@@ -3632,7 +3925,7 @@ $('saveJob').onclick=async()=>{
     handover, deliver:handover==='delivery', addr:$('fAddr').value.trim(),
     needsMeasure:$('fMeasure').checked, noteUrgent:$('fUrgent').checked, photos,
     needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt||undefined,
-    appts: editing?apptsOf(editing):[],
+    appts: editing?clone(apptsOf(editing)):[],
     costs: costs.filter(c=>c.label||num(c.amount)),
     wanted:$('fWanted').value, note:$('fNote').value.trim(),
     called: editing?!!editing.called:false,
@@ -3640,11 +3933,18 @@ $('saveJob').onclick=async()=>{
     status: editing?editing.status:'quote',
     takenAt: editing?editing.takenAt:new Date().toISOString()
   });
+  delete job.measured;
+  job.measuredAt = !$('fMeasure').checked ? wasMeasured
+    : $('fMeasured').checked ? (wasMeasured||new Date().toISOString()) : null;
+  if(markNow) apptsOf(job).forEach(a=>{ if(a.kind==='measure'&&!a.doneAt) a.doneAt=job.measuredAt; });
   if(job.status!=='done'&&job.status!=='lost') applyStatus(job);
   if(await pushJob(job)){
     dropDraft(draftKey); draftKey=null;
     hideSheets(); render();
-    toast(editing?`Job ${job.no} updated`:`Quote ${job.no} saved — send it, then confirm`);
+    toast(markNow?measuredToast(job)
+         :editing?`Job ${job.no} updated`
+         :job.status==='measure'?`Job ${job.no} saved — book the measure in`
+         :`Quote ${job.no} saved — send it, then confirm`);
   }
 };
 $('delJob').onclick=async()=>{
@@ -3670,7 +3970,7 @@ function composeLinks(to,subject,body){
 /* everything after the opening */
 function buildJobText(j,kind){
   const parts=[];
-  if(!measureOnly(j)){
+  if(!awaitingMeasure(j)){
     customerBlocks(j).forEach(b=>parts.push(b,RULE));
     parts.push(totalLines(j,kind).join('\n'),RULE);
   }
@@ -3693,7 +3993,8 @@ const nextMeasure=j=>apptsOf(j).find(a=>a.kind==='measure'&&!a.doneAt);
 /* the opening: hello, and one line saying what this is */
 function defaultMessage(j,kind){
   const hi=greetingFor(j)+'\n\n';
-  if(measureOnly(j)) return hi+(nextMeasure(j)
+  if(awaitingMeasure(j)&&isMeasured(j)) return hi+'Thanks for having us round to measure up. We will send you a price shortly.';
+  if(awaitingMeasure(j)) return hi+(nextMeasure(j)
     ? 'Thanks for your enquiry. Here are the details of our visit to measure up:'
     : 'Thanks for your enquiry. We will be in touch to arrange a time to come and measure up.');
   if(kind==='quote')   return hi+'Here is your quote, reference '+j.no+':';
@@ -3744,7 +4045,8 @@ function totalLines(j,kind){
 }
 function closingLine(j,kind){
   const call='call us on '+SHOP.tel;
-  if(measureOnly(j)) return 'Once we have the sizes we will send you a price. Any questions, '+call+'.';
+  if(awaitingMeasure(j)&&isMeasured(j)) return 'Any questions, '+call+'.';
+  if(awaitingMeasure(j)) return 'Once we have the sizes we will send you a price. Any questions, '+call+'.';
   if(kind==='quote')   return "If you'd like to go ahead, just reply to this email or "+call+'. The quote is valid for 30 days.';
   if(kind==='confirm') return 'We will be in touch as soon as it is ready. If anything needs changing, reply to this email or '+call+'.';
   if(kind==='balance') return 'Any questions, reply to this email or '+call+'.';
@@ -3894,13 +4196,13 @@ function openMail(j){
   $('pickCard').style.display='none';
   $('mKind').style.display='';
   $('mTold').textContent='Mark customer told';
-  mailKind = measureOnly(j) ? 'quote'
+  mailKind = awaitingMeasure(j) ? 'quote'
            : j.status==='quote'||j.status==='lost' ? 'quote'
            : j.status==='ready' ? 'ready'
            : j.status==='done'  ? 'balance' : 'confirm';
   $('mailTitle').textContent='Email job '+j.no+' — '+j.name;
   $('mTo').value=j.email||'';
-  $('mSubj').value=(measureOnly(j)?'Visit ':mailKind==='quote'?'Quote ':'Job ')+j.no+' from '+SHOP.name;
+  $('mSubj').value=(awaitingMeasure(j)?'Visit ':mailKind==='quote'?'Quote ':'Job ')+j.no+' from '+SHOP.name;
   $('mMsg').value=defaultMessage(j,mailKind);
   Array.prototype.forEach.call($('mKind').children,b=>b.classList.toggle('on',b.dataset.k===mailKind));
   drawMail(); showSheet($('mailSheet'));
@@ -3910,7 +4212,7 @@ $('mKind').addEventListener('click',e=>{
   mailKind=b.dataset.k;
   Array.prototype.forEach.call($('mKind').children,x=>x.classList.toggle('on',x===b));
   $('mMsg').value=defaultMessage(mailJob,mailKind);
-  $('mSubj').value=(measureOnly(mailJob)?'Visit ':mailKind==='quote'?'Quote ':'Job ')+mailJob.no+' from '+SHOP.name;
+  $('mSubj').value=(awaitingMeasure(mailJob)?'Visit ':mailKind==='quote'?'Quote ':'Job ')+mailJob.no+' from '+SHOP.name;
   drawMail();
 });
 /* The photos belonging to whatever is ticked, in job order, once each. */

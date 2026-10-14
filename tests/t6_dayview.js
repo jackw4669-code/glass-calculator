@@ -151,11 +151,12 @@ const cutPiece = (o = {}) => Object.assign(
     ok(route.indexOf(encodeURIComponent('14 Hall Lane, RM14 1AU')) > 0 && /waypoints=/.test(route),
        'calling at each stop');
 
-    /* changed on request: a completed stop now comes off the day sheet */
+    /* changed on request again: a completed stop stays on the day sheet,
+       greyed out, rather than coming off it */
     await click(w, stops[1].querySelector('[data-stopdone]'));
     ok(cur(server, 'b').status === 'done', 'a job can be marked completed from the day');
     const after = qa(w, '#dayBody .tl .stop');
-    ok(after.length === 1, 'and it comes off the sheet');
+    ok(after.length === 2 && after[1].classList.contains('done'), 'and it stays on the sheet, greyed out');
     ok(/1 done, 1 to go/.test(txt(q(w, '.daysum'))), 'while the summary keeps count');
 
     await click(w, after[0].querySelector('[data-open]'));

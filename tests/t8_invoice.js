@@ -131,25 +131,30 @@ const toOrder = (o = {}) => Object.assign({ pid: 'dgclear', w: '900', h: '600', 
     w.eval('openDay(ymd(new Date()))'); await settle(w, 3);
     const stops = () => qa(w, '#dayBody .tl .stop');
     const stopFor = name => stops().find(s => s.textContent.indexOf(name) >= 0);
+    /* greyed out, marked completed, and nothing left to press but Open */
+    const isDone = s => !!s && s.classList.contains('done') && !s.querySelector('[data-stopdone]')
+                        && /✓/.test(txt(s.querySelector('.kind')));
+    const times = () => stops().map(s => txt(s.querySelector('.t0'))).join(' ');
     ok(stops().length === 4, 'four stops to start with');
     ok(stops().every(s => /Mark completed/.test(txt(s.querySelector('[data-stopdone]')))),
        'every stop can be marked completed, ready or not');
 
     await click(w, stopFor('Mo Measure').querySelector('[data-stopdone]'));
-    ok(!stopFor('Mo Measure'), 'a completed measure comes off the sheet');
+    ok(isDone(stopFor('Mo Measure')), 'a completed measure stays on the sheet, greyed out and marked completed');
+    ok(times() === '09:00 11:00 14:00 16:30', 'in its place in the day');
     ok(cur(server, 'm').status !== 'done', 'but the job stays open — it still needs sizes and a quote');
     ok(cur(server, 'm').appts[0].doneAt, 'the visit itself is recorded as done');
     ok(/add the sizes/.test(txt($(w, 'toast'))), 'and the message says what comes next');
 
     await click(w, stopFor('Two Day Builders').querySelector('[data-stopdone]'));
-    ok(!stopFor('Two Day Builders'), "day one of a two-day fit comes off today's sheet");
+    ok(isDone(stopFor('Two Day Builders')), "day one of a two-day fit is marked completed on today's sheet");
     ok(cur(server, 'c').status !== 'done', 'but the job is not closed while day two is still booked');
 
     let asked = '';
     w.confirm = m => { asked = m; return false; };
     await click(w, stopFor('Pat Retail').querySelector('[data-stopdone]'));
     ok(/still to collect/.test(asked) && /£120\.00/.test(asked), 'leaving money behind gets a warning first');
-    ok(!!stopFor('Pat Retail') && cur(server, 'a').status === 'ready', 'and saying no leaves the stop alone');
+    ok(!!stopFor('Pat Retail') && !isDone(stopFor('Pat Retail')) && cur(server, 'a').status === 'ready', 'and saying no leaves the stop alone');
 
     asked = '';
     await click(w, stopFor('Not Ready Ltd').querySelector('[data-stopdone]'));
@@ -158,24 +163,25 @@ const toOrder = (o = {}) => Object.assign({ pid: 'dgclear', w: '900', h: '600', 
     w.confirm = m => { asked = m; return true; };
     await click(w, stopFor('Pat Retail').querySelector('[data-stopdone]'));
     ok(cur(server, 'a').status === 'done' && cur(server, 'a').doneAt, 'saying yes closes the job off');
-    ok(!stopFor('Pat Retail'), 'and takes it off the sheet');
+    ok(isDone(stopFor('Pat Retail')) && /Fitted/.test(txt(stopFor('Pat Retail').querySelector('.kind'))),
+       'and the stop stays, greyed out, marked Fitted');
     ok(/3 done, 1 to go/.test(txt(q(w, '.daysum'))), 'the summary keeps count of what is done');
 
     const bar = q(w, '#dayBody .undobar');
     ok(!!bar && /Job 11/.test(txt(bar)), 'an Undo bar sits at the top of the day sheet');
     await click(w, bar.querySelector('[data-undo]'));
-    ok(!!stopFor('Pat Retail') && cur(server, 'a').status === 'ready', 'and puts the last one straight back');
+    ok(!isDone(stopFor('Pat Retail')) && cur(server, 'a').status === 'ready', 'and puts the last one straight back');
 
     await click(w, stopFor('Pat Retail').querySelector('[data-stopdone]'));
     await click(w, stopFor('Not Ready Ltd').querySelector('[data-stopdone]'));
-    ok(stops().length === 0, 'once everything is completed the sheet is clear');
+    ok(stops().length === 4 && stops().every(isDone), 'once everything is completed every stop is still there, greyed out');
     ok(/Everything for today is done/.test(txt($(w, 'dayBody'))), 'and says so');
     ok(!q(w, '#dayBody .dayacts a.maplink'), 'with no route left to drive');
     await click(w, $(w, 'dayPrint'));
     ok(/Everything booked for this day is done/.test(w._printed), 'the run sheet prints only what is left');
 
     w.eval("dayViewDate=shiftDay(ymd(new Date()),1); renderDay();"); await settle(w, 3);
-    ok(!!stopFor('Two Day Builders'), "day two is still on tomorrow's sheet");
+    ok(!!stopFor('Two Day Builders') && !isDone(stopFor('Two Day Builders')), "day two is still to do on tomorrow's sheet");
     await click(w, stopFor('Two Day Builders').querySelector('[data-stopdone]'));
     ok(cur(server, 'c').status === 'done', 'and completing the last day closes the job');
     w.close();
