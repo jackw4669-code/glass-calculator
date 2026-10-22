@@ -123,9 +123,13 @@ const addPhoto = async (w, name) => {
     ok(near(saved._net, 420), 'the net is the frames total');
 
     ok(/1200/.test(txt(q(w, '.job'))), 'the card shows the size');
+    ok(saved.needsOrder === true, 'naming where the frame is coming from ticks Needs to order?');
     const id = saved.id;
     await click(w, q(w, '[data-conf]'));
-    ok(cur(server, id).status === 'order', 'confirming puts it on order, not straight to ready');
+    /* changed on request: frames that need ordering go through To be ordered first */
+    ok(cur(server, id).status === 'pricing', 'confirming puts it in To be ordered, not straight to ready');
+    await click(w, q(w, '[data-ordj]'));
+    ok(cur(server, id).status === 'order' && cur(server, id).frames[0].orderedAt, 'Mark as ordered puts it on order');
     await click(w, q(w, '[data-fa]'));
     ok(cur(server, id).frames[0].arrived === true, 'the frame can be booked in');
     ok(cur(server, id).status === 'ready', 'and then it is ready');

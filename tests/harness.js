@@ -8,6 +8,18 @@ const TARGET = CANDIDATES.filter(Boolean).find(p => fs.existsSync(p));
 if (!TARGET) { console.error('Could not find index.html. Run from the repo root, or set JOBBOOK=path/to/index.html'); process.exit(1); }
 
 
+/* A stand-in for postcodes.io: made-up but realistic places round
+   Upminster, so the quickest-route tests know where everything is. */
+const POSTCODES = {
+  'RM14 2QT': [51.5560, 0.2490],   // the shop
+  'RM14 1AU': [51.5735, 0.2470],   // Hall Lane, north
+  'RM14 2AB': [51.5455, 0.2525],   // Corbets Tey Road, south
+  'RM12 4PL': [51.5540, 0.2070],   // Hornchurch, west
+  'RM14 3DA': [51.5640, 0.2780],   // Cranham, east
+  'CM13 3AB': [51.5940, 0.3290],   // out towards Brentwood
+  'RM11 1AA': [51.5770, 0.2120]    // Emerson Park, north-west
+};
+
 function makeServer() {
   const rows = new Map();          // id -> {data, version}
   const photos = new Map();
@@ -15,14 +27,23 @@ function makeServer() {
   const settingsV = new Map();      // key -> version, as updated_at in D1
   let vcount = 0;
   const log = [];
+  const postcodes = new Map(Object.entries(POSTCODES));
   return {
-    rows, settings, settingsV, log, photos,
+    rows, settings, settingsV, log, photos, postcodes,
     seed(job) { rows.set(job.id, { data: JSON.stringify(job), version: 1 }); },
     async handle(url, opt) {
       if (this._photoRoute) { const r = this._photoRoute(url, opt); if (r) return r; }
       const method = (opt && opt.method) || 'GET';
       const path = url.replace(/^https?:\/\/[^/]+/, '');
       log.push(method + ' ' + path);
+      if (/^https:\/\/api\.postcodes\.io\/postcodes$/.test(url) && method === 'POST') {
+        if (this.postcodesDown) throw new Error('offline');
+        const asked = JSON.parse(opt.body).postcodes || [];
+        return { ok: true, status: 200, json: async () => ({ status: 200, result: asked.map(pc => {
+          const at = postcodes.get(String(pc).toUpperCase());
+          return { query: pc, result: at ? { postcode: pc, latitude: at[0], longitude: at[1] } : null };
+        }) }) };
+      }
       const json = (o, status = 200) => ({
         ok: status < 400, status,
         json: async () => o

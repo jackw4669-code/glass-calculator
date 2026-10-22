@@ -86,7 +86,9 @@ const NEW = ['invtick', 'invstate', 'tag-inv', 'istamp', 'undobar', 'undobtn', '
              'sd', 'sphotos', 'sfoot', 'smoney', 'gapline', 'gt', 'gf', 'clash', 'notime',
              'dayempty', 'waitrow', 'notready', 'k-fit', 'k-deliver', 'k-measure', 'prun', 'pt', 'pwarn',
              'mstamp', 'kdone', 'sdonewhen', 'movelist', 'mv', 'mvl', 'mvd', 'mvnow', 'mvh',
-             'attnchip', 'attntick', 'attnwrap', 'attn', 'attnwhen'];
+             'attnchip', 'attntick', 'attnwrap', 'attn', 'attnwhen',
+             'subtabs', 'subtab', 'ordtick', 'ordmore', 'ordpick', 'ordlab', 'ordnote', 'sposrow', 'spos',
+             'seqpick', 'retime', 'rtrow', 'rtacts'];
 const unstyledNew = NEW.filter(c => !styled.has(c));
 if (unstyledNew.length) bad('new classes with no CSS rule: ' + unstyledNew.join(', '));
 else ok('all ' + NEW.length + ' new classes are styled');

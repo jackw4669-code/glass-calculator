@@ -579,6 +579,39 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   padding:9px 12px;margin:0 0 10px;font-size:15px;line-height:1.4;color:var(--ink);white-space:pre-wrap}
 .attn b{display:block;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:2px}
 .attn .attnwhen{display:block;font-size:13px;color:var(--ink2);margin-top:4px;white-space:normal}
+
+/* ---------- glass, maintenance and frames inside a tab ---------- */
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+.subtab{padding:9px 14px;border:1px solid var(--silver);border-radius:var(--r);background:var(--white);
+  font-size:15px;font-weight:600;color:var(--ink2);display:flex;gap:8px;align-items:baseline}
+.subtab b{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink2)}
+.subtab.has b{color:var(--amber)}
+.subtab.on{background:var(--float);border-color:var(--float);color:var(--white)}
+.subtab.on b{color:var(--white)}
+
+/* ---------- needs to order ---------- */
+.invtick.ordtick{margin-top:14px}
+.invtick.ordtick.on{border-color:var(--blue);background:var(--blue-l)}
+.ordmore{margin-top:10px}
+.ordmore .row{margin-bottom:6px}
+@media(max-width:620px){ .ordmore .row{flex-direction:column} }
+
+/* ---------- putting the day in order ---------- */
+.ordpick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.ordlab{font-size:14px;font-weight:700;color:var(--ink2)}
+.ordpick .toggle{flex:1 1 300px;max-width:460px}
+.ordnote{font-size:14px;color:var(--ink2);margin:-4px 0 12px;line-height:1.45}
+.ordnote.busy{font-style:italic}
+.ordnote.warn{color:var(--amber);font-weight:600}
+.sposrow{display:flex;align-items:center;gap:8px;padding:9px 14px 0}
+.slot .sposrow{padding:0 0 6px}
+.spos{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.seqpick{padding:5px 8px;border:1px solid var(--silver);border-radius:var(--r);background:var(--white);font-size:15px;font-weight:600}
+.retime{margin:4px 14px 10px;padding:12px;border:1px solid var(--blue);border-radius:var(--r);background:var(--blue-l)}
+.slot .retime{margin:10px 0 0}
+.rtrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rtacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+@media(max-width:620px){ .rtrow{grid-template-columns:1fr 1fr} .rtrow>div:first-child{grid-column:1/-1} }
 </style>
 </head>
 <body>
@@ -660,6 +693,16 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         </div>
         <div id="maintWrap" style="display:none">
           <p class="sub">Put what you are charging under <b>The work</b> below, and everything the fitter needs to know in the <b>Notes</b>.</p>
+        </div>
+        <div id="orderWrap" style="display:none">
+          <label class="invtick ordtick" id="ordTick"><input type="checkbox" id="fNeedsOrder"> Needs to order?</label>
+          <div class="ordmore" id="ordMore" style="display:none">
+            <div class="row" id="ordWork">
+              <div><label for="fOrdWhat">What needs ordering?</label><input class="inp" id="fOrdWhat" placeholder="e.g. 2 white espagnolette handles"></div>
+              <div><label for="fOrdSup">Coming from</label><input class="inp" id="fOrdSup" placeholder="supplier"></div>
+            </div>
+            <div class="invstate" id="ordState"></div>
+          </div>
         </div>
       </div>
 
@@ -1013,7 +1056,7 @@ const LEGACY_RATE={"c2mm":51.61,"c2mmrf":66.31,"c4mm":48.63,"c6mm":80.04,"c8mm":
 const LEGACY_ADDON={"pol-std":5.5,"pol-10":9.9,"bev-str":14.3,"bev-shp":28.6,"leading":51.99,"obsunit":11.0};
 
 
-const SHOP={ name:"Wilson's Glass", addr:"6 St Mary's Lane, Upminster, Essex",
+const SHOP={ name:"Wilson's Glass", addr:"6 St Mary's Lane, Upminster, Essex", postcode:'RM14 2QT',
              tel:'01708 224215', email:'wilsons.glass@outlook.com' };
 
 /* Products the shop does not cut itself — these get ordered in.
@@ -1631,7 +1674,22 @@ const KINDS={glass:'Glass',frames:'Frames',maintenance:'Maintenance'};
 const kindOf=j=>KINDS[j.kind]?j.kind:'glass';
 const isGlass=j=>kindOf(j)==='glass';
 const framesOf=j=>(j.frames||[]);
-const pendingFrames=j=>framesOf(j).filter(f=>!f.arrived);
+/* ---------- ordering for frames and maintenance ----------
+   Glass is ordered piece by piece. A frames or maintenance job only goes
+   through To be ordered and On order when Needs to order? is ticked on
+   it. Then each of its frames, or the one order for the work, goes to
+   order, on order and in, the same as a bought-in piece of glass. */
+function orderLines(j){
+  if(!j.needsOrder) return [];
+  const k=kindOf(j);
+  if(k==='frames') return framesOf(j);
+  if(k==='maintenance') return j.workOrder?[j.workOrder]:[];
+  return [];
+}
+const lst=l=>l.ostate||(l.arrived?'arrived':'toprice');
+const linesToOrder=j=>orderLines(j).filter(l=>lst(l)==='toprice');
+const linesOnOrder=j=>orderLines(j).filter(l=>lst(l)==='ordered');
+const pendingFrames=j=>kindOf(j)==='frames'?linesOnOrder(j):[];
 
 /* ---------- status derives from the pieces ----------
    A job can be waiting on a supplier AND have glass to cut at the
@@ -1702,8 +1760,8 @@ function autoStatus(j){
   if(j.status==='done'||j.status==='lost') return j.status;
   if(awaitingMeasure(j)) return 'measure';  // not priced for real until it has been measured
   if(!j.confirmed) return 'quote';
-  if(toPrice(j).length) return 'pricing';
-  if(pendingOrder(j).length||pendingFrames(j).length) return 'order';
+  if(toPrice(j).length||linesToOrder(j).length) return 'pricing';
+  if(pendingOrder(j).length||linesOnOrder(j).length) return 'order';
   if(pendingCut(j).length) return 'cut';
   return 'ready';
 }
@@ -1725,13 +1783,14 @@ const orderStamp=it=>it.src==='order'&&it.orderedAt&&ost(it)!=='toprice'
 function orderedSuppliers(j){
   const m={};
   pendingOrder(j).forEach(i=>{const s=i.supplier||'Supplier'; m[s]=(m[s]||0)+1;});
+  linesOnOrder(j).forEach(l=>{const s=l.supplier||'Supplier'; m[s]=(m[s]||0)+1;});
   return m;
 }
 
 function waitingSuppliers(j){
   const m={};
   notArrived(j).forEach(i=>{const s=i.supplier||'Supplier'; m[s]=(m[s]||0)+1;});
-  pendingFrames(j).forEach(f=>{const s=f.supplier||'Supplier'; m[s]=(m[s]||0)+1;});
+  orderLines(j).filter(l=>lst(l)!=='arrived').forEach(l=>{const s=l.supplier||'Supplier'; m[s]=(m[s]||0)+1;});
   return m;
 }
 
@@ -1772,6 +1831,11 @@ const nextAppt=j=>apptsOf(j).filter(a=>!a.doneAt).sort((a,b)=>(a.date+(a.time||'
 /* Old records predate the quote step, per-piece ticks and appointments. */
 function normalise(j){
   if(j.confirmed===undefined) j.confirmed = j.status!=='quote';
+  /* Before Needs to order? existed every frame was ordered, so an older
+     frames job keeps that: frames not in yet are on order once it is
+     confirmed, and still to order on a quote. */
+  if(j.needsOrder===undefined) j.needsOrder = kindOf(j)==='frames'&&framesOf(j).length>0;
+  if(j.needsOrder) framesOf(j).forEach(f=>{ if(!f.ostate) f.ostate = f.arrived?'arrived':(j.confirmed?'ordered':'toprice'); });
   if(!j.handover) j.handover = j.deliver?'delivery':'collection';
   if(!j.costs) j.costs=[];
   if(j.needsMeasure===undefined) j.needsMeasure=false;
@@ -1906,8 +1970,8 @@ function bucket(f){
   if(f==='book')   return JOBS.filter(j=>bookable(j)&&neededAppts(j).length);
   /* still to measure, or measured and waiting on the customer */
   if(f==='quote')  return JOBS.filter(j=>j.status==='quote'||j.status==='measure');
-  if(f==='pricing')return JOBS.filter(j=>isWorking(j)&&toPrice(j).length);
-  if(f==='order')  return JOBS.filter(j=>isWorking(j)&&pendingOrder(j).length);
+  if(f==='pricing')return JOBS.filter(j=>isWorking(j)&&(toPrice(j).length||linesToOrder(j).length));
+  if(f==='order')  return JOBS.filter(j=>isWorking(j)&&(pendingOrder(j).length||linesOnOrder(j).length));
   if(f==='cut')    return JOBS.filter(j=>isWorking(j)&&pendingCut(j).length);
   if(f==='ready')  return JOBS.filter(j=>j.status==='ready');
   if(f==='told')   return JOBS.filter(j=>j.status==='ready'&&!j.called);
@@ -1978,10 +2042,22 @@ function render(){
   $('banner').innerHTML=bars.join('');
 
   if(filter==='diary'&&!q){ renderDiary(); return; }
-  if((filter==='cut'||filter==='order'||filter==='pricing')&&!q&&listView==='sheet'){
-    renderSheet(filter==='pricing'?'toprice':filter); return; }
+  /* To be ordered and On order are split into glass, maintenance and frames */
+  const subbed=(filter==='pricing'||filter==='order')&&!q;
+  const subBar=subbed?subTabs(filter):'';
+  if((filter==='cut'||(subbed&&subKind==='glass'))&&!q&&listView==='sheet'){
+    renderSheet(filter==='pricing'?'toprice':filter);
+    if(subbed) $('list').insertAdjacentHTML('afterbegin',subBar);
+    return; }
 
   let show = q ? JOBS.filter(j=>matches(j,q)) : bucket(filter==='diary'?'all':filter);
+  if(subbed) show=show.filter(j=>kindOf(j)===subKind);
+  if(subbed&&!show.length){
+    $('list').innerHTML=subBar+`<div class="empty"><h3>No ${subKind} ${filter==='pricing'?'to be ordered':'on order'}</h3>
+      <p>${filter==='pricing'?'Tick <b>Needs to order?</b> on a '+subKind+' job and it comes here once the customer confirms.'
+                            :'Anything marked as ordered waits here until it comes in.'}</p></div>`;
+    return;
+  }
   const ord={measure:0,quote:1,pricing:2,order:3,cut:4,ready:5,done:6,lost:7};
   /* waiting to be booked: soonest wanted-by first, so the urgent ones lead */
   if(filter==='book'&&!q) show.sort((a,b)=>(a.wanted||'9999').localeCompare(b.wanted||'9999')||a.no-b.no);
@@ -2008,14 +2084,22 @@ function render(){
     ? `<p class="sub" style="margin:0 0 12px">${show.length} job${show.length===1?' needs':'s need'} a measure, fitting or delivery putting in the diary. Soonest wanted first.</p>`
     : filter==='invoice'&&!q
     ? `<p class="sub" style="margin:0 0 12px">${show.length} job${show.length===1?' needs':'s need'} an invoice. Finished work first, longest waiting first.</p>` : '';
-  $('list').innerHTML=intro+'<div class="jobgrid">'+show.map(jobCard).join('')+'</div>';
+  $('list').innerHTML=subBar+intro+'<div class="jobgrid">'+show.map(jobCard).join('')+'</div>';
+}
+const SUBKINDS=[['glass','Glass'],['maintenance','Maintenance'],['frames','Frames']];
+let subKind='glass';
+function subTabs(f){
+  const all=bucket(f);
+  return `<div class="subtabs">${SUBKINDS.map(([k,l])=>{
+    const n=all.filter(j=>kindOf(j)===k).length;
+    return `<button class="subtab ${subKind===k?'on':''} ${n?'has':''}" data-sub="${k}">${l} <b>${n}</b></button>`;}).join('')}</div>`;
 }
 function jobCard(j){
   const s=j.status==='measure'&&isMeasured(j)?{label:'Measured',cls:'s-measure'}:stat(j.status), t=jobTotals(j);
   const bal=balanceOf(j);
   const flag=j.status==='ready'&&!j.called;
   const sup=orderedSuppliers(j);
-  const nToOrder=toPrice(j).length;
+  const nToOrder=toPrice(j).length+linesToOrder(j).length;
   const nCut=pendingCut(j).length;
   const need=bookable(j)?neededAppts(j):[];
   const appt=nextAppt(j);
@@ -2056,14 +2140,27 @@ function jobCard(j){
       ${framesOf(j).map((f,n)=>`<div class="ditem">
         ${awaitingMeasure(j)&&!isMeasured(j)?'<span class="src src-quoted" title="Not measured yet">To measure</span>'
           :!j.confirmed?'<span class="src src-quoted" title="Not confirmed yet">Quoted</span>'
-          :f.arrived?'<span class="src src-in" title="Arrived">In</span>'
-                   :`<button class="src src-order" data-fa="${j.id}|${n}" title="Tick off when it arrives">On order</button>`}
+          :!j.needsOrder?'<span class="src src-in" title="Nothing to order">Ready</span>'
+          :lst(f)==='arrived'?'<span class="src src-in" title="Arrived">In</span>'
+          :lst(f)==='ordered'?`<button class="src src-order" data-fa="${j.id}|${n}" title="Tick off when it arrives">On order</button>`
+          :'<span class="src src-price" title="Not ordered yet">To order</span>'}
         <div class="body">
           <div class="prod">${esc(f.desc||'Frame')}${f.supplier?' &middot; '+esc(f.supplier):''}</div>
           ${f.w||f.h?`<div class="size">${esc(f.w)}<span class="x">×</span>${esc(f.h)}<span class="qty">×${f.q||1}</span></div>`
                     :`<div class="size"><span class="qty">×${f.q||1}</span></div>`}
           ${f.note?`<div class="inote">${esc(f.note)}</div>`:''}
+          ${j.needsOrder&&f.orderedAt&&lst(f)!=='toprice'?`<span class="ostamp">Ordered on ${esc(orderedOn(f))}</span>`:''}
         </div></div>`).join('')}
+      ${kindOf(j)==='maintenance'&&j.needsOrder&&j.workOrder?(o=>`<div class="ditem">
+        ${awaitingMeasure(j)&&!isMeasured(j)?'<span class="src src-quoted" title="Not measured yet">To measure</span>'
+          :!j.confirmed?'<span class="src src-quoted" title="Not confirmed yet">Quoted</span>'
+          :lst(o)==='arrived'?'<span class="src src-in" title="Arrived">In</span>'
+          :lst(o)==='ordered'?`<button class="src src-order" data-wa="${j.id}" title="Tick off when it arrives">On order</button>`
+          :'<span class="src src-price" title="Not ordered yet">To order</span>'}
+        <div class="body">
+          <div class="prod">${esc(o.what||'Parts for the work')}${o.supplier?' &middot; '+esc(o.supplier):''}</div>
+          ${o.orderedAt&&lst(o)!=='toprice'?`<span class="ostamp">Ordered on ${esc(orderedOn(o))}</span>`:''}
+        </div></div>`)(j.workOrder):''}
       ${measureOnly(j)?'<div class="sub">'+(isMeasured(j)?'Measured — the sizes still need adding':'Waiting to be measured')+'</div>'
         :`<div class="sub mono" style="margin-top:7px">${kindOf(j)==='glass'?t.area.toFixed(3)+' m²':KINDS[kindOf(j)]}${(j.extras||[]).length?' · '+j.extras.map(x=>esc(x.label)).join(', '):''}</div>`}
       ${j.note?(j.noteUrgent?`<div class="note urgent"><b>Read this first</b>${esc(j.note)}</div>`
@@ -2209,7 +2306,8 @@ function renderDiary(){
     </button>`;}).join('');
 
   const waiting=JOBS.filter(j=>bookable(j)&&neededAppts(j).length);
-  const dayJobs=selDay?(byDay[selDay]||[]):[];
+  const dayOd=selDay?orderDay(selDay,byDay[selDay]||[]):{list:[],note:''};
+  const dayJobs=dayOd.list;
   const mins=dayJobs.reduce((s,x)=>s+(+x.a.mins||0),0);
 
   $('list').innerHTML=`
@@ -2231,15 +2329,19 @@ function renderDiary(){
           <span style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="act go" data-dayview="${selDay}">Open full screen</button>
             <button class="act" data-bookday="${selDay}">+ Book this day</button></span></div>
-        ${dayJobs.length?dayJobs.map(x=>`<div class="slot">
+        ${dayJobs.length>1?orderPicker(dayOd,dayJobs):''}
+        ${dayJobs.length?dayJobs.map((x,n)=>`<div class="slot">
             <div class="tm">${x.a.time||'—'}<div class="dur">${DURS[x.a.mins]||((+x.a.mins||0)+' min')}${x.a.time?'<br>to '+endTime(x.a.time,x.a.mins):''}</div></div>
             <div style="flex:1;min-width:0">
+              ${posRow(x,dayMode==='time'?0:n+1,dayJobs.length)}
               <div style="font-weight:600">${x.j.no} · ${esc(x.j.name)} <span class="tag ${APPT[x.a.kind].cls}">${APPT[x.a.kind].label}</span></div>
               <div class="sub">${esc(x.j.addr||'No address')}${x.j.phone?' · '+esc(fmtPhone(x.j.phone)):''}</div>
               <div class="sub">${x.a.doneAt?'<b style="color:var(--float-d)">Completed</b> · ':''}${stat(x.j.status).label}${toPrice(x.j).length?' · '+toPrice(x.j).length+' not ordered yet':''}${pendingOrder(x.j).length?' · waiting on '+Object.keys(waitingSuppliers(x.j)).join(', '):''}${pendingCut(x.j).length?' · '+pendingCut(x.j).length+' still to cut':''}</div>
               ${x.j.note?`<div class="dnote ${x.j.noteUrgent?'urgent':''}"><b>${x.j.noteUrgent?'Read this first':'Note'}</b>${esc(x.j.note)}</div>`:''}
+              ${retimeKey===stopKey(x)?retimeBlock(x):''}
             </div>
             <div style="display:flex;flex-direction:column;gap:6px">
+              ${x.a.doneAt?'':`<button class="act" data-retime="${stopKey(x)}">Change time</button>`}
               <button class="act" data-open="${x.j.id}">Open</button>
               <button class="act" data-delappt="${x.j.id}|${x.i}">Remove</button>
             </div>
@@ -2276,20 +2378,18 @@ const MOVES=[
 function canMoveTo(j,k){
   if(k==='measure'||k==='lost') return true;
   if(!hasWork(j)) return false;
-  const o=(j.items||[]).some(i=>i.src==='order'), c=(j.items||[]).some(i=>i.src==='cut');
+  const o=(j.items||[]).some(i=>i.src==='order')||orderLines(j).length>0, c=(j.items||[]).some(i=>i.src==='cut');
   if(k==='pricing') return o;
-  if(k==='order') return o||framesOf(j).length>0;
+  if(k==='order') return o;
   if(k==='cut') return c;
   return true;
 }
 function moveJob(j,k){
   const now=new Date().toISOString();
-  const op=(j.items||[]).filter(i=>i.src==='order'), cp=(j.items||[]).filter(i=>i.src==='cut');
+  const op=(j.items||[]).filter(i=>i.src==='order').concat(orderLines(j)), cp=(j.items||[]).filter(i=>i.src==='cut');
   const notOrdered=i=>{ i.ostate='toprice'; i.arrived=false; delete i.orderedAt; delete i.arrivedAt; };
   const onOrder=i=>{ i.ostate='ordered'; i.arrived=false; if(!i.orderedAt) i.orderedAt=now; delete i.arrivedAt; };
   const gotIn=i=>{ if(ost(i)!=='arrived'){ i.ostate='arrived'; i.arrived=true; if(!i.orderedAt) i.orderedAt=now; i.arrivedAt=now; } };
-  const framesIn=v=>framesOf(j).forEach(f=>{
-    if(v){ if(!f.arrived){ f.arrived=true; f.arrivedAt=now; } } else { f.arrived=false; delete f.arrivedAt; } });
   const sayYes=()=>{ if(!j.confirmed){ j.confirmed=true; j.confirmedAt=now; }
     if(j.needsMeasure&&!j.measuredAt) j.measuredAt=now; };
   /* anything closed is opened again first */
@@ -2300,15 +2400,15 @@ function moveJob(j,k){
   if(k!=='ready'){ j.called=false; delete j.toldHow; delete j.calledAt; }
   if(k==='measure'||k==='quote'){
     j.confirmed=false; delete j.confirmedAt;
-    op.forEach(notOrdered); cp.forEach(i=>{ i.cut=false; }); framesIn(false);
+    op.forEach(notOrdered); cp.forEach(i=>{ i.cut=false; });
     if(k==='measure'){ j.needsMeasure=true; j.measuredAt=null; }
     else if(j.needsMeasure&&!j.measuredAt) j.measuredAt=now;
   } else {
     sayYes();
     if(k==='pricing') op.forEach(notOrdered);
-    if(k==='order'){ op.forEach(onOrder); framesIn(false); }
-    if(k==='cut'){ op.forEach(gotIn); framesIn(true); if(!cp.some(i=>!i.cut)) cp.forEach(i=>{ i.cut=false; }); }
-    if(k==='ready'){ op.forEach(gotIn); framesIn(true); cp.forEach(i=>{ i.cut=true; }); }
+    if(k==='order') op.forEach(onOrder);
+    if(k==='cut'){ op.forEach(gotIn); if(!cp.some(i=>!i.cut)) cp.forEach(i=>{ i.cut=false; }); }
+    if(k==='ready'){ op.forEach(gotIn); cp.forEach(i=>{ i.cut=true; }); }
   }
   applyStatus(j);
 }
@@ -2366,6 +2466,156 @@ $('moveBody').addEventListener('click',async e=>{
    sheet, ticked, so the day can be followed as it goes.
    ============================================================ */
 let dayViewDate=null, dayBack=false;
+
+/* ---------- putting a day in order ----------
+   By start time, by hand (1st, 2nd, 3rd, kept on the bookings so every
+   device shows the same order), or the quickest round trip from the shop.
+   Which one is remembered on each device. */
+const DAYMODES=[['time','Time'],['manual','Manual'],['route','Quickest route']];
+let dayMode=(()=>{ try{ const m=localStorage.getItem('wg-daymode-v1'); return DAYMODES.some(x=>x[0]===m)?m:'time'; }catch(e){ return 'time'; } })();
+let retimeKey='';
+const stopKey=x=>x.j.id+'|'+x.i;
+const ORD=n=>n+((n%100>=11&&n%100<=13)?'th':(['th','st','nd','rd'][n%10]||'th'));
+function orderDay(d,list){
+  const hand=list.some(x=>typeof x.a.seq==='number');
+  if(dayMode==='manual'){
+    const seq=x=>typeof x.a.seq==='number'?x.a.seq:1e9;
+    return {list:list.slice().sort((p,q)=>seq(p)-seq(q)),
+            note:'Pick 1st, 2nd, 3rd on each stop. Every device shows the same order.'};
+  }
+  if(dayMode==='route'){
+    const key=routeKey(d,list), r=ROUTES[key];
+    if(!r||(r.failed&&Date.now()-r.at>30000)){ planRoute(list,key); return {list,note:'Working out the quickest route…',busy:true}; }
+    if(r.busy) return {list,note:'Working out the quickest route…',busy:true};
+    if(r.failed) return {list,note:r.failed};
+    const pos=k=>{ const i=r.order.indexOf(k); return i<0?1e9:i; };
+    return {list:list.slice().sort((p,q)=>pos(stopKey(p))-pos(stopKey(q))),note:r.note};
+  }
+  return {list,note:hand?'This day has been put in order by hand. Manual shows that order.':''};
+}
+/* stops are listed by time, so put one at a new place and number them all */
+async function reorderStop(key,pos){
+  const q=key.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+  const a=apptsOf(j)[+q[1]]; if(!a) return;
+  const list=orderDay(a.date,apptsOn(a.date)).list.slice();
+  const from=list.findIndex(x=>stopKey(x)===key); if(from<0) return;
+  const it=list.splice(from,1)[0];
+  list.splice(Math.max(0,Math.min(list.length,pos-1)),0,it);
+  const touched=[...new Set(list.filter((x,i)=>x.a.seq!==i+1).map(x=>x.j))];
+  if(!touched.length) return;
+  const snap=snapshot('The order of '+longDate(a.date)+' changed',touched);
+  list.forEach((x,i)=>{ x.a.seq=i+1; });
+  let ok=0; for(const t of touched) if(await pushJob(t)) ok++;
+  if(ok) UNDO=snap;
+  render(); toast(it.j.name+' is now '+ORD(list.indexOf(it)+1),false,ok?'Undo':'');
+}
+
+/* ---------- the quickest round trip ----------
+   Each postcode is looked up once (postcodes.io, free, no key) and kept
+   on this device. The shortest round trip from the shop through every
+   stop and back is worked out exactly for up to twelve stops, which is
+   more than a day ever holds. Distances are as the crow flies, so Maps
+   may still adjust the driving. */
+const PC_RE=/\b([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})\b/i;
+const postcodeOf=s=>{ const m=PC_RE.exec(s||''); return m?(m[1]+' '+m[2]).toUpperCase():''; };
+let PCGEO=(()=>{ try{ return JSON.parse(localStorage.getItem('wg-pcgeo-v1')||'{}')||{}; }catch(e){ return {}; } })();
+const ROUTES={};
+const routeKey=(d,list)=>d+'|'+list.map(x=>stopKey(x)+'@'+postcodeOf(x.j.addr)).join(',');
+async function geocode(pcs){
+  const want=[...new Set(pcs)].filter(p=>p&&!(p in PCGEO));
+  if(want.length){
+    const r=await fetch('https://api.postcodes.io/postcodes',{method:'POST',
+      headers:{'content-type':'application/json'},body:JSON.stringify({postcodes:want.slice(0,100)})});
+    if(!r.ok) throw new Error('postcode lookup '+r.status);
+    const js=await r.json();
+    (js.result||[]).forEach(x=>{ const k=postcodeOf(x.query)||String(x.query).toUpperCase();
+      PCGEO[k]=x.result?{lat:x.result.latitude,lon:x.result.longitude}:null; });
+    try{ localStorage.setItem('wg-pcgeo-v1',JSON.stringify(PCGEO)); }catch(e){}
+  }
+  return pcs.map(p=>PCGEO[p]||null);
+}
+const kmBetween=(a,b)=>{ const r=Math.PI/180, dLa=(b.lat-a.lat)*r, dLo=(b.lon-a.lon)*r;
+  const s=Math.sin(dLa/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)**2;
+  return 2*6371*Math.asin(Math.sqrt(s)); };
+function shortestRound(home,pts){
+  const n=pts.length; if(!n) return {order:[],km:0};
+  const all=[home].concat(pts), M=all.map(a=>all.map(b=>kmBetween(a,b)));
+  const D=(i,j)=>M[i+1][j+1];                    // -1 is the shop
+  if(n<=12){
+    /* every order, without trying every order: the best way to reach each
+       stop having been to exactly these others */
+    const FULL=1<<n, INF=1e18, dp=new Float64Array(FULL*n).fill(INF), from=new Int16Array(FULL*n).fill(-1);
+    for(let i=0;i<n;i++) dp[(1<<i)*n+i]=D(-1,i);
+    for(let m=1;m<FULL;m++) for(let i=0;i<n;i++){
+      const v=dp[m*n+i]; if(v>=INF||!(m&(1<<i))) continue;
+      for(let k=0;k<n;k++){ if(m&(1<<k)) continue;
+        const nm=m|(1<<k), c=v+D(i,k); if(c<dp[nm*n+k]){ dp[nm*n+k]=c; from[nm*n+k]=i; } }
+    }
+    let best=INF, last=0;
+    for(let i=0;i<n;i++){ const c=dp[(FULL-1)*n+i]+D(i,-1); if(c<best){ best=c; last=i; } }
+    const order=[]; let m=FULL-1, i=last;
+    while(i>=0){ order.push(i); const p=from[m*n+i]; m&=~(1<<i); i=p; }
+    return {order:order.reverse(),km:best};
+  }
+  /* more than twelve: nearest first, then untangle any crossings */
+  const left=new Set(pts.map((_,i)=>i)); let order=[], at=-1;
+  while(left.size){ let b=-1,bd=Infinity; left.forEach(k=>{ const d=D(at,k); if(d<bd){ bd=d; b=k; } });
+    order.push(b); left.delete(b); at=b; }
+  const len=o=>o.reduce((s,k,i)=>s+D(i?o[i-1]:-1,k),0)+D(o[o.length-1],-1);
+  for(let better=true;better;){ better=false;
+    for(let a=0;a<n-1;a++) for(let b=a+1;b<n;b++){
+      const o=order.slice(0,a).concat(order.slice(a,b+1).reverse(),order.slice(b+1));
+      if(len(o)<len(order)-1e-9){ order=o; better=true; } } }
+  return {order,km:len(order)};
+}
+async function planRoute(list,key){
+  ROUTES[key]={busy:true};
+  try{
+    const geo=await geocode([SHOP.postcode].concat(list.map(x=>postcodeOf(x.j.addr))));
+    if(!geo[0]) throw new Error('the shop postcode was not found');
+    const pts=[], gone=[];
+    list.forEach((x,i)=>{ if(geo[i+1]) pts.push({x,g:geo[i+1]}); else gone.push(x); });
+    const best=shortestRound(geo[0],pts.map(p=>p.g));
+    const miles=Math.round(best.km*1.25/1.609);
+    ROUTES[key]={order:best.order.map(i=>stopKey(pts[i].x)).concat(gone.map(stopKey)),
+      note:(pts.length?'The quickest way round from the shop and back, about '+miles+' mile'+(miles===1?'':'s')
+        +'. Worked out from the postcodes, so Maps may still adjust the driving.':'')
+        +(gone.length?' No postcode found for '+gone.map(x=>x.j.no+' '+x.j.name).join(', ')
+        +', so '+(gone.length===1?'it goes':'they go')+' at the end.':'')};
+  }catch(e){
+    ROUTES[key]={failed:'Could not look the postcodes up just now, so this is in time order. It tries again in a moment.',at:Date.now()};
+  }
+  render();
+}
+function orderPicker(od,list){
+  return `<div class="ordpick"><span class="ordlab">Order the day by</span>
+    <div class="toggle">${DAYMODES.map(([k,l])=>`<button data-dmode="${k}" class="${dayMode===k?'on':''}">${l}</button>`).join('')}</div></div>
+    ${od.note?`<p class="ordnote${od.busy?' busy':''}">${esc(od.note)}</p>`:''}
+    ${dayMode!=='time'&&!od.busy&&outOfOrder(list)?`<p class="ordnote warn">The times are not in this order yet. Use <b>Change time</b> on a stop to move it.</p>`:''}`;
+}
+const outOfOrder=list=>{ const t=list.map(x=>toMin(x.a.time)).filter(v=>v!==null); return t.some((v,i)=>i>0&&v<t[i-1]); };
+function posRow(x,pos,n){
+  if(!pos) return '';
+  if(dayMode==='manual') return `<div class="sposrow"><span class="spos">Order</span>
+    <select class="seqpick" data-seq="${stopKey(x)}" aria-label="Where this stop comes in the day">${Array.from({length:n},(_,i)=>
+      `<option value="${i+1}" ${i+1===pos?'selected':''}>${ORD(i+1)}</option>`).join('')}</select></div>`;
+  return `<div class="sposrow"><span class="spos">${ORD(pos)} stop</span></div>`;
+}
+/* change the time without leaving the day */
+function retimeBlock(x){
+  const a=x.a, opts=Object.keys(DURS).map(Number);
+  if(a.mins&&opts.indexOf(+a.mins)<0) opts.push(+a.mins);
+  return `<div class="retime">
+    <div class="rtrow">
+      <div><label for="rtDate">Day</label><input class="inp" id="rtDate" type="date" value="${esc(a.date)}"></div>
+      <div><label for="rtTime">Start</label><input class="inp mono" id="rtTime" type="time" value="${esc(a.time||'')}"></div>
+      <div><label for="rtMins">How long</label><select class="inp" id="rtMins">${opts.sort((p,q)=>p-q).map(m=>
+        `<option value="${m}" ${m===+a.mins?'selected':''}>${esc(DURS[m]||m+' min')}</option>`).join('')}</select></div>
+    </div>
+    <div class="rtacts"><button class="act go" data-rtsave="${stopKey(x)}">Save the new time</button>
+      <button class="act" data-rtcancel="1">Cancel</button></div>
+  </div>`;
+}
 const KIND_STYLE={fit:'k-fit',deliver:'k-deliver',measure:'k-measure'};
 const toMin=t=>{const m=/^(\d{1,2}):(\d{2})/.exec(t||''); return m?(+m[1])*60+(+m[2]):null;};
 const fmtMins=n=>{n=Math.round(n); const h=Math.floor(n/60), m=n%60;
@@ -2401,10 +2651,12 @@ function readiness(j,a){
   const p=[];
   if(!j.confirmed) p.push('the customer has not confirmed it');
   if(awaitingMeasure(j)) p.push('it has not been measured');
-  const tp=toPrice(j).length, po=pendingOrder(j).length, pf=pendingFrames(j).length, pc=pendingCut(j).length;
+  const tp=toPrice(j).length, po=pendingOrder(j).length, pf=linesOnOrder(j).length, pc=pendingCut(j).length;
   if(tp) p.push(tp+' piece'+(tp===1?' has':'s have')+' not been ordered yet');
   if(po) p.push(po+' piece'+(po===1?' is':'s are')+' still on order from '+Object.keys(waitingSuppliers(j)).join(' and '));
-  if(pf) p.push(pf+' frame'+(pf===1?' has':'s have')+' not arrived');
+  const lt=linesToOrder(j).length, fr=kindOf(j)==='frames';
+  if(lt) p.push(fr?lt+' frame'+(lt===1?' has':'s have')+' not been ordered yet':'the parts have not been ordered yet');
+  if(pf) p.push(fr?pf+' frame'+(pf===1?' has':'s have')+' not arrived':'the parts have not arrived');
   if(pc) p.push(pc+' piece'+(pc===1?' is':'s are')+' still to cut');
   return {ok:!p.length,done:false,problems:p};
 }
@@ -2434,10 +2686,10 @@ function whatsGoing(j){
   return rows.length?`<div class="sgoing">${rows.join('')}</div>`:'';
 }
 
-function stopCard(x){
+function stopCard(x,pos,n){
   const j=x.j, a=x.a, finished=stopDone(x), r=finished?null:readiness(j,a), bal=balanceOf(j);
   const t0=a.time||'', st=toMin(t0), en=st!==null?st+(+a.mins||0):null;
-  const closed=j.status==='done';
+  const closed=j.status==='done', key=stopKey(x);
   const cls=[KIND_STYLE[a.kind]||'', finished?'done':'', r&&!r.ok?'notready':''].join(' ');
   /* nothing is collected at a measure visit, so it has no money line */
   const money = a.kind==='measure' ? '<span></span>'
@@ -2445,6 +2697,7 @@ function stopCard(x){
     : `<span class="smoney paid">Paid</span>`;
   const times=`<div class="stime"><span class="t0">${t0||'—'}</span>
       ${en!==null?`<span class="t1"><span class="to">to </span>${endTime(t0,a.mins)}</span><span class="t1">${DURS[a.mins]||fmtMins(+a.mins||0)}</span>`:''}</div>`;
+  const place=posRow(x,pos,n);
   if(finished){
     /* a finished stop keeps its place, cut down to who and where */
     const when=a.doneAt||(closed?j.doneAt:'');
@@ -2453,6 +2706,7 @@ function stopCard(x){
     return `<div class="stop ${cls}">
     ${times}
     <div class="scard">
+      ${place}
       <div class="shead">
         <h3><span class="jn">${j.no}</span>${esc(j.name)}${j.trade?' <span class="tag">Trade</span>':''}</h3>
         <span class="kind kdone">✓ ${word}</span>
@@ -2471,10 +2725,12 @@ function stopCard(x){
   return `<div class="stop ${cls}">
     ${times}
     <div class="scard">
+      ${place}
       <div class="shead">
         <h3><span class="jn">${j.no}</span>${esc(j.name)}${j.trade?' <span class="tag">Trade</span>':''}</h3>
         <span class="kind ${APPT[a.kind].cls}">${APPT[a.kind].label}</span>
       </div>
+      ${retimeKey===key?retimeBlock(x):''}
       <div class="sbody">
         <div class="saddr">${j.addr?mapLink(j.addr):'<span class="sub">No address on the job</span>'}</div>
         <div class="sreach">
@@ -2492,7 +2748,8 @@ function stopCard(x){
         ${money}
         <div class="acts">
           ${a.kind!=='measure'&&!j.trade&&bal>0.005?`<button class="act warn" data-settle="${j.id}">Take ${gbp(bal)}</button>`:''}
-          <button class="act go" data-stopdone="${j.id}|${x.i}">Mark completed</button>
+          <button class="act" data-retime="${key}">Change time</button>
+          <button class="act go" data-stopdone="${key}">Mark completed</button>
           <button class="act" data-open="${j.id}">Open job</button>
         </div>
       </div>
@@ -2506,18 +2763,18 @@ function routeUrl(stops){
   const addrs=stops.filter(x=>x.j.addr&&!stopDone(x)).map(x=>x.j.addr).slice(0,9);
   if(!addrs.length) return '';
   return 'https://www.google.com/maps/dir/?api=1&travelmode=driving'
-    +'&origin='+encodeURIComponent(SHOP.addr)+'&destination='+encodeURIComponent(SHOP.addr)
+    +'&origin='+encodeURIComponent(SHOP.addr+', '+SHOP.postcode)+'&destination='+encodeURIComponent(SHOP.addr+', '+SHOP.postcode)
     +'&waypoints='+addrs.map(encodeURIComponent).join('%7C');
 }
 
 function renderDay(){
   const d=dayViewDate; if(!d) return;
-  const all=apptsOn(d);
+  const byTime=apptsOn(d), od=orderDay(d,byTime), all=od.list, byClock=dayMode==='time';
   /* finished stops stay where they were, greyed out; the summary, the
      route and the warnings are about what is still to do */
   const todo=all.filter(x=>!stopDone(x));
-  const allTimed=all.filter(x=>toMin(x.a.time)!==null);
-  const timed=allTimed, untimed=all.filter(x=>toMin(x.a.time)===null);
+  const allTimed=byTime.filter(x=>toMin(x.a.time)!==null);
+  const timed=byClock?allTimed:all, untimed=byClock?byTime.filter(x=>toMin(x.a.time)===null):[];
   const rel=dayWord(d), isRel=/^(today|tomorrow|yesterday)$/.test(rel);
   $('dayTitle').textContent='Day sheet';
 
@@ -2533,12 +2790,12 @@ function renderDay(){
 
   let tl='';
   timed.forEach((x,i)=>{
-    if(i>0){
+    if(byClock&&i>0){
       const p=timed[i-1], pEnd=toMin(p.a.time)+(+p.a.mins||0), gap=toMin(x.a.time)-pEnd;
       if(gap<0) tl+=`<div class="gapline clash"><div class="gt"></div><div class="gf">Overlaps the booking before by ${fmtMins(-gap)}</div></div>`;
       else if(gap>=15) tl+=`<div class="gapline"><div class="gt"></div><div class="gf">${fmtMins(gap)} free</div></div>`;
     }
-    tl+=stopCard(x);
+    tl+=stopCard(x,byClock?0:i+1,all.length);
   });
 
   const waiting=JOBS.filter(j=>bookable(j)&&neededAppts(j).length);
@@ -2562,11 +2819,12 @@ function renderDay(){
       ${route?`<a class="go maplink" data-map="1" href="${route}" target="_blank" rel="noopener">Open the route in Maps</a>`:''}
       <button data-bookday="${d}">Book something in</button>
     </div>
+    ${all.length>1?orderPicker(od,all):''}
     ${blocked.length?`<div class="dayalert"><b>${blocked.length} booking${blocked.length===1?' is':'s are'} not ready to go out.</b>
       <ul>${blocked.map(x=>`<li>${x.a.time?x.a.time+' — ':''}${x.j.no} ${esc(x.j.name)}: ${esc(readiness(x.j,x.a).problems.join('; '))}</li>`).join('')}</ul></div>`:''}
     ${!todo.length?`<div class="dayempty"><h3>Everything for ${isRel?rel:esc(longDate(d))} is done.</h3><p class="sub">Each booking has been marked completed.</p></div>`:''}
     <div class="tl">${tl}</div>
-    ${untimed.length?`<div class="notime"><h4>No time set</h4>${untimed.map(stopCard).join('')}</div>`:''}
+    ${untimed.length?`<div class="notime"><h4>No time set</h4>${untimed.map(x=>stopCard(x)).join('')}</div>`:''}
     `:`
     <div class="dayempty">
       <h3>Nothing booked for ${esc(longDate(d))}.</h3>
@@ -2599,7 +2857,7 @@ $('daySheet').addEventListener('click',e=>{
 
 $('dayPrint').onclick=()=>{
   const d=dayViewDate; if(!d) return;
-  const all=apptsOn(d).filter(x=>!stopDone(x));
+  const all=orderDay(d,apptsOn(d)).list.filter(x=>!stopDone(x));
   $('printarea').innerHTML=`<div class="ptitle">Run sheet — ${esc(longDate(d))}</div>`+
     (all.length?all.map(x=>{
       const j=x.j, a=x.a, r=readiness(j,a), bal=balanceOf(j);
@@ -2869,11 +3127,36 @@ document.addEventListener('click',async e=>{
   const ud=e.target.closest('[data-undodrop]');
   if(ud){ UNDO=null; render(); return; }
 
+  const sbt=e.target.closest('[data-sub]');
+  if(sbt){ subKind=sbt.dataset.sub; render(); return; }
   const f=e.target.closest('[data-f]');
   if(f){ filter=f.dataset.f; listView='sheet'; $('search').value='';
+    /* open on a kind that has something in it */
+    if(filter==='pricing'||filter==='order'){ const all=bucket(filter);
+      if(!all.some(j=>kindOf(j)===subKind)){ const k=SUBKINDS.find(([k])=>all.some(j=>kindOf(j)===k)); if(k) subKind=k[0]; } }
     if(filter==='diary'&&!selDay) selDay=ymd(new Date());
     render(); window.scrollTo({top:0}); return; }
 
+  const dmo=e.target.closest('[data-dmode]');
+  if(dmo){ dayMode=dmo.dataset.dmode; try{ localStorage.setItem('wg-daymode-v1',dayMode); }catch(err){} render(); return; }
+  const rtb=e.target.closest('[data-retime]');
+  if(rtb){ retimeKey=retimeKey===rtb.dataset.retime?'':rtb.dataset.retime; render();
+    const box=document.getElementById('rtTime'); if(box) box.focus(); return; }
+  if(e.target.closest('[data-rtcancel]')){ retimeKey=''; render(); return; }
+  const rts=e.target.closest('[data-rtsave]');
+  if(rts){
+    const q=rts.dataset.rtsave.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const a=apptsOf(j)[+q[1]]; if(!a) return;
+    const nd=$('rtDate').value, nt=$('rtTime').value, nm=+$('rtMins').value;
+    if(!nd){ toast('Needs a day',true); return; }
+    const snap=snapshot(APPT[a.kind].label+' for job '+j.no+' moved',[j]);
+    const moved=nd!==a.date;
+    a.date=nd; a.time=nt; a.mins=nm||a.mins; if(moved) delete a.seq;
+    retimeKey='';
+    if(await pushJob(j)){ UNDO=snap; render();
+      toast(APPT[a.kind].label+' for job '+j.no+(moved?' moved to '+longDate(nd)+(nt?' at '+nt:''):(nt?' now at '+nt:' now has no time')),false,'Undo'); }
+    return;
+  }
   const dv=e.target.closest('[data-dayview]');
   if(dv){ selDay=dv.dataset.dayview; openDay(dv.dataset.dayview); return; }
 
@@ -2995,8 +3278,9 @@ document.addEventListener('click',async e=>{
     const j=JOBS.find(x=>x.id===id); if(!j) return;
     const snap=snapshot(name+' glass booked in on job '+j.no,[j]);
     j.items.forEach(i=>{ if(i.src==='order'&&ost(i)==='ordered'&&(i.supplier||'Supplier')===name){ i.ostate='arrived'; i.arrived=true; i.arrivedAt=new Date().toISOString(); } });
+    orderLines(j).forEach(l=>{ if(lst(l)==='ordered'&&(l.supplier||'Supplier')===name){ l.ostate='arrived'; l.arrived=true; l.arrivedAt=new Date().toISOString(); } });
     applyStatus(j);
-    if(await pushJob(j)){ UNDO=snap; render(); toast(name+' glass booked in for job '+j.no,false,'Undo'); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast(name+(isGlass(j)?' glass':'')+' booked in for job '+j.no,false,'Undo'); }
     return;
   }
   const cut=e.target.closest('[data-cut]');
@@ -3031,13 +3315,13 @@ document.addEventListener('click',async e=>{
   const oj=e.target.closest('[data-ordj]');
   if(oj){
     const j=JOBS.find(x=>x.id===oj.dataset.ordj); if(!j) return;
-    const todo=toPrice(j); if(!todo.length) return;
+    const todo=toPrice(j).concat(linesToOrder(j)); if(!todo.length) return;
     const snap=snapshot('Glass marked as ordered on job '+j.no,[j]);
     const now=new Date().toISOString();
     todo.forEach(it=>{ it.ostate='ordered'; it.orderedAt=now; });
     applyStatus(j);
     if(await pushJob(j)){ UNDO=snap; render();
-      toast('Job '+j.no+' — glass ordered '+orderedOn({orderedAt:now}),false,'Undo'); }
+      toast('Job '+j.no+' — '+(isGlass(j)?'glass ':'')+'ordered '+orderedOn({orderedAt:now}),false,'Undo'); }
     return;
   }
 
@@ -3088,11 +3372,20 @@ document.addEventListener('click',async e=>{
     return;
   }
 
+  const wa=e.target.closest('[data-wa]');
+  if(wa){
+    const j=JOBS.find(x=>x.id===wa.dataset.wa); if(!j||!j.workOrder) return;
+    const snap=snapshot('Parts booked in on job '+j.no,[j]);
+    const o=j.workOrder; o.ostate='arrived'; o.arrived=true; o.arrivedAt=new Date().toISOString();
+    applyStatus(j);
+    if(await pushJob(j)){ UNDO=snap; render(); toast('Parts in — job '+j.no,false,'Undo'); }
+    return;
+  }
   const fa=e.target.closest('[data-fa]');
   if(fa){
     const q=fa.dataset.fa.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
     const snap=snapshot('Frame booked in on job '+j.no,[j]);
-    j.frames[+q[1]].arrived=true; j.frames[+q[1]].arrivedAt=new Date().toISOString();
+    const fr=j.frames[+q[1]]; fr.ostate='arrived'; fr.arrived=true; fr.arrivedAt=new Date().toISOString();
     applyStatus(j);
     if(await pushJob(j)){ UNDO=snap; render(); toast('Frame booked in — job '+j.no,false,'Undo'); }
     return;
@@ -3123,6 +3416,8 @@ document.addEventListener('click',async e=>{
   if(o){ openJob(JOBS.find(x=>x.id===o.dataset.open)); return; }
 });
 document.addEventListener('change',async e=>{
+  const sp=e.target.closest&&e.target.closest('[data-seq]');
+  if(sp) await reorderStop(sp.dataset.seq,+sp.value);
 });
 $('search').addEventListener('input',render);
 $('menuBtn').onclick=()=>$('menu').classList.toggle('on');
@@ -3462,6 +3757,7 @@ function collectForm(){
     note:$('fNote').value, needsMeasure:$('fMeasure').checked, measured:$('fMeasured').checked, noteUrgent:$('fUrgent').checked,
     needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt,
     attnOn:$('fAttn').checked, attnText:$('fAttnText').value,
+    needsOrder:$('fNeedsOrder').checked, ordWhat:$('fOrdWhat').value, ordSup:$('fOrdSup').value,
     photos:photoList.filter(p=>!p.isNew).map(p=>({id:p.id,name:p.name,w:p.w,h:p.h,send:p.send!==false}))
   };
 }
@@ -3700,7 +3996,10 @@ function drawFrames(){
 $('frames').addEventListener('input',e=>{
   const t=e.target, map={fdesc:'desc',fwid:'w',fhgt:'h',fqty:'q',fsup:'supplier',fprice:'price'};
   if(t.dataset.pn!==undefined){ frames[+t.dataset.pn.split(':')[1]].note=t.value; return; }
-  for(const k in map) if(t.dataset[k]!==undefined){ frames[+t.dataset[k]][map[k]]=t.value; drawCalc(); return; }
+  for(const k in map) if(t.dataset[k]!==undefined){ frames[+t.dataset[k]][map[k]]=t.value; drawCalc();
+    /* a frame coming from a supplier has to be ordered */
+    if(k==='fsup'&&t.value.trim()&&!$('fNeedsOrder').checked){ $('fNeedsOrder').checked=true; drawOrder(); }
+    return; }
 });
 $('frames').addEventListener('click',e=>{
   const po=e.target.closest('[data-pnopen]');
@@ -3723,8 +4022,20 @@ function setKind(k){
   $('unitPick').style.display  = jobKind==='maintenance'?'none':'';
   $('extrasTitle').textContent = jobKind==='maintenance'?'The work':'Extras and labour';
   if(jobKind==='frames'&&!frames.length) frames.push({desc:'',w:'',h:'',q:'1',supplier:'',price:'',arrived:false});
-  drawFrames(); drawCalc();
+  drawFrames(); drawCalc(); drawOrder();
 }
+/* frames and maintenance only: glass is ordered piece by piece */
+function drawOrder(){
+  const show=jobKind!=='glass', on=$('fNeedsOrder').checked;
+  $('orderWrap').style.display=show?'':'none';
+  $('ordTick').classList.toggle('on',on);
+  $('ordMore').style.display=show&&on?'':'none';
+  $('ordWork').style.display=jobKind==='maintenance'?'':'none';
+  $('ordState').innerHTML = jobKind==='frames'
+    ? 'Once the customer confirms, the frames go to <b>To be ordered</b>, then <b>On order</b>, then the job is ready. Each frame is ordered from wherever it says it is coming from.'
+    : 'Once the customer confirms, this goes to <b>To be ordered</b>, then <b>On order</b>, then the job is ready.';
+}
+$('fNeedsOrder').addEventListener('change',drawOrder);
 $('kindPick').addEventListener('click',e=>{
   const b=e.target.closest('[data-kind]'); if(!b) return;
   setKind(b.dataset.kind);
@@ -3915,6 +4226,9 @@ function fillForm(j){
   $('fCard').checked=j?!!j.cardFee:false;
   $('fNoVat').checked=j?!!j.noVat:false;
   frames=j&&j.frames?clone(j.frames):[];
+  $('fNeedsOrder').checked=j?!!j.needsOrder:false;
+  $('fOrdWhat').value=j?(j.ordWhat!==undefined?j.ordWhat:(j.workOrder&&j.workOrder.what)||''):'';
+  $('fOrdSup').value=j?(j.ordSup!==undefined?j.ordSup:(j.workOrder&&j.workOrder.supplier)||''):'';
   photoList=j&&j.photos?clone(j.photos):[]; photoGone=[];
   photoList.filter(p=>!PHOTOCACHE[p.id]).forEach(p=>{
     loadPhoto(p.id).then(drawPhotos).catch(()=>{});
@@ -3957,6 +4271,7 @@ $('saveJob').onclick=async()=>{
   const cleanFrames=jobKind==='frames'
     ? frames.filter(f=>(f.desc||'').trim()||num(f.price)||parseFloat(f.w)>0)
         .map(f=>{ const c=Object.assign({arrived:false},f,{price:num(f.price)});
+            if(!c.ostate) c.ostate=c.arrived?'arrived':'toprice';
             c.note=(c.note||'').trim(); if(!c.note) delete c.note; return c; })
     : [];
   if(jobKind==='glass' && !clean.length && !$('fMeasure').checked){
@@ -3987,6 +4302,10 @@ $('saveJob').onclick=async()=>{
     handover, deliver:handover==='delivery', addr:$('fAddr').value.trim(),
     needsMeasure:$('fMeasure').checked, noteUrgent:$('fUrgent').checked, photos,
     needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt||undefined,
+    needsOrder: jobKind!=='glass'&&$('fNeedsOrder').checked,
+    workOrder: jobKind==='maintenance'&&$('fNeedsOrder').checked
+      ? Object.assign({ostate:'toprice'},editing&&editing.workOrder||{},{what:$('fOrdWhat').value.trim(),supplier:$('fOrdSup').value.trim()})
+      : (editing?editing.workOrder:undefined),
     /* flagged when first ticked; changing the words keeps that time */
     attn: attnOn ? {text:attnText, at:(editing&&needsAttn(editing)&&editing.attn.at)||new Date().toISOString()} : undefined,
     appts: editing?clone(apptsOf(editing)):[],
@@ -3997,7 +4316,7 @@ $('saveJob').onclick=async()=>{
     status: editing?editing.status:'quote',
     takenAt: editing?editing.takenAt:new Date().toISOString()
   });
-  delete job.measured;
+  delete job.measured; delete job.ordWhat; delete job.ordSup;
   job.measuredAt = !$('fMeasure').checked ? wasMeasured
     : $('fMeasured').checked ? (wasMeasured||new Date().toISOString()) : null;
   if(markNow) apptsOf(job).forEach(a=>{ if(a.kind==='measure'&&!a.doneAt) a.doneAt=job.measuredAt; });
