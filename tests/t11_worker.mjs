@@ -113,6 +113,25 @@ await section('one shared price list', async () => {
   ok((await call('PUT', '/api/settings', { shop: { prices: {} } })).status === 404, 'and the old unchecked save no longer exists');
 });
 
+await section('events in the diary, kept the same way', async () => {
+  const firmans = { id: 'e1', what: 'Collect glass from Firmans', date: '2026-10-30', time: '09:00', mins: 30, remind: true };
+  const jack = { id: 'e2', what: 'Jack off work', date: '2026-11-01', time: '08:00', mins: 240, remind: false };
+  let r = await call('PUT', '/api/settings/events', { value: { list: [firmans] }, base: null });
+  ok(r.status === 200 && r.body.version, 'the first event saves');
+  const v1 = r.body.version;
+  r = await call('GET', '/api/settings');
+  ok(r.body.events.list[0].what === firmans.what && r.body._versions.events === v1, 'every machine reads it, with its version');
+  await wait(3);
+  r = await call('PUT', '/api/settings/events', { value: { list: [jack] }, base: null });
+  ok(r.status === 409 && r.body.current.version === v1 && r.body.current.value.list.length === 1,
+     'a machine that had not seen it is refused, and handed the list to add its own to');
+  r = await call('PUT', '/api/settings/events', { value: { list: r.body.current.value.list.concat([jack]) }, base: v1 });
+  ok(r.status === 200, 'adding on top of the current list goes through');
+  r = await call('GET', '/api/settings');
+  ok(r.body.events.list.map(e => e.id).join() === 'e1,e2' && r.body.shop.prices.c4mm === 51,
+     'so both events are kept, and the price list is left alone');
+});
+
 await section('jobs, as before', async () => {
   const job = { id: 'j1', no: 1771, name: 'Brian Okafor', status: 'quote', _total: 58.36, _balance: 58.36, _paid: 0, _net: 48.63,
                 items: [{ pid: 'c4mm', w: '1000', h: '1000', q: '1', rate: 48.63 }] };

@@ -73,38 +73,38 @@ const addPhoto = async (w, name) => {
   {
     const { w, server } = await boot({ seed: [] });
     await click(w, $(w, 'newBtn'));
-    ok(!!q(w, '[data-kind="glass"].on'), 'a new job starts as glass');
-    ok($(w, 'glassWrap').style.display !== 'none', 'with the calculator showing');
-
-    await click(w, q(w, '[data-kind="maintenance"]'));
-    ok($(w, 'glassWrap').style.display === 'none', 'maintenance hides the calculator');
-    ok($(w, 'framesWrap').style.display === 'none', 'and the frames list');
-    ok(txt($(w, 'extrasTitle')) === 'The work', 'and renames Extras to The work');
-    ok($(w, 'unitPick').style.display === 'none', 'the unit picker goes away');
+    ok(!q(w, '#kindPick') && !!$(w, 'glassCard') && !!$(w, 'framesCard') && !!$(w, 'worksCard'),
+       'a new job has Glass, Frames and Maintenance together, with nothing to choose between');
+    ok(qa(w, '#items .item').length === 1 && !qa(w, '#frames .item').length && !qa(w, '#works .item').length,
+       'it starts with a piece of glass, and nothing yet under Frames or Maintenance');
 
     await type(w, $(w, 'fName'), 'Mrs Doyle');
-    await click(w, $(w, 'addExtra'));
-    await type(w, q(w, '[data-xl="0"]'), 'Re-seal bay window');
-    await type(w, q(w, '[data-xa="0"]'), '180');
+    await click(w, q(w, '#items [data-rmi="0"]'));
+    ok(!qa(w, '#items .item').length && txt($(w, 'addItem')) === '+ Add glass', 'the glass can be taken off altogether');
+    await click(w, $(w, 'addWork'));
+    await type(w, q(w, '[data-wdesc="0"]'), 'Re-seal bay window');
+    await type(w, q(w, '[data-wprice="0"]'), '180');
+    ok(/Maintenance£180\.00/.test(txt($(w, 'calcRows'))) && !/Glass and edgework/.test(txt($(w, 'calcRows'))),
+       'the price panel shows the maintenance, and no glass');
     await type(w, $(w, 'fNote'), 'Bring the long ladder');
     await click(w, $(w, 'saveJob'));
 
     const saved = [...server.rows.values()].map(r => JSON.parse(r.data))[0];
-    ok(saved.kind === 'maintenance', 'it saves as a maintenance job');
-    ok(saved.items.length === 0, 'with no glass on it');
-    ok(near(saved._net, 180), 'and the price comes from the work line');
+    ok(saved.works.length === 1 && saved.works[0].desc === 'Re-seal bay window' && saved.works[0].price === 180,
+       'it saves the maintenance');
+    ok(saved.items.length === 0 && !('kind' in saved), 'with no glass on it, and no job type');
+    ok(near(saved._net, 180), 'and the price comes from the maintenance');
     ok(!/m²/.test(txt(q(w, '.job'))), 'the card does not talk about square metres');
-    ok(/Maintenance/.test(txt(q(w, '.job'))), 'it says what sort of job it is');
+    ok(/Maintenance/.test(txt(q(w, '.job'))), 'it says what sort of work it is');
     w.close();
   }
 
   {
     const { w, server } = await boot({ seed: [] });
     await click(w, $(w, 'newBtn'));
-    await click(w, q(w, '[data-kind="frames"]'));
-    ok($(w, 'framesWrap').style.display !== 'none', 'frames shows its own list');
-    ok(!!q(w, '[data-fwid="0"]'), 'with a width box');
-    ok($(w, 'unitPick').style.display !== 'none', 'and keeps the unit picker');
+    await click(w, $(w, 'addFrame'));
+    ok(qa(w, '#frames .item').length === 1 && !!q(w, '[data-fwid="0"]'), 'a frame has its own sizes');
+    ok($(w, 'unitPick').style.display !== 'none', 'and the unit picker is still there');
 
     await type(w, $(w, 'fName'), 'Hall Lane Builders');
     await type(w, q(w, '[data-fdesc="0"]'), 'White uPVC casement, one opener');
@@ -114,16 +114,17 @@ const addPhoto = async (w, name) => {
     await type(w, q(w, '[data-fsup="0"]'), 'Trade Frames');
     await type(w, q(w, '[data-fprice="0"]'), '210');
     ok(/420\.00/.test(txt($(w, 'calcRows'))), 'two at 210 comes to 420 before VAT');
+    ok(/2 × £210\.00£420\.00/.test(txt(q(w, '#frames .iline'))), 'and the frame shows its own total');
     await click(w, $(w, 'saveJob'));
 
     const saved = [...server.rows.values()].map(r => JSON.parse(r.data))[0];
-    ok(saved.kind === 'frames', 'it saves as a frames job');
-    ok(saved.frames.length === 1 && saved.frames[0].price === 210, 'with the price typed in');
+    ok(saved.items.length === 0, 'the empty piece of glass is not kept');
+    ok(saved.frames.length === 1 && saved.frames[0].price === 210, 'the frame is, with the price typed in');
     ok(saved.frames[0].w === '1200', 'and the size kept');
     ok(near(saved._net, 420), 'the net is the frames total');
 
     ok(/1200/.test(txt(q(w, '.job'))), 'the card shows the size');
-    ok(saved.needsOrder === true, 'naming where the frame is coming from ticks Needs to order?');
+    ok(saved.frames[0].order === true, 'naming where the frame is coming from ticks its Needs to order?');
     const id = saved.id;
     await click(w, q(w, '[data-conf]'));
     /* changed on request: frames that need ordering go through To be ordered first */

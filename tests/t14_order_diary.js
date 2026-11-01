@@ -24,23 +24,26 @@ const framesJob = (o = {}) => job(Object.assign({ kind: 'frames', items: [],
   {
     const { w, server } = await boot({ seed: [] });
     await click(w, $(w, 'newBtn'));
-    ok($(w, 'orderWrap').style.display === 'none', 'a glass job does not ask: glass is ordered piece by piece');
-    await click(w, q(w, '[data-kind="maintenance"]'));
-    ok($(w, 'orderWrap').style.display !== 'none' && !$(w, 'fNeedsOrder').checked, 'a maintenance job asks Needs to order?, not ticked');
-    ok($(w, 'ordMore').style.display === 'none', 'with nothing more to fill in until it is ticked');
-    await tick(w, $(w, 'fNeedsOrder'), true);
-    ok($(w, 'ordWork').style.display !== 'none', 'ticked, it asks what needs ordering and where from');
+    ok(!q(w, '#items [data-lord]'), 'glass does not ask: it is ordered piece by piece');
+    await click(w, $(w, 'addWork'));
+    const tick0 = () => q(w, '#works [data-lord="0"]');
+    ok(!!tick0() && !tick0().checked, 'maintenance asks Needs to order?, not ticked');
+    ok(!!q(w, '[data-wdesc="0"]') && !!q(w, '[data-wsup="0"]') && !!q(w, '[data-wqty="0"]') && !!q(w, '[data-wprice="0"]'),
+       'and always asks what it is, where it is coming from, how many and the price each');
     await type(w, $(w, 'fName'), 'Handle Harry');
-    await click(w, q(w, '#addExtra'));
-    await type(w, q(w, '[data-xl="0"]'), 'Replace the handles');
-    await type(w, q(w, '[data-xa="0"]'), '90');
-    await type(w, $(w, 'fOrdWhat'), '2 white espagnolette handles');
-    await type(w, $(w, 'fOrdSup'), 'Tudor');
+    await click(w, q(w, '#items [data-rmi="0"]'));
+    await type(w, q(w, '[data-wdesc="0"]'), '2 white espagnolette handles');
+    await type(w, q(w, '[data-wsup="0"]'), 'Tudor');
+    ok(tick0().checked && tick0().closest('.ltick').classList.contains('on'), 'saying where it is coming from ticks it');
+    await type(w, q(w, '[data-wqty="0"]'), '2');
+    await type(w, q(w, '[data-wprice="0"]'), '45');
     await click(w, $(w, 'saveJob'));
     const id = [...server.rows.keys()][0];
     let j = cur(server, id);
-    ok(j.needsOrder === true && j.workOrder && j.workOrder.what === '2 white espagnolette handles' && j.workOrder.supplier === 'Tudor'
-       && j.workOrder.ostate === 'toprice', 'it saves what needs ordering, from where, not ordered yet');
+    ok(j.works.length === 1 && j.works[0].desc === '2 white espagnolette handles' && j.works[0].supplier === 'Tudor'
+       && j.works[0].order === true && j.works[0].ostate === 'toprice' && j.works[0].q === '2' && j.works[0].price === 45,
+       'it saves what it is, from where, how many and the price, not ordered yet');
+    ok(Math.abs(j._net - 90) < 0.005, 'two at 45 is 90 before VAT');
 
     await click(w, q(w, `[data-conf="${id}"]`));
     ok(cur(server, id).status === 'pricing', 'once confirmed it goes to To be ordered, not straight to ready');
@@ -49,17 +52,18 @@ const framesJob = (o = {}) => job(Object.assign({ kind: 'frames', items: [],
        'To be ordered opens on Maintenance, the kind with something in it');
     ok(cardNames(w).join() === 'Handle Harry', 'and shows the job');
     const c = q(w, '#list .job');
-    ok(/To order/.test(txt(c.querySelector('.docket'))) && /2 white espagnolette handles · Tudor/.test(txt(c.querySelector('.docket'))),
-       'its card says what is to order, and from where');
+    ok(/To order/.test(txt(c.querySelector('.docket'))) && /Maintenance · Tudor/.test(txt(c.querySelector('.docket')))
+       && txt(c.querySelector('.docket .wname')) === '2 white espagnolette handles×2',
+       'its card says what is to order, from where, and how many');
     await click(w, c.querySelector('[data-ordj]'));
     j = cur(server, id);
-    ok(j.status === 'order' && j.workOrder.ostate === 'ordered' && j.workOrder.orderedAt, 'Mark as ordered puts it on order');
+    ok(j.status === 'order' && j.works[0].ostate === 'ordered' && j.works[0].orderedAt, 'Mark as ordered puts it on order');
     await click(w, q(w, '[data-f="order"]'));
     ok(q(w, '[data-sub="maintenance"]').classList.contains('on') && cardNames(w).join() === 'Handle Harry', 'it is under On order, Maintenance');
     ok(/Ordered on/.test(txt(q(w, '#list .job .docket'))), 'saying when it was ordered');
     await click(w, q(w, '#list [data-arr]'));
     j = cur(server, id);
-    ok(j.status === 'ready' && j.workOrder.ostate === 'arrived', 'Tudor delivered makes it ready');
+    ok(j.status === 'ready' && j.works[0].ostate === 'arrived', 'Tudor delivered makes it ready');
     w.close();
   }
   {
@@ -75,13 +79,16 @@ const framesJob = (o = {}) => job(Object.assign({ kind: 'frames', items: [],
     w.close();
   }
   {
-    const { w, server } = await boot({ seed: [] });
+    const { w } = await boot({ seed: [] });
     await click(w, $(w, 'newBtn'));
-    await click(w, q(w, '[data-kind="frames"]'));
-    ok($(w, 'orderWrap').style.display !== 'none' && $(w, 'ordWork').style.display === 'none',
-       'frames ask Needs to order? too, without the maintenance boxes');
+    await click(w, $(w, 'addFrame'));
+    const t0 = () => q(w, '#frames [data-lord="0"]');
+    ok(!!t0() && !t0().checked, 'frames ask Needs to order? too, one frame at a time');
     await type(w, q(w, '[data-fsup="0"]'), 'Trade Frames');
-    ok($(w, 'fNeedsOrder').checked, 'saying where a frame is coming from ticks it');
+    ok(t0().checked, 'saying where a frame is coming from ticks it');
+    await tick(w, t0(), false);
+    await type(w, q(w, '[data-fsup="0"]'), 'Trade Frames Ltd');
+    ok(!t0().checked && !t0().closest('.ltick').classList.contains('on'), 'untick it and it stays unticked while the name is finished off');
     w.close();
   }
   {
@@ -92,7 +99,7 @@ const framesJob = (o = {}) => job(Object.assign({ kind: 'frames', items: [],
       framesJob({ id: 'q', no: 84, name: 'Old Quote', frames: [{ desc: 'Casement', w: '1200', h: '900', q: '1', price: 300, arrived: false }] })
     ];
     const { w, server } = await boot({ seed });
-    ok(w.eval("JOBS.find(j=>j.id==='o').needsOrder") === true && w.eval("bucket('order').some(j=>j.id==='o')"),
+    ok(w.eval("JOBS.find(j=>j.id==='o').frames[0].order") === true && w.eval("bucket('order').some(j=>j.id==='o')"),
        'an older confirmed frames job stays on order');
     await click(w, q(w, '[data-conf="q"]'));
     ok(cur(server, 'q').status === 'pricing', 'and an older frames quote goes to To be ordered once confirmed');
@@ -139,7 +146,8 @@ const framesJob = (o = {}) => job(Object.assign({ kind: 'frames', items: [],
     await click(w, $(w, 'closeDay'));
     await click(w, q(w, '[data-move="x"]'));
     await click(w, q(w, '#moveBody [data-moveto="quote"]'));
-    ok(cur(server, 'x').workOrder.ostate === 'toprice' && !cur(server, 'x').workOrder.orderedAt, 'Move back to Quotes takes the parts off order');
+    ok(cur(server, 'x').works[1].ostate === 'toprice' && !cur(server, 'x').works[1].orderedAt && !('workOrder' in cur(server, 'x')),
+       'Move back to Quotes takes the parts off order');
     w.close();
   }
 

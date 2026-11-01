@@ -29,9 +29,14 @@ header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--white)
 @media(max-width:620px){
   .brand{display:none}
   header{flex-wrap:wrap;padding:9px 12px;gap:8px}
-  header .searchwrap{order:3;flex:1 0 100%;min-width:0}
-  header #newBtn{margin-left:auto}
+  /* the buttons get the top row; the search shares the next with the
+     Shared / Offline badge */
+  header .hacts{order:1;flex:1 0 100%;justify-content:flex-end;flex-wrap:wrap;gap:8px}
+  header .searchwrap{order:2;flex:1 1 0;min-width:0}
+  header #storeTag{order:3}
 }
+@media(max-width:860px) and (min-width:621px){ .brand{display:none} }
+.hacts{display:flex;gap:10px;align-items:center}
 .searchwrap{flex:1;min-width:110px}
 #search{width:100%;padding:9px 12px;background:#233A40;border:1px solid #35545C;border-radius:var(--r);color:var(--white);font-size:15px}
 #search::placeholder{color:#7E999F}
@@ -40,7 +45,6 @@ header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--white)
 .hbtn.ghost{border:1px solid #35545C;color:#B9CDCB}
 #storeTag{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;padding:4px 8px;border-radius:2px;white-space:nowrap}
 @media(max-width:760px) and (min-width:621px){#storeTag{display:none}}
-@media(max-width:620px){#storeTag{margin-right:auto}}
 .st-shop{background:#1E4D3E;color:#8FD9BC}
 .st-device{background:#5A3D10;color:#F0C687}
 .st-none{background:#5A1E1D;color:#F0A9A7}
@@ -589,12 +593,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .subtab.on{background:var(--float);border-color:var(--float);color:var(--white)}
 .subtab.on b{color:var(--white)}
 
-/* ---------- needs to order ---------- */
-.invtick.ordtick{margin-top:14px}
-.invtick.ordtick.on{border-color:var(--blue);background:var(--blue-l)}
-.ordmore{margin-top:10px}
-.ordmore .row{margin-bottom:6px}
-@media(max-width:620px){ .ordmore .row{flex-direction:column} }
+/* ---------- needs to order, on each frame and piece of maintenance ---------- */
+.ltick{display:flex;width:max-content;max-width:100%;align-items:center;gap:9px;margin-top:11px;padding:8px 12px;border:1px solid var(--silver);
+  border-radius:var(--r);background:var(--white);font-size:14.5px;font-weight:600;color:var(--ink);
+  text-transform:none;letter-spacing:0;cursor:pointer}
+.ltick input{width:18px;height:18px;flex:0 0 auto}
+.ltick.on{border-color:var(--blue);background:var(--blue-l)}
+.lstate{font-size:13.5px;font-weight:600;color:var(--blue);margin-top:5px}
 
 /* ---------- putting the day in order ---------- */
 .ordpick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
@@ -612,6 +617,44 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .rtrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .rtacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 @media(max-width:620px){ .rtrow{grid-template-columns:1fr 1fr} .rtrow>div:first-child{grid-column:1/-1} }
+
+/* ---------- glass, frames and maintenance on one job ---------- */
+.cardhint{margin-top:9px}
+.wrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.8fr) minmax(0,1.2fr);gap:9px}
+/* a label running onto two lines does not push its box out of line */
+.wrow>div,.lrow>div{display:flex;flex-direction:column;justify-content:flex-end}
+@media(max-width:620px){ .wrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .wrow>div:first-child{grid-column:1/-1} }
+/* what is being done, as large as a size on a piece of glass */
+.size.wname{font-family:'Archivo',system-ui,sans-serif;font-size:18px;font-weight:600;line-height:1.3}
+.size.wname .wd{min-width:0;overflow-wrap:anywhere}
+.sline .sw{font-size:15.5px;font-weight:600;color:var(--ink);min-width:0}
+
+/* ---------- events in the diary ---------- */
+.hbtn.evbtn{background:#C8443F;color:#FFFFFF}
+.hbtn.evbtn:hover{background:#A93834}
+@media(max-width:400px){ header .hbtn{padding:9px 8px;font-size:13.5px} header .hacts{gap:6px} }
+.ev-evt{background:#FDECEA;color:var(--red)}
+.cell .dot.ev-evt{background:var(--red);border-radius:1px}
+.evday{background:var(--white);border:1px solid #F0B7B3;border-left:4px solid var(--red);border-radius:var(--r);
+  padding:10px 14px 6px;margin:0 0 14px}
+.evday h4{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:2px}
+.evrow{display:flex;gap:6px 14px;align-items:center;flex-wrap:wrap;padding:9px 0;border-top:1px solid var(--silver2)}
+.evday h4+.evrow{border-top:none}
+.evt{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;min-width:122px}
+.evw{flex:1 1 180px;min-width:0;font-size:15.5px;font-weight:600;overflow-wrap:anywhere}
+.evd{display:block;font-size:13.5px;font-weight:400;color:var(--ink2);margin-top:1px}
+.evacts{display:flex;gap:6px}
+.tag.evrem{background:#FDECEA;color:var(--red)}
+.evnote{margin-top:10px}
+.invtick.evtick.on{border-color:var(--red);background:#FDECEA}
+.banner.remind{background:#FDECEA;border-color:#F0B7B3;border-left-color:var(--red);font-size:15px}
+.banner.remind b{color:var(--red)}
+.banner.remind button{color:var(--red)}
+.banner.remind .rmlist{flex:1 1 100%;min-width:0}
+.rmrow{display:flex;justify-content:space-between;align-items:baseline;gap:4px 14px;flex-wrap:wrap;
+  margin-top:7px;padding-top:7px;border-top:1px solid #F0B7B3}
+.rmrow .mono{font-weight:600}
+.rmacts{display:flex;gap:14px}
 </style>
 </head>
 <body>
@@ -620,6 +663,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <div class="brand">Wilson's <span>Glass</span></div>
   <div class="searchwrap"><input id="search" placeholder="Search name, phone or job no." autocomplete="off"></div>
   <span id="storeTag" class="st-none">…</span>
+  <div class="hacts">
+  <button class="hbtn evbtn" id="evBtn">+ New event</button>
   <button class="hbtn primary" id="newBtn">+ New job</button>
   <button class="hbtn ghost" id="draftsBtn">Drafts<b id="draftCount"></b></button>
   <div class="menuwrap">
@@ -633,6 +678,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button id="expBtn">Back up / export</button>
       <button id="rateBtn">Prices &amp; suppliers</button>
     </div>
+  </div>
   </div>
 </header>
 
@@ -672,38 +718,25 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         </div>
       </div>
 
-      <div class="card">
-        <h4><span id="workTitle">Glass</span><span id="unitPick"></span></h4>
-        <div class="fgroup"><label>What sort of job is this?</label>
-          <div class="toggle" id="kindPick">
-            <button data-kind="glass" class="on">Glass</button>
-            <button data-kind="frames">Frames</button>
-            <button data-kind="maintenance">Maintenance</button>
-          </div>
-        </div>
-        <div id="glassWrap">
-          <div id="items"></div>
-          <button class="addbtn" id="addItem">+ Add another piece</button>
-          <p class="sub" style="margin-top:9px">No sizes yet? Tick <b>needs measuring first</b> under Handover and save — the job goes in the diary to be measured, and you add the sizes afterwards.</p>
-        </div>
-        <div id="framesWrap" style="display:none">
-          <div id="frames"></div>
-          <button class="addbtn" id="addFrame">+ Add another frame</button>
-          <p class="sub" style="margin-top:9px">Sizes are kept for the order and the fitting. The price is whatever you are charging, typed in by hand — there is no rate for frames.</p>
-        </div>
-        <div id="maintWrap" style="display:none">
-          <p class="sub">Put what you are charging under <b>The work</b> below, and everything the fitter needs to know in the <b>Notes</b>.</p>
-        </div>
-        <div id="orderWrap" style="display:none">
-          <label class="invtick ordtick" id="ordTick"><input type="checkbox" id="fNeedsOrder"> Needs to order?</label>
-          <div class="ordmore" id="ordMore" style="display:none">
-            <div class="row" id="ordWork">
-              <div><label for="fOrdWhat">What needs ordering?</label><input class="inp" id="fOrdWhat" placeholder="e.g. 2 white espagnolette handles"></div>
-              <div><label for="fOrdSup">Coming from</label><input class="inp" id="fOrdSup" placeholder="supplier"></div>
-            </div>
-            <div class="invstate" id="ordState"></div>
-          </div>
-        </div>
+      <div class="card" id="glassCard">
+        <h4><span>Glass</span><span id="unitPick"></span></h4>
+        <div id="items"></div>
+        <button class="addbtn" id="addItem">+ Add another piece</button>
+        <p class="sub cardhint">No sizes yet? Tick <b>needs measuring first</b> under Handover and save — the job goes in the diary to be measured, and you add the sizes afterwards.</p>
+      </div>
+
+      <div class="card" id="framesCard">
+        <h4>Frames</h4>
+        <div id="frames"></div>
+        <button class="addbtn" id="addFrame">+ Add a frame</button>
+        <p class="sub cardhint" id="framesHint">The price is whatever you are charging, typed in by hand. Tick <b>Needs to order?</b> on a frame coming from a supplier: once the customer confirms, it goes to To be ordered, then On order.</p>
+      </div>
+
+      <div class="card" id="worksCard">
+        <h4>Maintenance</h4>
+        <div id="works"></div>
+        <button class="addbtn" id="addWork">+ Add maintenance</button>
+        <p class="sub cardhint" id="worksHint">Each thing being done or fitted, how many, and the price each before VAT. Tick <b>Needs to order?</b> on anything that has to come in: once the customer confirms, it goes to To be ordered, then On order.</p>
       </div>
 
       <div class="card">
@@ -715,7 +748,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </div>
 
       <div class="card">
-        <h4 id="extrasTitle">Extras and labour</h4>
+        <h4>Extras and labour</h4>
         <div id="extras"></div>
         <button class="addbtn" id="addExtra">+ Add an extra</button>
         <div style="margin-top:12px;max-width:160px">
@@ -894,6 +927,38 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <div class="sheetfoot"><div class="footinner">
     <button class="cancel" id="bCancel">Cancel</button>
     <button class="save" id="bSave">Put in the diary</button>
+  </div></div>
+</div>
+
+<!-- ============ DIARY EVENT ============ -->
+<div class="sheet" id="evSheet">
+  <div class="sheethead"><h2 id="evTitle">New event</h2><button class="hbtn ghost" id="closeEv">Close</button></div>
+  <div class="sheetbody" style="max-width:580px">
+    <div class="card">
+      <h4>In the diary</h4>
+      <div class="fgroup"><label for="evWhat">What is it?</label>
+        <input class="inp" id="evWhat" autocomplete="off" placeholder="e.g. Collect glass from Firmans"></div>
+      <div class="row fgroup">
+        <div><label for="evDate">Date</label><input class="inp" id="evDate" type="date"></div>
+        <div id="evTimeWrap"><label for="evTime">Time</label><input class="inp mono" id="evTime" type="time" value="09:00"></div>
+      </div>
+      <div class="fgroup"><label for="evMins">How long?</label>
+        <select class="inp" id="evMins">
+          <option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60" selected>1 hour</option>
+          <option value="90">1½ hours</option><option value="120">2 hours</option><option value="180">3 hours</option>
+          <option value="240">Half day (4 hours)</option><option value="360">6 hours</option><option value="480">Full day (8 hours)</option>
+          <option value="0">All day, no set time</option>
+        </select>
+      </div>
+      <label class="invtick evtick" id="evRemTick"><input type="checkbox" id="evRemind"> Make it a reminder</label>
+      <div class="invstate" id="evRemState"></div>
+      <div id="evClash"></div>
+    </div>
+  </div>
+  <div class="sheetfoot"><div class="footinner">
+    <button class="cancel" id="evCancel">Cancel</button>
+    <button class="save" id="evSave">Put in the diary</button>
+    <button class="danger" id="evDel" style="display:none">Delete</button>
   </div></div>
 </div>
 
@@ -1186,7 +1251,8 @@ const stat=k=>STATUSES.find(s=>s.k===k)||STATUSES[0];
 const DURS={30:'30 min',60:'1 hr',90:'1½ hr',120:'2 hr',180:'3 hr',240:'Half day',360:'6 hr',480:'Full day'};
 
 let JOBS=[], CUSTOMERS=[], PRICES={}, ADJ=0, filter='all', editing=null, mailJob=null, mailKind='ready';
-let items=[], extras=[], costs=[], pays=[], frames=[], jobKind='glass', formInvoicedAt='', formMeasuredAt='', formAttnAt='';
+let items=[], extras=[], costs=[], pays=[], frames=[], works=[], formInvoicedAt='', formMeasuredAt='', formAttnAt='';
+let EVENTS=[], EVENTSV=null, MIRROREV='', evEditing=null;
 let isTrade=false, handover='collection', unit='mm';
 let diaryMonth=new Date(), selDay=null, listView='sheet';
 let lastFull=null, lastAny=null, nagDismissed='';
@@ -1652,44 +1718,54 @@ function priceItem(it,u){
 function totals(its,exs,discPct,card,u,opt){
   opt=opt||{};
   const priced=its.map(i=>priceItem(i,u));
-  const framesTotal=(opt.frames||[]).reduce((s,f)=>s+num(f.price)*Math.max(1,parseInt(f.q)||1),0);
-  const subtotal=priced.reduce((s,i)=>s+i.total,0)+framesTotal;
+  const glassTotal=priced.reduce((s,i)=>s+i.total,0);
+  const framesTotal=lineTotal(opt.frames), worksTotal=lineTotal(opt.works);
+  /* the discount comes off the glass, the frames and the maintenance,
+     never off the extras and labour */
+  const subtotal=glassTotal+framesTotal+worksTotal;
   const discountAmount=subtotal*(num(discPct)/100);
   const extrasTotal=(exs||[]).reduce((s,x)=>s+num(x.amount),0);
   const net=subtotal-discountAmount+extrasTotal;
   const vat=opt.noVat?0:net*VAT_RATE;
   const beforeCard=net+vat;
   const cardAmount=card?beforeCard*CARD_FEE:0;
-  return {priced,subtotal,framesTotal,discountAmount,extrasTotal,net,vat,cardAmount,noVat:!!opt.noVat,
+  return {priced,glassTotal,subtotal,framesTotal,worksTotal,discountAmount,extrasTotal,net,vat,cardAmount,noVat:!!opt.noVat,
           grand:beforeCard+cardAmount,area:priced.reduce((s,i)=>s+i.area,0)};
 }
+/* frames and maintenance are priced by hand: so much each, times how many */
+const lineQty=l=>Math.max(1,parseInt(l.q)||1);
+const lineTotal=list=>(list||[]).reduce((s,l)=>s+num(l.price)*lineQty(l),0);
 const jobTotals=j=>totals(j.items||[],j.extras||[],j.discountPct,j.cardFee,j.unit,
-                          {frames:j.frames||[],noVat:!!j.noVat});
+                          {frames:j.frames||[],works:j.works||[],noVat:!!j.noVat});
 
-/* ---------- not every job is glass ----------
-   Frames get sizes and a price typed in by hand rather than worked out
-   from a rate. Maintenance is a price and whatever is in the notes.
-   Both still go through quoting, the diary, payments and the money. */
+/* ---------- glass, frames and maintenance, on one job ----------
+   A job can have any mix of the three. Frames get sizes and a price typed
+   in by hand rather than worked out from a rate. Maintenance is each thing
+   being done or fitted, how many, and the price each. All of it goes
+   through quoting, the diary, payments and the money. */
 const KINDS={glass:'Glass',frames:'Frames',maintenance:'Maintenance'};
-const kindOf=j=>KINDS[j.kind]?j.kind:'glass';
-const isGlass=j=>kindOf(j)==='glass';
 const framesOf=j=>(j.frames||[]);
-/* ---------- ordering for frames and maintenance ----------
-   Glass is ordered piece by piece. A frames or maintenance job only goes
-   through To be ordered and On order when Needs to order? is ticked on
-   it. Then each of its frames, or the one order for the work, goes to
-   order, on order and in, the same as a bought-in piece of glass. */
-function orderLines(j){
-  if(!j.needsOrder) return [];
-  const k=kindOf(j);
-  if(k==='frames') return framesOf(j);
-  if(k==='maintenance') return j.workOrder?[j.workOrder]:[];
-  return [];
-}
+const worksOf=j=>(j.works||[]);
+const hasGlass=j=>(j.items||[]).length>0;
+/* the kinds of work on a job, in the order the job sheet shows them */
+const kindsOf=j=>Object.keys(KINDS).filter(k=>k==='glass'?hasGlass(j):k==='frames'?framesOf(j).length>0:worksOf(j).length>0);
+const kindLabel=j=>kindsOf(j).map(k=>KINDS[k]).join(' + ');
+/* ---------- ordering frames and maintenance ----------
+   Glass is ordered piece by piece. Each frame and each piece of
+   maintenance has its own Needs to order?. Ticked, it goes to order, on
+   order and in, the same as a bought-in piece of glass. */
+const orderLines=j=>framesOf(j).filter(l=>l.order).concat(worksOf(j).filter(l=>l.order));
 const lst=l=>l.ostate||(l.arrived?'arrived':'toprice');
 const linesToOrder=j=>orderLines(j).filter(l=>lst(l)==='toprice');
 const linesOnOrder=j=>orderLines(j).filter(l=>lst(l)==='ordered');
-const pendingFrames=j=>kindOf(j)==='frames'?linesOnOrder(j):[];
+/* Is something of this kind waiting at this stage? f is 'pricing' (To be
+   ordered) or 'order' (On order). A job with more than one kind of work
+   can be waiting under more than one. */
+function waitingKind(j,f,k){
+  if(k==='glass') return (f==='pricing'?toPrice(j):pendingOrder(j)).length>0;
+  const want=f==='pricing'?'toprice':'ordered';
+  return (k==='frames'?framesOf(j):worksOf(j)).some(l=>l.order&&lst(l)===want);
+}
 
 /* ---------- status derives from the pieces ----------
    A job can be waiting on a supplier AND have glass to cut at the
@@ -1710,14 +1786,10 @@ const isWorking=j=>isLive(j)&&j.confirmed&&!awaitingMeasure(j);
    fitting or delivery waits until the customer has said yes. */
 const bookable=j=>isLive(j)&&(j.confirmed||awaitingMeasure(j));
 
-/* Is there anything on this job yet? For glass that means pieces, for
-   frames it means frames, for maintenance it means a price. Until there
-   is, the job is waiting to be measured or quoted. */
+/* Is there anything on this job yet: glass, frames or maintenance? Until
+   there is, the job is waiting to be measured or quoted. */
 function hasWork(j){
-  const k=kindOf(j);
-  if(k==='maintenance') return (j.extras||[]).length>0;
-  if(k==='frames')      return framesOf(j).length>0;
-  return (j.items||[]).length>0;
+  return hasGlass(j)||framesOf(j).length>0||worksOf(j).length>0;
 }
 const measureOnly=j=>!hasWork(j);
 
@@ -1828,14 +1900,60 @@ function neededAppts(j){
 }
 const nextAppt=j=>apptsOf(j).filter(a=>!a.doneAt).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0];
 
+/* ---------- jobs saved before glass, frames and maintenance could share
+   a job ----------
+   A job used to be one kind, picked at the top of the job sheet.
+   Maintenance was charged as extras ("The work"), and Needs to order? was
+   one tick for the whole job, with one thing to order on maintenance.
+   They are read the new way: the work becomes maintenance lines, the thing
+   to order becomes a line of its own, and each frame takes the job's tick.
+   Before Needs to order? existed every frame was ordered, so an older
+   frames job keeps that. The total comes out the same. */
+function upgradeWork(j){
+  if(!Array.isArray(j.works)){
+    const kind=j.kind, ord=j.needsOrder;
+    const framesOrdered=ord===undefined?kind==='frames':!!ord;
+    framesOf(j).forEach(f=>{
+      if(f.order===undefined) f.order=framesOrdered;
+      if(f.order&&!f.ostate) f.ostate=f.arrived?'arrived':(j.confirmed?'ordered':'toprice');
+    });
+    j.works=[];
+    if(kind==='maintenance'){
+      j.works=(j.extras||[]).map(x=>({desc:String(x.label||''),supplier:'',q:'1',price:num(x.amount),order:false}));
+      j.extras=[];
+      /* the work was never discounted, so nothing comes off it now either */
+      if(j.works.length&&num(j.discountPct)) j.discountPct=0;
+      const o=j.workOrder;
+      if(ord&&o) j.works.push(Object.assign({desc:String(o.what||'').trim()||'Parts for the work',
+          supplier:String(o.supplier||''),q:'1',price:0,order:true,ostate:o.ostate||'toprice'},
+        o.orderedAt?{orderedAt:o.orderedAt}:{},o.arrivedAt?{arrivedAt:o.arrivedAt}:{},o.arrived?{arrived:true}:{}));
+    }
+  }
+  delete j.kind; delete j.needsOrder; delete j.workOrder;
+  return j;
+}
+/* A draft kept by the version before, where the job sheet only saved the
+   kind of work it was showing. Anything ordered keeps how far along it is. */
+function upgradeForm(f,base){
+  if(Array.isArray(f.works)) return f;
+  const k=KINDS[f.kind]?f.kind:'glass';
+  if(k!=='glass') f.items=[];
+  if(k!=='frames') f.frames=[];
+  if(k==='maintenance'&&f.needsOrder) f.workOrder={what:f.ordWhat||'',supplier:f.ordSup||''};
+  upgradeWork(f);
+  const was=base?worksOf(base).filter(l=>l.order):[];
+  f.works.forEach(l=>{
+    const m=l.order&&was.find(x=>x.desc===l.desc&&(x.supplier||'')===(l.supplier||''));
+    if(m) ['ostate','orderedAt','arrivedAt','arrived'].forEach(p=>{ if(m[p]!==undefined) l[p]=m[p]; });
+  });
+  delete f.ordWhat; delete f.ordSup;
+  return f;
+}
+
 /* Old records predate the quote step, per-piece ticks and appointments. */
 function normalise(j){
   if(j.confirmed===undefined) j.confirmed = j.status!=='quote';
-  /* Before Needs to order? existed every frame was ordered, so an older
-     frames job keeps that: frames not in yet are on order once it is
-     confirmed, and still to order on a quote. */
-  if(j.needsOrder===undefined) j.needsOrder = kindOf(j)==='frames'&&framesOf(j).length>0;
-  if(j.needsOrder) framesOf(j).forEach(f=>{ if(!f.ostate) f.ostate = f.arrived?'arrived':(j.confirmed?'ordered':'toprice'); });
+  upgradeWork(j);
   if(!j.handover) j.handover = j.deliver?'delivery':'collection';
   if(!j.costs) j.costs=[];
   if(j.needsMeasure===undefined) j.needsMeasure=false;
@@ -1940,8 +2058,11 @@ async function runUndo(){
     snap._v = live ? live._v : 0;            /* 0 = the row is gone, put it back */
     if(await pushJob(snap)) ok++;
   }
+  if(u.event&&await saveEvents(upsertEvent(u.event))) ok++;
   render();
-  if(ok===u.jobs.length)  toast('Put back — '+u.label.toLowerCase());
+  const want=u.jobs.length+(u.event?1:0);
+  if(ok===want&&u.event&&!u.jobs.length) toast('Put back in the diary — '+u.event.what);
+  else if(ok===want)      toast('Put back — '+u.label.toLowerCase());
   else if(ok)             toast('Only part of that could be put back',true);
   else                    toast('Could not undo — check the connection',true);
 }
@@ -1959,7 +2080,8 @@ function matches(j,q){
                              ||(i.supplier||'').toLowerCase().includes(q)
                              ||extraSpec(i).toLowerCase().includes(q)
                              ||(i.note||'').toLowerCase().includes(q))
-      || framesOf(j).some(f=>(f.desc||'').toLowerCase().includes(q)||(f.note||'').toLowerCase().includes(q));
+      || framesOf(j).concat(worksOf(j)).some(l=>(l.desc||'').toLowerCase().includes(q)
+                             ||(l.supplier||'').toLowerCase().includes(q)||(l.note||'').toLowerCase().includes(q));
 }
 function bucket(f){
   /* every flagged job, open or closed: somebody asked for something */
@@ -2026,6 +2148,12 @@ function render(){
       <span style="display:flex;gap:8px;align-items:center">
         <button data-undo="1">Undo</button>
         <button class="dismiss" data-undodrop="1">Dismiss</button></span></div>`);
+  const rem=remindersToday();
+  if(rem.length)
+    bars.push(`<div class="banner remind"><div class="rmlist"><b>Reminder${rem.length>1?'s':''} for today</b>
+      ${rem.map(e=>`<div class="rmrow"><span><span class="mono">${esc(evWhen(e))}</span> — ${esc(e.what)}</span>
+        <span class="rmacts"><button data-evopen="${esc(e.id)}">Change</button><button data-evseen="${esc(e.id)}">Hide</button></span></div>`).join('')}
+      </div></div>`);
   if(!ONLINE)
     bars.push(`<div class="banner"><div><b>The shared job book cannot be reached.</b>
       ${STORE==='none'?'This browser is also blocking storage, so nothing can be kept at all.'
@@ -2051,10 +2179,11 @@ function render(){
     return; }
 
   let show = q ? JOBS.filter(j=>matches(j,q)) : bucket(filter==='diary'?'all':filter);
-  if(subbed) show=show.filter(j=>kindOf(j)===subKind);
+  if(subbed) show=show.filter(j=>waitingKind(j,filter,subKind));
   if(subbed&&!show.length){
     $('list').innerHTML=subBar+`<div class="empty"><h3>No ${subKind} ${filter==='pricing'?'to be ordered':'on order'}</h3>
-      <p>${filter==='pricing'?'Tick <b>Needs to order?</b> on a '+subKind+' job and it comes here once the customer confirms.'
+      <p>${filter==='pricing'?(subKind==='glass'?'Glass set to <b>Ordered in</b>':'Anything with <b>Needs to order?</b> ticked')
+                              +' comes here once the customer confirms.'
                             :'Anything marked as ordered waits here until it comes in.'}</p></div>`;
     return;
   }
@@ -2091,7 +2220,7 @@ let subKind='glass';
 function subTabs(f){
   const all=bucket(f);
   return `<div class="subtabs">${SUBKINDS.map(([k,l])=>{
-    const n=all.filter(j=>kindOf(j)===k).length;
+    const n=all.filter(j=>waitingKind(j,f,k)).length;
     return `<button class="subtab ${subKind===k?'on':''} ${n?'has':''}" data-sub="${k}">${l} <b>${n}</b></button>`;}).join('')}</div>`;
 }
 function jobCard(j){
@@ -2137,32 +2266,11 @@ function jobCard(j){
           ${it.note?`<div class="inote">${esc(it.note)}</div>`:''}
           ${orderStamp(it)}
         </div></div>`;}).join('')}
-      ${framesOf(j).map((f,n)=>`<div class="ditem">
-        ${awaitingMeasure(j)&&!isMeasured(j)?'<span class="src src-quoted" title="Not measured yet">To measure</span>'
-          :!j.confirmed?'<span class="src src-quoted" title="Not confirmed yet">Quoted</span>'
-          :!j.needsOrder?'<span class="src src-in" title="Nothing to order">Ready</span>'
-          :lst(f)==='arrived'?'<span class="src src-in" title="Arrived">In</span>'
-          :lst(f)==='ordered'?`<button class="src src-order" data-fa="${j.id}|${n}" title="Tick off when it arrives">On order</button>`
-          :'<span class="src src-price" title="Not ordered yet">To order</span>'}
-        <div class="body">
-          <div class="prod">${esc(f.desc||'Frame')}${f.supplier?' &middot; '+esc(f.supplier):''}</div>
-          ${f.w||f.h?`<div class="size">${esc(f.w)}<span class="x">×</span>${esc(f.h)}<span class="qty">×${f.q||1}</span></div>`
-                    :`<div class="size"><span class="qty">×${f.q||1}</span></div>`}
-          ${f.note?`<div class="inote">${esc(f.note)}</div>`:''}
-          ${j.needsOrder&&f.orderedAt&&lst(f)!=='toprice'?`<span class="ostamp">Ordered on ${esc(orderedOn(f))}</span>`:''}
-        </div></div>`).join('')}
-      ${kindOf(j)==='maintenance'&&j.needsOrder&&j.workOrder?(o=>`<div class="ditem">
-        ${awaitingMeasure(j)&&!isMeasured(j)?'<span class="src src-quoted" title="Not measured yet">To measure</span>'
-          :!j.confirmed?'<span class="src src-quoted" title="Not confirmed yet">Quoted</span>'
-          :lst(o)==='arrived'?'<span class="src src-in" title="Arrived">In</span>'
-          :lst(o)==='ordered'?`<button class="src src-order" data-wa="${j.id}" title="Tick off when it arrives">On order</button>`
-          :'<span class="src src-price" title="Not ordered yet">To order</span>'}
-        <div class="body">
-          <div class="prod">${esc(o.what||'Parts for the work')}${o.supplier?' &middot; '+esc(o.supplier):''}</div>
-          ${o.orderedAt&&lst(o)!=='toprice'?`<span class="ostamp">Ordered on ${esc(orderedOn(o))}</span>`:''}
-        </div></div>`)(j.workOrder):''}
+      ${framesOf(j).map((f,n)=>lineRow(j,f,n,'frame')).join('')}
+      ${worksOf(j).map((l,n)=>lineRow(j,l,n,'work')).join('')}
       ${measureOnly(j)?'<div class="sub">'+(isMeasured(j)?'Measured — the sizes still need adding':'Waiting to be measured')+'</div>'
-        :`<div class="sub mono" style="margin-top:7px">${kindOf(j)==='glass'?t.area.toFixed(3)+' m²':KINDS[kindOf(j)]}${(j.extras||[]).length?' · '+j.extras.map(x=>esc(x.label)).join(', '):''}</div>`}
+        :(hasGlass(j)||(j.extras||[]).length)?`<div class="sub mono" style="margin-top:7px">${[hasGlass(j)?t.area.toFixed(3)+' m²':'',
+            (j.extras||[]).map(x=>esc(x.label)).filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</div>`:''}
       ${j.note?(j.noteUrgent?`<div class="note urgent"><b>Read this first</b>${esc(j.note)}</div>`
                             :`<div class="note">${esc(j.note)}</div>`):''}
       ${j.handover!=='collection'&&j.addr?`<div class="note">${handoverLabel(j)} — ${mapLink(j.addr)}</div>`:''}
@@ -2202,6 +2310,31 @@ function jobCard(j){
       </div>
     </div>
   </article>`;
+}
+
+/* A frame or a piece of maintenance on the job card, laid out like a
+   piece of glass: where it is up to, what it is, then the size, or what is
+   being done, in large type. */
+function lineBadge(j,l,n,kind){
+  if(awaitingMeasure(j)&&!isMeasured(j)) return '<span class="src src-quoted" title="Not measured yet">To measure</span>';
+  if(!j.confirmed) return '<span class="src src-quoted" title="Not confirmed yet">Quoted</span>';
+  if(!l.order) return '<span class="src src-in" title="Nothing to order">Ready</span>';
+  const s=lst(l);
+  if(s==='arrived') return '<span class="src src-in" title="Arrived">In</span>';
+  if(s==='ordered') return `<button class="src src-order" data-${kind==='frame'?'fa':'wa'}="${j.id}|${n}" title="Tick off when it arrives">On order</button>`;
+  return '<span class="src src-price" title="Not ordered yet">To order</span>';
+}
+function lineRow(j,l,n,kind){
+  const body = kind==='frame'
+    ? `<div class="prod">${esc(l.desc||'Frame')}${l.supplier?' &middot; '+esc(l.supplier):''}</div>
+       ${l.w||l.h?`<div class="size">${esc(l.w)}<span class="x">×</span>${esc(l.h)}<span class="qty">×${lineQty(l)}</span></div>`
+                 :`<div class="size"><span class="qty">×${lineQty(l)}</span></div>`}`
+    : `<div class="prod">Maintenance${l.supplier?' &middot; '+esc(l.supplier):''}</div>
+       <div class="size wname"><span class="wd">${esc(String(l.desc||'').trim()||'Maintenance work')}</span><span class="qty">×${lineQty(l)}</span></div>`;
+  return `<div class="ditem">${lineBadge(j,l,n,kind)}<div class="body">${body}
+      ${l.note?`<div class="inote">${esc(l.note)}</div>`:''}
+      ${l.order&&l.orderedAt&&lst(l)!=='toprice'?`<span class="ostamp">Ordered on ${esc(orderedOn(l))}</span>`:''}
+    </div></div>`;
 }
 
 /* ---------- worksheets ----------
@@ -2295,19 +2428,28 @@ function renderDiary(){
   Object.keys(byDay).forEach(k=>byDay[k].sort((p,q)=>(p.a.time||'').localeCompare(q.a.time||'')));
   const today=ymd(new Date());
 
+  const evByDay={};
+  EVENTS.forEach(e=>{ (evByDay[e.date]=evByDay[e.date]||[]).push(e); });
   const cells=grid.map(d=>{
-    const key=ymd(d), out=d.getMonth()!==diaryMonth.getMonth(), evs=byDay[key]||[];
+    const key=ymd(d), out=d.getMonth()!==diaryMonth.getMonth();
+    /* bookings and events together, in time order */
+    const evs=(byDay[key]||[]).map(x=>({t:x.a.time||'',
+        chip:`<span class="ev ${APPT[x.a.kind].cls}"${x.j.note?' title="'+esc(x.j.note)+'"':''}>${x.a.time?x.a.time+' ':''}${esc(x.j.name)}${x.j.note?`<span class="hasnote ${x.j.noteUrgent?'urgent':''}"> *</span>`:''}</span>`,
+        dot:`<span class="dot ${APPT[x.a.kind].cls} ${x.j.noteUrgent&&x.j.note?'urgent':''}"></span>`}))
+      .concat((evByDay[key]||[]).map(e=>({t:e.time||'',
+        chip:`<span class="ev ev-evt" title="${esc(e.what)}">${e.time?esc(e.time)+' ':''}${esc(e.what)}</span>`,
+        dot:'<span class="dot ev-evt"></span>'})))
+      .sort((p,q)=>p.t.localeCompare(q.t));
     return `<button class="cell ${out?'out':''} ${key===today?'today':''} ${key===selDay?'sel':''}" data-day="${key}">
       <span class="dn">${d.getDate()}</span>
-      ${evs.slice(0,2).map(x=>`<span class="ev ${APPT[x.a.kind].cls}"${x.j.note?' title="'+esc(x.j.note)+'"':''}>${x.a.time?x.a.time+' ':''}${esc(x.j.name)}${x.j.note?`<span class="hasnote ${x.j.noteUrgent?'urgent':''}"> *</span>`:''}</span>`).join('')}
+      ${evs.slice(0,2).map(x=>x.chip).join('')}
       ${evs.length>2?`<span class="more">+${evs.length-2} more</span>`:''}
-      ${evs.length?`<span class="dots">${evs.map(x=>
-        `<span class="dot ${APPT[x.a.kind].cls} ${x.j.noteUrgent&&x.j.note?'urgent':''}"></span>`).join('')}</span>`:''}
+      ${evs.length?`<span class="dots">${evs.map(x=>x.dot).join('')}</span>`:''}
     </button>`;}).join('');
 
   const waiting=JOBS.filter(j=>bookable(j)&&neededAppts(j).length);
   const dayOd=selDay?orderDay(selDay,byDay[selDay]||[]):{list:[],note:''};
-  const dayJobs=dayOd.list;
+  const dayJobs=dayOd.list, dayEv=selDay?eventsOn(selDay):[];
   const mins=dayJobs.reduce((s,x)=>s+(+x.a.mins||0),0);
 
   $('list').innerHTML=`
@@ -2328,7 +2470,9 @@ function renderDiary(){
             ${mins?' — '+(mins/60).toFixed(mins%60?1:0)+' hours booked':''}</h4>
           <span style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="act go" data-dayview="${selDay}">Open full screen</button>
-            <button class="act" data-bookday="${selDay}">+ Book this day</button></span></div>
+            <button class="act" data-bookday="${selDay}">+ Book this day</button>
+            <button class="act" data-evnew="${selDay}">+ Add an event</button></span></div>
+        ${evBlock(dayEv)}
         ${dayJobs.length>1?orderPicker(dayOd,dayJobs):''}
         ${dayJobs.length?dayJobs.map((x,n)=>`<div class="slot">
             <div class="tm">${x.a.time||'—'}<div class="dur">${DURS[x.a.mins]||((+x.a.mins||0)+' min')}${x.a.time?'<br>to '+endTime(x.a.time,x.a.mins):''}</div></div>
@@ -2345,7 +2489,7 @@ function renderDiary(){
               <button class="act" data-open="${x.j.id}">Open</button>
               <button class="act" data-delappt="${x.j.id}|${x.i}">Remove</button>
             </div>
-          </div>`).join(''):'<p class="sub">Nothing booked in.</p>'}`
+          </div>`).join(''):`<p class="sub">${dayEv.length?'No jobs booked in.':'Nothing booked in.'}</p>`}`
       :'<p class="sub" style="margin-top:14px">Pick a day to see what is booked, or to add something.</p>'}
       ${waiting.length?`<h4 style="margin:18px 0 9px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--amber)">Needs a slot (${waiting.length})</h4>`+
         waiting.map(j=>`<div class="unsched">
@@ -2368,7 +2512,7 @@ let moveJobId=null;
 const MOVES=[
   {k:'measure',label:'To measure',d:'Still to be measured. Stays off the order and cutting lists until it is.'},
   {k:'quote',  label:'Quotes',d:'Waiting for the customer to say yes.'},
-  {k:'pricing',label:'To be ordered',d:'The customer has said yes. Glass from a supplier not ordered yet.'},
+  {k:'pricing',label:'To be ordered',d:'The customer has said yes. Glass, frames or parts from a supplier not ordered yet.'},
   {k:'order',  label:'On order',d:'Ordered, waiting for it to come in.'},
   {k:'cut',    label:'To cut',d:'Everything is in. Still to cut.'},
   {k:'ready',  label:'Ready',d:'Everything is in and cut, ready to go out.'},
@@ -2426,7 +2570,7 @@ function drawMoveSheet(){
   if(j.needsInvoice&&j.invoicedAt) side.push(['uninv','Back on To invoice','Marked as invoiced by mistake.']);
   if(!j.needsInvoice&&j.status!=='lost') side.push(['inv','Add to To invoice','Ticks Needs invoice? on the job.']);
   $('moveBody').innerHTML=`<p class="sub" style="margin:0 0 12px">Where should it be? Moving a job back undoes what came after:
-      back to Quotes takes the glass off order and unticks anything cut. Wrong one? Undo puts it back.</p>
+      back to Quotes takes everything off order and unticks anything cut. Wrong one? Undo puts it back.</p>
     <div class="movelist">${MOVES.filter(m=>canMoveTo(j,m.k)).map(m=>
       `<button class="mv ${m.k===now?'now':''}" data-moveto="${m.k}"${m.k===now?' disabled':''}>
         <span class="mvl">${esc(m.label)}${m.k===now?' <span class="mvnow">Now</span>':''}</span>
@@ -2651,12 +2795,15 @@ function readiness(j,a){
   const p=[];
   if(!j.confirmed) p.push('the customer has not confirmed it');
   if(awaitingMeasure(j)) p.push('it has not been measured');
-  const tp=toPrice(j).length, po=pendingOrder(j).length, pf=linesOnOrder(j).length, pc=pendingCut(j).length;
+  const tp=toPrice(j).length, po=pendingOrder(j).length, pc=pendingCut(j).length;
   if(tp) p.push(tp+' piece'+(tp===1?' has':'s have')+' not been ordered yet');
   if(po) p.push(po+' piece'+(po===1?' is':'s are')+' still on order from '+Object.keys(waitingSuppliers(j)).join(' and '));
-  const lt=linesToOrder(j).length, fr=kindOf(j)==='frames';
-  if(lt) p.push(fr?lt+' frame'+(lt===1?' has':'s have')+' not been ordered yet':'the parts have not been ordered yet');
-  if(pf) p.push(fr?pf+' frame'+(pf===1?' has':'s have')+' not arrived':'the parts have not arrived');
+  const fo=framesOf(j).filter(l=>l.order), wo=worksOf(j).filter(l=>l.order);
+  const ft=fo.filter(l=>lst(l)==='toprice').length, fw=fo.filter(l=>lst(l)==='ordered').length;
+  if(ft) p.push(ft+' frame'+(ft===1?' has':'s have')+' not been ordered yet');
+  if(fw) p.push(fw+' frame'+(fw===1?' has':'s have')+' not arrived');
+  if(wo.some(l=>lst(l)==='toprice')) p.push('the parts have not been ordered yet');
+  if(wo.some(l=>lst(l)==='ordered')) p.push('the parts have not arrived');
   if(pc) p.push(pc+' piece'+(pc===1?' is':'s are')+' still to cut');
   return {ok:!p.length,done:false,problems:p};
 }
@@ -2680,8 +2827,9 @@ function whatsGoing(j){
     rows.push(`<div class="sline"><span class="sz">${f.w&&f.h?esc(f.w)+' × '+esc(f.h):''}${+f.q>1?' ×'+f.q:''}</span>
       <span class="sd">${esc(f.desc||'Frame')}${f.note?`<div class="inote">${esc(f.note)}</div>`:''}</span></div>`);
   });
-  if(kindOf(j)==='maintenance') (j.extras||[]).forEach(x=>{
-    rows.push(`<div class="sline"><span class="sd">${esc(x.label||'Work')}</span></div>`);
+  worksOf(j).forEach(l=>{
+    rows.push(`<div class="sline"><span class="sd"><span class="sw">${esc(String(l.desc||'').trim()||'Maintenance')}</span>${lineQty(l)>1?' <span class="mono">×'+lineQty(l)+'</span>':''}
+      ${l.note?`<div class="inote">${esc(l.note)}</div>`:''}</span></div>`);
   });
   return rows.length?`<div class="sgoing">${rows.join('')}</div>`:'';
 }
@@ -2769,7 +2917,7 @@ function routeUrl(stops){
 
 function renderDay(){
   const d=dayViewDate; if(!d) return;
-  const byTime=apptsOn(d), od=orderDay(d,byTime), all=od.list, byClock=dayMode==='time';
+  const byTime=apptsOn(d), od=orderDay(d,byTime), all=od.list, byClock=dayMode==='time', evs=eventsOn(d);
   /* finished stops stay where they were, greyed out; the summary, the
      route and the warnings are about what is still to do */
   const todo=all.filter(x=>!stopDone(x));
@@ -2818,7 +2966,9 @@ function renderDay(){
     <div class="dayacts">
       ${route?`<a class="go maplink" data-map="1" href="${route}" target="_blank" rel="noopener">Open the route in Maps</a>`:''}
       <button data-bookday="${d}">Book something in</button>
+      <button data-evnew="${d}">Add an event</button>
     </div>
+    ${evBlock(evs)}
     ${all.length>1?orderPicker(od,all):''}
     ${blocked.length?`<div class="dayalert"><b>${blocked.length} booking${blocked.length===1?' is':'s are'} not ready to go out.</b>
       <ul>${blocked.map(x=>`<li>${x.a.time?x.a.time+' — ':''}${x.j.no} ${esc(x.j.name)}: ${esc(readiness(x.j,x.a).problems.join('; '))}</li>`).join('')}</ul></div>`:''}
@@ -2826,10 +2976,12 @@ function renderDay(){
     <div class="tl">${tl}</div>
     ${untimed.length?`<div class="notime"><h4>No time set</h4>${untimed.map(x=>stopCard(x)).join('')}</div>`:''}
     `:`
+    ${evBlock(evs)}
     <div class="dayempty">
-      <h3>Nothing booked for ${esc(longDate(d))}.</h3>
-      <p class="sub">The whole day is free.</p>
-      <div class="dayacts" style="margin:12px 0 ${waiting.length?'10px':'0'}"><button class="go" data-bookday="${d}">Book something in</button></div>
+      <h3>${evs.length?'No jobs':'Nothing'} booked for ${esc(longDate(d))}.</h3>
+      <p class="sub">${evs.length?'Just the events above.':'The whole day is free.'}</p>
+      <div class="dayacts" style="margin:12px 0 ${waiting.length?'10px':'0'}"><button class="go" data-bookday="${d}">Book something in</button>
+        <button data-evnew="${d}">Add an event</button></div>
       ${waiting.length?`<div style="font-size:14px;font-weight:700;margin-top:6px">Still waiting for a slot</div>`+
         waiting.slice(0,8).map(j=>`<div class="waitrow"><span>${j.no} · ${esc(j.name)} — needs ${esc(neededAppts(j).map(k=>APPT[k].label.toLowerCase()).join(' and '))}</span>
           <button class="act go" data-book="${j.id}">Book</button></div>`).join(''):''}
@@ -2852,13 +3004,15 @@ $('daySheet').addEventListener('click',e=>{
     dayViewDate = n===0 ? ymd(new Date()) : shiftDay(dayViewDate,n);
     selDay=dayViewDate; renderDay(); window.scrollTo({top:0}); return; }
   /* leaving the day to open a job or book something should bring you back */
-  if(e.target.closest('[data-open],[data-book],[data-bookday]')) dayBack=true;
+  if(e.target.closest('[data-open],[data-book],[data-bookday],[data-evnew],[data-evopen]')) dayBack=true;
 },true);
 
 $('dayPrint').onclick=()=>{
   const d=dayViewDate; if(!d) return;
-  const all=orderDay(d,apptsOn(d)).list.filter(x=>!stopDone(x));
+  const all=orderDay(d,apptsOn(d)).list.filter(x=>!stopDone(x)), evs=eventsOn(d);
   $('printarea').innerHTML=`<div class="ptitle">Run sheet — ${esc(longDate(d))}</div>`+
+    (evs.length?`<div class="prun"><div class="pt"><span>Events</span></div>${evs.map(e=>
+      `<div>${esc(evWhen(e))} · ${esc(e.what)}${e.remind?' (reminder)':''}</div>`).join('')}</div>`:'')+
     (all.length?all.map(x=>{
       const j=x.j, a=x.a, r=readiness(j,a), bal=balanceOf(j);
       return `<div class="prun">
@@ -2870,8 +3024,10 @@ $('dayPrint').onclick=()=>{
           return `<div class="psize">${stopSize(j,it,pi)}</div>
                   <div class="pprod">${esc(pi.p.name)}${extraSpec(it)?' · '+esc(extraSpec(it)):''}</div>
                   ${it.note?`<div class="pnote">${esc(it.note)}</div>`:''}`;}).join('')}
-        ${framesOf(j).map(f=>`<div class="psize">${esc(f.w||'')}${f.w?' × ':''}${esc(f.h||'')}${+f.q>1?' ×'+f.q:''}</div>
+        ${framesOf(j).map(f=>`<div class="psize">${esc(f.w||'')}${f.w?' × ':''}${esc(f.h||'')}${+f.q>1?' ×'+esc(f.q):''}</div>
                               <div class="pprod">${esc(f.desc||'Frame')}</div>${f.note?`<div class="pnote">${esc(f.note)}</div>`:''}`).join('')}
+        ${worksOf(j).map(l=>`<div class="psize">${esc(String(l.desc||'').trim()||'Maintenance')}${lineQty(l)>1?' ×'+lineQty(l):''}</div>
+                              ${l.note?`<div class="pnote">${esc(l.note)}</div>`:''}`).join('')}
         ${j.note?`<div class="pnote"><b>${j.noteUrgent?'READ FIRST: ':''}</b>${esc(j.note)}</div>`:''}
         <div style="margin-top:5px;font-weight:700">${bal>0.005?gbp(bal)+(j.trade?' to invoice':' TO COLLECT'):'Paid'}</div>
       </div>`;}).join('')
@@ -2939,9 +3095,13 @@ function drawClash(){
   const same=allAppts().filter(x=>x.a.date===d&&!(bookJob&&x.j.id===bookJob.id&&x.a.kind===bookKind));
   const mins=same.reduce((s,x)=>s+(+x.a.mins||0),0)+m;
   const overlap=same.filter(x=>x.a.time&&t&&x.a.time<endTime(t,m)&&endTime(x.a.time,x.a.mins)>t);
-  $('bClash').innerHTML = overlap.length
-    ? `<div class="warnbox">Overlaps ${overlap.map(x=>esc(x.j.name)+' at '+x.a.time).join(', ')}. That day would have ${(mins/60).toFixed(1)} hours booked.</div>`
-    : same.length ? `<p class="sub">${same.length} other visit${same.length>1?'s':''} that day — ${(mins/60).toFixed(1)} hours in total.</p>` : '';
+  const evs=eventsOn(d), evHit=evs.filter(e=>e.time&&t&&e.time<endTime(t,m)&&endTime(e.time,e.mins)>t);
+  const hits=overlap.map(x=>esc(x.j.name)+' at '+x.a.time).concat(evHit.map(e=>esc(e.what)+' at '+e.time));
+  const rest=evs.filter(e=>evHit.indexOf(e)<0);
+  $('bClash').innerHTML = (hits.length
+    ? `<div class="warnbox">Overlaps ${hits.join(', ')}. That day would have ${(mins/60).toFixed(1)} hours booked.</div>`
+    : same.length ? `<p class="sub">${same.length} other visit${same.length>1?'s':''} that day — ${(mins/60).toFixed(1)} hours in total.</p>` : '')
+    + (rest.length?`<p class="sub evnote">Also that day: ${rest.map(e=>esc(e.what)+(e.time?' at '+e.time:', all day')).join('; ')}.</p>`:'');
 }
 ['bDate','bTime','bMins'].forEach(id=>$(id).addEventListener('input',()=>{drawClash();drawMoveNotice();}));
 $('bKind').addEventListener('click',e=>{
@@ -2964,6 +3124,142 @@ $('bSave').onclick=async()=>{
     toast(APPT[bookKind].label+' booked for '+new Date($('bDate').value).toLocaleDateString('en-GB'));
   }
 };
+
+/* ============================================================
+   EVENTS IN THE DIARY
+   Things that are not jobs: collecting glass from a supplier, somebody
+   off for the morning. Each has a date, and a time and how long, or lasts
+   all day. Made a reminder, it shows at the top of the app on the day, on
+   every machine, until it is hidden on that machine.
+   They are kept in the job book as one list, so every machine sees the
+   same diary. A save says which copy it was changing. If another machine
+   saved in between, the change is made again on top of theirs, so
+   nobody's event is lost.
+   ============================================================ */
+const KEY_EVENTS='wg:events:v1';
+const EV_MINS={15:'15 minutes',30:'30 minutes',60:'1 hour',90:'1½ hours',120:'2 hours',180:'3 hours',
+               240:'Half day (4 hours)',360:'6 hours',480:'Full day (8 hours)'};
+const evMinsText=m=>EV_MINS[m]||fmtMins(m);
+const tidyEvents=list=>(Array.isArray(list)?list:[]).filter(e=>e&&e.id&&e.date&&typeof e.what==='string');
+const eventsOn=d=>EVENTS.filter(e=>e.date===d)
+  .sort((a,b)=>(a.time||'').localeCompare(b.time||'')||String(a.at||'').localeCompare(String(b.at||'')));
+const evWhen=e=>e.time?e.time+(e.mins?' to '+endTime(e.time,e.mins):''):'All day';
+async function mirrorEvents(){
+  const s=JSON.stringify(EVENTS); if(s===MIRROREV) return; MIRROREV=s;
+  try{ await sSet(KEY_EVENTS,s); }catch(e){}
+}
+/* change takes the list and gives back the new one */
+async function saveEvents(change){
+  if(!ONLINE){ toast('The job book cannot be reached, so the diary was not changed',true); return false; }
+  const keep=shiftDay(ymd(new Date()),-400);          /* a year and a bit is plenty to look back on */
+  for(let n=0;n<4;n++){
+    const next=tidyEvents(change(clone(EVENTS))).filter(e=>e.date>=keep);
+    let r;
+    try{ r=await fetch(API+'/settings/events',{method:'PUT',headers:{'content-type':'application/json'},
+                                               body:JSON.stringify({value:{list:next},base:EVENTSV})}); }
+    catch(e){ toast('Could not save — check the connection',true); return false; }
+    if(r.status===409){
+      let cur=null; try{ cur=(await r.json()).current; }catch(e){}
+      EVENTS=tidyEvents(cur&&cur.value&&cur.value.list); EVENTSV=cur?cur.version:null;
+      continue;
+    }
+    if(!r.ok){ toast('Could not save — check the connection',true); return false; }
+    let v=null; try{ v=(await r.json()).version; }catch(e){}
+    EVENTS=next; EVENTSV=v; await mirrorEvents();
+    return true;
+  }
+  toast('The diary kept changing on another machine — try again',true);
+  return false;
+}
+const upsertEvent=ev=>list=>list.filter(e=>e.id!==ev.id).concat([ev]);
+async function removeEvent(id){
+  const ev=EVENTS.find(e=>e.id===id);
+  if(!ev){ render(); toast('That has already been taken out of the diary'); return false; }
+  if(!await saveEvents(list=>list.filter(e=>e.id!==id))) return false;
+  UNDO={label:'"'+ev.what+'" taken out of the diary',at:Date.now(),jobs:[],event:clone(ev)};
+  return true;
+}
+
+function openEvent(ev,date){
+  evEditing=ev||null;
+  $('evTitle').textContent=ev?'Change the event':'New event';
+  $('evWhat').value=ev?ev.what:'';
+  $('evDate').value=ev?ev.date:(date||ymd(new Date()));
+  $('evTime').value=ev&&ev.time?ev.time:'09:00';
+  const m=ev?(ev.time?(+ev.mins||60):0):60, sel=$('evMins');
+  if(!Array.prototype.some.call(sel.options,o=>+o.value===m)){
+    const o=document.createElement('option'); o.value=String(m); o.textContent=evMinsText(m);
+    sel.insertBefore(o,sel.lastElementChild); }
+  sel.value=String(m);
+  $('evRemind').checked=ev?!!ev.remind:false;
+  $('evDel').style.display=ev?'':'none';
+  $('evSave').textContent=ev?'Save event':'Put in the diary';
+  drawEvent(); showSheet($('evSheet'));
+  if(!ev) setTimeout(()=>$('evWhat').focus(),60);
+}
+function drawEvent(){
+  const allDay=$('evMins').value==='0', on=$('evRemind').checked, d=$('evDate').value;
+  const t=allDay?'':$('evTime').value, m=+$('evMins').value||60;
+  $('evTimeWrap').style.display=allDay?'none':'';
+  $('evRemTick').classList.toggle('on',on);
+  $('evRemState').textContent=on?'On '+(d?longDate(d):'the day')+' it shows at the top of the app, on every machine, until it is hidden.':'';
+  /* the jobs booked that day, and any it clashes with */
+  const same=d?apptsOn(d).filter(x=>!stopDone(x)):[];
+  const hit=t?same.filter(x=>x.a.time&&x.a.time<endTime(t,m)&&endTime(x.a.time,x.a.mins)>t):[];
+  $('evClash').innerHTML=!same.length?''
+    :hit.length?`<div class="warnbox">At the same time: ${hit.map(x=>esc(x.a.time+' '+x.j.name)+' ('+APPT[x.a.kind].label.toLowerCase()+')').join(', ')}.</div>`
+    :`<p class="sub evnote">${same.length} job${same.length===1?'':'s'} booked that day.</p>`;
+}
+['evDate','evTime','evMins','evRemind'].forEach(id=>{ $(id).addEventListener('input',drawEvent); $(id).addEventListener('change',drawEvent); });
+$('evBtn').onclick=()=>openEvent(null,filter==='diary'&&selDay?selDay:ymd(new Date()));
+$('closeEv').onclick=hideSheets; $('evCancel').onclick=hideSheets;
+$('evSave').onclick=async()=>{
+  const what=$('evWhat').value.trim(), date=$('evDate').value;
+  if(!what){ toast('Say what it is',true); $('evWhat').focus(); return; }
+  if(!date){ toast('Needs a date',true); $('evDate').focus(); return; }
+  const was=evEditing, time=$('evMins').value==='0'?'':$('evTime').value;
+  const ev={id:was?was.id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+            what, date, time, mins:time?(+$('evMins').value||60):0, remind:$('evRemind').checked,
+            at:was&&was.at?was.at:new Date().toISOString()};
+  if(!await saveEvents(upsertEvent(ev))) return;
+  hideSheets();
+  if(filter==='diary'){ selDay=date; diaryMonth=new Date(date+'T12:00:00'); }
+  render();
+  toast((was?'Changed':'In the diary')+' for '+longDate(date)+(ev.remind?' — it will remind everyone on the day':''));
+};
+$('evDel').onclick=async()=>{
+  const ev=evEditing; if(!ev) return;
+  if(!window.confirm('Take "'+ev.what+'" out of the diary?')) return;
+  if(await removeEvent(ev.id)){ hideSheets(); render(); toast('Taken out of the diary',false,'Undo'); }
+};
+
+/* ---------- reminders ----------
+   On the day, each reminder sits at the top of the app. Hiding one only
+   hides it on this machine, and only for today. */
+const SEEN_KEY='wg-evseen-v1';
+let SEEN_MEM={};
+function seenToday(){
+  let s={}; try{ s=JSON.parse(localStorage.getItem(SEEN_KEY)||'{}')||{}; }catch(e){}
+  return Object.assign(s,SEEN_MEM);
+}
+function hideReminder(id){
+  const t=ymd(new Date()), s=seenToday();
+  Object.keys(s).forEach(k=>{ if(s[k]!==t) delete s[k]; });
+  s[id]=t; SEEN_MEM[id]=t;
+  try{ localStorage.setItem(SEEN_KEY,JSON.stringify(s)); }catch(e){}
+}
+const remindersToday=()=>{ const t=ymd(new Date()), s=seenToday(); return eventsOn(t).filter(e=>e.remind&&s[e.id]!==t); };
+
+/* the events on a day, as a block above that day's jobs */
+function evRow(e){
+  return `<div class="evrow">
+    <span class="evt">${esc(evWhen(e))}</span>
+    <span class="evw">${esc(e.what)}${e.remind?' <span class="tag evrem">Reminder</span>':''}
+      ${e.time&&e.mins?`<span class="evd">${esc(evMinsText(+e.mins))}</span>`:''}</span>
+    <span class="evacts"><button class="act" data-evopen="${esc(e.id)}">Change</button>
+      <button class="act" data-evdel="${esc(e.id)}">Remove</button></span></div>`;
+}
+const evBlock=list=>list.length?`<div class="evday"><h4>Events</h4>${list.map(evRow).join('')}</div>`:'';
 
 const API = '/api';
 
@@ -3041,6 +3337,9 @@ async function loadAll() {
     }
     ensureSuppliers();
     if (s.shop) await mirrorShop();
+    EVENTS = tidyEvents(s.events && s.events.list);
+    EVENTSV = ver.events || null;
+    await mirrorEvents();
     ONLINE = true;
 
     /* Keep a copy on this machine so the counter can still look things up
@@ -3052,6 +3351,8 @@ async function loadAll() {
     try {
       const raw = await sGet(KEY_JOBS);
       if (raw) JOBS = JSON.parse(raw).map(normalise);
+      const ev = await sGet(KEY_EVENTS);
+      if (ev) EVENTS = tidyEvents(JSON.parse(ev));
       await readLocalPrices();
       await readLocalSuppliers();
     } catch (e) {}
@@ -3129,11 +3430,19 @@ document.addEventListener('click',async e=>{
 
   const sbt=e.target.closest('[data-sub]');
   if(sbt){ subKind=sbt.dataset.sub; render(); return; }
+  const evNewB=e.target.closest('[data-evnew]');
+  if(evNewB){ openEvent(null,evNewB.dataset.evnew); return; }
+  const evOpenB=e.target.closest('[data-evopen]');
+  if(evOpenB){ const ev=EVENTS.find(x=>x.id===evOpenB.dataset.evopen); if(ev) openEvent(ev); return; }
+  const evDelB=e.target.closest('[data-evdel]');
+  if(evDelB){ if(await removeEvent(evDelB.dataset.evdel)){ render(); toast('Taken out of the diary',false,'Undo'); } return; }
+  const evSeenB=e.target.closest('[data-evseen]');
+  if(evSeenB){ hideReminder(evSeenB.dataset.evseen); render(); return; }
   const f=e.target.closest('[data-f]');
   if(f){ filter=f.dataset.f; listView='sheet'; $('search').value='';
     /* open on a kind that has something in it */
     if(filter==='pricing'||filter==='order'){ const all=bucket(filter);
-      if(!all.some(j=>kindOf(j)===subKind)){ const k=SUBKINDS.find(([k])=>all.some(j=>kindOf(j)===k)); if(k) subKind=k[0]; } }
+      if(!all.some(j=>waitingKind(j,filter,subKind))){ const k=SUBKINDS.find(([k])=>all.some(j=>waitingKind(j,filter,k))); if(k) subKind=k[0]; } }
     if(filter==='diary'&&!selDay) selDay=ymd(new Date());
     render(); window.scrollTo({top:0}); return; }
 
@@ -3276,11 +3585,12 @@ document.addEventListener('click',async e=>{
   if(arr){
     const parts=arr.dataset.arr.split('|'), id=parts[0], name=parts[1];
     const j=JOBS.find(x=>x.id===id); if(!j) return;
-    const snap=snapshot(name+' glass booked in on job '+j.no,[j]);
-    j.items.forEach(i=>{ if(i.src==='order'&&ost(i)==='ordered'&&(i.supplier||'Supplier')===name){ i.ostate='arrived'; i.arrived=true; i.arrivedAt=new Date().toISOString(); } });
-    orderLines(j).forEach(l=>{ if(lst(l)==='ordered'&&(l.supplier||'Supplier')===name){ l.ostate='arrived'; l.arrived=true; l.arrivedAt=new Date().toISOString(); } });
+    const snap=snapshot(name+' delivery booked in on job '+j.no,[j]);
+    let lines=0;
+    (j.items||[]).forEach(i=>{ if(i.src==='order'&&ost(i)==='ordered'&&(i.supplier||'Supplier')===name){ i.ostate='arrived'; i.arrived=true; i.arrivedAt=new Date().toISOString(); } });
+    orderLines(j).forEach(l=>{ if(lst(l)==='ordered'&&(l.supplier||'Supplier')===name){ l.ostate='arrived'; l.arrived=true; l.arrivedAt=new Date().toISOString(); lines++; } });
     applyStatus(j);
-    if(await pushJob(j)){ UNDO=snap; render(); toast(name+(isGlass(j)?' glass':'')+' booked in for job '+j.no,false,'Undo'); }
+    if(await pushJob(j)){ UNDO=snap; render(); toast(name+(lines?'':' glass')+' booked in for job '+j.no,false,'Undo'); }
     return;
   }
   const cut=e.target.closest('[data-cut]');
@@ -3316,12 +3626,13 @@ document.addEventListener('click',async e=>{
   if(oj){
     const j=JOBS.find(x=>x.id===oj.dataset.ordj); if(!j) return;
     const todo=toPrice(j).concat(linesToOrder(j)); if(!todo.length) return;
-    const snap=snapshot('Glass marked as ordered on job '+j.no,[j]);
+    const glassOnly=!linesToOrder(j).length;
+    const snap=snapshot((glassOnly?'Glass':'Everything')+' marked as ordered on job '+j.no,[j]);
     const now=new Date().toISOString();
     todo.forEach(it=>{ it.ostate='ordered'; it.orderedAt=now; });
     applyStatus(j);
     if(await pushJob(j)){ UNDO=snap; render();
-      toast('Job '+j.no+' — '+(isGlass(j)?'glass ':'')+'ordered '+orderedOn({orderedAt:now}),false,'Undo'); }
+      toast('Job '+j.no+' — '+(glassOnly?'glass ':'')+'ordered '+orderedOn({orderedAt:now}),false,'Undo'); }
     return;
   }
 
@@ -3374,9 +3685,10 @@ document.addEventListener('click',async e=>{
 
   const wa=e.target.closest('[data-wa]');
   if(wa){
-    const j=JOBS.find(x=>x.id===wa.dataset.wa); if(!j||!j.workOrder) return;
+    const q=wa.dataset.wa.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const o=worksOf(j)[+q[1]]; if(!o) return;
     const snap=snapshot('Parts booked in on job '+j.no,[j]);
-    const o=j.workOrder; o.ostate='arrived'; o.arrived=true; o.arrivedAt=new Date().toISOString();
+    o.ostate='arrived'; o.arrived=true; o.arrivedAt=new Date().toISOString();
     applyStatus(j);
     if(await pushJob(j)){ UNDO=snap; render(); toast('Parts in — job '+j.no,false,'Undo'); }
     return;
@@ -3384,8 +3696,9 @@ document.addEventListener('click',async e=>{
   const fa=e.target.closest('[data-fa]');
   if(fa){
     const q=fa.dataset.fa.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const fr=framesOf(j)[+q[1]]; if(!fr) return;
     const snap=snapshot('Frame booked in on job '+j.no,[j]);
-    const fr=j.frames[+q[1]]; fr.ostate='arrived'; fr.arrived=true; fr.arrivedAt=new Date().toISOString();
+    fr.ostate='arrived'; fr.arrived=true; fr.arrivedAt=new Date().toISOString();
     applyStatus(j);
     if(await pushJob(j)){ UNDO=snap; render(); toast('Frame booked in — job '+j.no,false,'Undo'); }
     return;
@@ -3489,17 +3802,18 @@ function specBlock(it,i){
    forgotten whenever the list is rebuilt, the same as OTHER. */
 let NOTEOPEN={};
 function pieceNote(kind,i,val){
-  const k=kind+':'+i, noun=kind==='frame'?'frame':'piece';
+  const k=kind+':'+i, noun=kind==='frame'?'frame':kind==='work'?'item':'piece';
   if(!val&&!NOTEOPEN[k]) return `<button class="pnadd" data-pnopen="${k}">+ Note for this ${noun}</button>`;
   return `<div class="pnwrap"><label for="pn${kind}${i}">Note for this ${noun}</label>
     <textarea class="inp" rows="2" id="pn${kind}${i}" data-pn="${k}"
-      placeholder="${kind==='frame'?'e.g. cill needs replacing, opener on the left':'e.g. polished edges both long sides, pattern runs top to bottom'}">${esc(val||'')}</textarea>
-    <div class="pnhint">${kind==='frame'?'Shown on the job and the day sheet.'
-                                         :'Goes on the cutting list, the order list and the email to the supplier.'}</div></div>`;
+      placeholder="${kind==='frame'?'e.g. cill needs replacing, opener on the left'
+                    :kind==='work'?'e.g. back door, the handle sticks':'e.g. polished edges both long sides, pattern runs top to bottom'}">${esc(val||'')}</textarea>
+    <div class="pnhint">${kind==='piece'||kind==='item'?'Goes on the cutting list, the order list and the email to the supplier.'
+                                         :'Shown on the job and the day sheet.'}</div></div>`;
 }
 function openPieceNote(k){
   NOTEOPEN[k]=true;
-  if(k.indexOf('frame:')===0) drawFrames(); else drawItems();
+  if(k.indexOf('frame:')===0) drawFrames(); else if(k.indexOf('work:')===0) drawWorks(); else drawItems();
   const t=document.querySelector('[data-pn="'+k+'"]'); if(t) t.focus();
 }
 
@@ -3511,7 +3825,7 @@ function drawItems(){
     const p=prodOf(it.pid), pi=priceItem(it);
     return `<div class="item ${it.src==='order'?'ordered':'cutting'}">
       <div class="ihead"><span class="inum">Piece ${i+1}</span>
-        ${items.length>1?`<button class="idel" data-rmi="${i}" aria-label="Remove piece">×</button>`:''}</div>
+        <button class="idel" data-rmi="${i}" aria-label="Remove piece">×</button></div>
       <select class="inp" data-pid="${i}" style="margin-bottom:9px">${productOptions(it.pid)}</select>
       <div class="srcpick">
         <button data-src="${i}:cut" data-v="cut" class="${it.src==='cut'?'on':''}">We cut it</button>
@@ -3539,6 +3853,7 @@ function drawItems(){
       ${pieceNote('item',i,it.note)}
       <div class="iline"><span>${pi.area?pi.area.toFixed(3)+' m²':'stock size'}${pi.perim?' · '+pi.perim.toFixed(2)+' lm':''}</span><b>${gbp(pi.total)}</b></div>
     </div>`;}).join('');
+  $('addItem').textContent=items.length?'+ Add another piece':'+ Add glass';
 }
 $('items').addEventListener('input',e=>{
   const t=e.target;
@@ -3751,13 +4066,12 @@ function drawDraftCount(){
 function collectForm(){
   return {
     name:$('fName').value, phone:$('fPhone').value, email:$('fEmail').value, trade:isTrade,
-    unit, kind:jobKind, items:clone(items), frames:clone(frames), extras:clone(extras),
+    unit, items:clone(items), frames:clone(frames), works:clone(works), extras:clone(extras),
     discountPct:$('fDisc').value, cardFee:$('fCard').checked, noVat:$('fNoVat').checked,
     payments:clone(pays), handover, addr:$('fAddr').value, wanted:$('fWanted').value,
     note:$('fNote').value, needsMeasure:$('fMeasure').checked, measured:$('fMeasured').checked, noteUrgent:$('fUrgent').checked,
     needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt,
     attnOn:$('fAttn').checked, attnText:$('fAttnText').value,
-    needsOrder:$('fNeedsOrder').checked, ordWhat:$('fOrdWhat').value, ordSup:$('fOrdSup').value,
     photos:photoList.filter(p=>!p.isNew).map(p=>({id:p.id,name:p.name,w:p.w,h:p.h,send:p.send!==false}))
   };
 }
@@ -3765,7 +4079,8 @@ function collectForm(){
 function hasContent(f){
   return !!((f.name||'').trim()||(f.phone||'').trim()||(f.email||'').trim()||(f.addr||'').trim()
     ||(f.note||'').trim()||(f.attnText||'').trim()||(f.items||[]).some(i=>i.w||i.h||i.note)
-    ||(f.frames||[]).some(x=>x.desc||x.w||x.h||x.price)||(f.extras||[]).some(x=>x.label||x.amount)
+    ||(f.frames||[]).some(x=>x.desc||x.w||x.h||x.price||x.supplier)||(f.works||[]).some(x=>x.desc||x.price||x.supplier)
+    ||(f.extras||[]).some(x=>x.label||x.amount)
     ||(f.payments||[]).some(p=>num(p.amount))||photoList.some(p=>p.isNew));
 }
 
@@ -3821,7 +4136,7 @@ function restoreDraft(d){
     toast('That job has been deleted since — the draft opens as a new job',true);
     draftKey='new:'+Date.now().toString(36);
   }
-  fillForm(Object.assign({},base||{},d.form));
+  fillForm(Object.assign({},base||{},upgradeForm(clone(d.form),base)));
   photoList=(d.form.photos||[]).map(p=>Object.assign({},p))
     .concat((d.newPhotos||[]).map(p=>Object.assign({isNew:true},p)));
   photoGone=(d.photoGone||[]).slice();
@@ -3836,11 +4151,12 @@ function renderDrafts(){
   const all=Object.values(readDrafts()).sort((a,b)=>b.savedAt.localeCompare(a.savedAt));
   $('draftBody').innerHTML = all.length
     ? all.map(d=>{
-        const f=d.form, n=(f.items||[]).filter(i=>i.w||i.h).length+(f.frames||[]).length;
+        const f=upgradeForm(clone(d.form)), g=(f.items||[]).filter(i=>i.w||i.h);
+        const n=g.length+(f.frames||[]).length+(f.works||[]).length;
         return `<div class="drow">
           <div style="min-width:0">
             <div class="dt">${d.jobId?'Changes to job '+d.jobNo+' — ':'New job — '}${esc((f.name||'').trim()||'no name yet')}</div>
-            <div class="dm">${[KINDS[f.kind]||'Glass', n?n+' item'+(n===1?'':'s'):'', (f.phone||'').trim()?esc(fmtPhone(f.phone)):'']
+            <div class="dm">${[kindLabel({items:g,frames:f.frames,works:f.works}), n?n+' item'+(n===1?'':'s'):'', (f.phone||'').trim()?esc(fmtPhone(f.phone)):'']
               .filter(Boolean).join(' · ')}</div>
             <div class="dm">Last changed ${esc(whenText(d.savedAt))}</div>
             ${draftStale(d)?`<div class="dwarn">This job has been changed since — opening the draft and saving would replace those changes.</div>`:''}
@@ -3970,11 +4286,36 @@ $('invState').addEventListener('click',e=>{
   if(e.target.closest('[data-uninv]')){ formInvoicedAt=''; drawInvState(); }
 });
 
+/* ---------- frames and maintenance lines ----------
+   Both are priced by hand, each has its own Needs to order?, and saying
+   where one is coming from ticks it, the first time. */
+const lineText=l=>`<span>${lineQty(l)} × ${gbp(num(l.price))}</span><b>${gbp(num(l.price)*lineQty(l))}</b>`;
+function lineState(l){
+  if(!l.order) return '';
+  const s=lst(l);
+  if(s==='ordered') return `<div class="lstate">On order${l.orderedAt?' since '+esc(orderedOn(l)):''}</div>`;
+  if(s==='arrived') return `<div class="lstate">In${realDate(l.arrivedAt)?' since '+esc(fullDate(l.arrivedAt)):''}</div>`;
+  return '';
+}
+const orderTick=(i,l)=>`<label class="ltick ${l.order?'on':''}"><input type="checkbox" data-lord="${i}" ${l.order?'checked':''}> Needs to order?</label>${lineState(l)}`;
+/* tick or untick in place, so the box being typed in keeps the cursor */
+function setLineOrder(id,list,i,on){
+  if(!list[i]) return;
+  list[i].order=on;
+  const box=$(id).querySelector('[data-lord="'+i+'"]'); if(!box) return;
+  box.checked=on;
+  box.closest('.ltick').classList.toggle('on',on);
+  box.closest('.item').classList.toggle('ordered',on);
+}
+function refreshLineTotals(id,list){
+  Array.prototype.forEach.call($(id).querySelectorAll('[data-lline]'),el=>{ const l=list[+el.dataset.lline]; if(l) el.innerHTML=lineText(l); });
+}
+
 function drawFrames(){
   $('frames').innerHTML=frames.map((f,i)=>
-    `<div class="item cutting">
+    `<div class="item ${f.order?'ordered':''}">
       <div class="ihead"><span class="inum">Frame ${i+1}</span>
-        ${frames.length>1?`<button class="idel" data-rmf="${i}" aria-label="Remove frame">×</button>`:''}</div>
+        <button class="idel" data-rmf="${i}" aria-label="Remove frame">×</button></div>
       <div class="fgroup"><label for="fd${i}">What it is</label>
         <input class="inp" id="fd${i}" data-fdesc="${i}" value="${esc(f.desc||'')}"
           placeholder="e.g. white uPVC casement, one opener"></div>
@@ -3984,22 +4325,32 @@ function drawFrames(){
         <input class="inp mono" data-fhgt="${i}" value="${esc(f.h||'')}" inputmode="decimal" placeholder="height">
         <input class="inp mono qty" data-fqty="${i}" value="${esc(f.q||'1')}" inputmode="numeric" aria-label="Quantity">
       </div>
-      <div class="row" style="margin-top:9px">
+      <div class="row lrow" style="margin-top:9px">
         <div><label for="fs${i}">Coming from</label>
           <input class="inp" id="fs${i}" data-fsup="${i}" value="${esc(f.supplier||'')}" placeholder="supplier"></div>
         <div><label for="fp${i}">Price each, ex VAT</label>
           <input class="inp mono" id="fp${i}" data-fprice="${i}" value="${esc(f.price||'')}" inputmode="decimal" placeholder="£"></div>
       </div>
+      ${orderTick(i,f)}
       ${pieceNote('frame',i,f.note)}
-    </div>`).join('')||'<p class="sub">No frames on this job yet.</p>';
+      <div class="iline" data-lline="${i}">${lineText(f)}</div>
+    </div>`).join('');
+  $('addFrame').textContent=frames.length?'+ Add another frame':'+ Add a frame';
+  $('framesHint').style.display=frames.length?'':'none';
 }
 $('frames').addEventListener('input',e=>{
   const t=e.target, map={fdesc:'desc',fwid:'w',fhgt:'h',fqty:'q',fsup:'supplier',fprice:'price'};
   if(t.dataset.pn!==undefined){ frames[+t.dataset.pn.split(':')[1]].note=t.value; return; }
-  for(const k in map) if(t.dataset[k]!==undefined){ frames[+t.dataset[k]][map[k]]=t.value; drawCalc();
+  for(const k in map) if(t.dataset[k]!==undefined){
+    const i=+t.dataset[k], f=frames[i], was=f[map[k]];
+    f[map[k]]=t.value; drawCalc(); refreshLineTotals('frames',frames);
     /* a frame coming from a supplier has to be ordered */
-    if(k==='fsup'&&t.value.trim()&&!$('fNeedsOrder').checked){ $('fNeedsOrder').checked=true; drawOrder(); }
+    if(k==='fsup'&&!String(was||'').trim()&&t.value.trim()&&!f.order) setLineOrder('frames',frames,i,true);
     return; }
+});
+$('frames').addEventListener('change',e=>{
+  const t=e.target; if(t.dataset.lord===undefined) return;
+  setLineOrder('frames',frames,+t.dataset.lord,t.checked); drawCalc();
 });
 $('frames').addEventListener('click',e=>{
   const po=e.target.closest('[data-pnopen]');
@@ -4007,39 +4358,56 @@ $('frames').addEventListener('click',e=>{
   const rm=e.target.closest('[data-rmf]'); if(!rm) return;
   frames.splice(+rm.dataset.rmf,1); NOTEOPEN={}; drawFrames(); drawCalc();
 });
-$('addFrame').onclick=()=>{ frames.push({desc:'',w:'',h:'',q:'1',supplier:'',price:'',arrived:false});
-  drawFrames(); drawCalc(); };
+$('addFrame').onclick=()=>{ frames.push({desc:'',w:'',h:'',q:'1',supplier:'',price:'',arrived:false,order:false});
+  drawFrames(); drawCalc();
+  const el=document.querySelector('[data-fdesc="'+(frames.length-1)+'"]'); if(el) el.focus(); };
 
-/* Swapping the job type changes what the sheet asks for. Nothing is
-   thrown away — switch back and the glass is still there. */
-function setKind(k){
-  jobKind=KINDS[k]?k:'glass';
-  Array.prototype.forEach.call($('kindPick').children,b=>b.classList.toggle('on',b.dataset.kind===jobKind));
-  $('workTitle').textContent=KINDS[jobKind];
-  $('glassWrap').style.display = jobKind==='glass'?'':'none';
-  $('framesWrap').style.display= jobKind==='frames'?'':'none';
-  $('maintWrap').style.display = jobKind==='maintenance'?'':'none';
-  $('unitPick').style.display  = jobKind==='maintenance'?'none':'';
-  $('extrasTitle').textContent = jobKind==='maintenance'?'The work':'Extras and labour';
-  if(jobKind==='frames'&&!frames.length) frames.push({desc:'',w:'',h:'',q:'1',supplier:'',price:'',arrived:false});
-  drawFrames(); drawCalc(); drawOrder();
+function drawWorks(){
+  $('works').innerHTML=works.map((l,i)=>
+    `<div class="item ${l.order?'ordered':''}">
+      <div class="ihead"><span class="inum">Maintenance ${i+1}</span>
+        <button class="idel" data-rmw="${i}" aria-label="Remove this maintenance">×</button></div>
+      <div class="fgroup"><label for="wd${i}">What it is</label>
+        <input class="inp" id="wd${i}" data-wdesc="${i}" value="${esc(l.desc||'')}" placeholder="e.g. 2 white espagnolette handles"></div>
+      <div class="wrow">
+        <div><label for="ws${i}">Coming from</label>
+          <input class="inp" id="ws${i}" data-wsup="${i}" value="${esc(l.supplier||'')}" placeholder="supplier"></div>
+        <div><label for="wq${i}">Quantity</label>
+          <input class="inp mono" id="wq${i}" data-wqty="${i}" value="${esc(l.q===undefined?'1':l.q)}" inputmode="numeric"></div>
+        <div><label for="wp${i}">Price each, ex VAT</label>
+          <input class="inp mono" id="wp${i}" data-wprice="${i}" value="${esc(l.price||'')}" inputmode="decimal" placeholder="£"></div>
+      </div>
+      ${orderTick(i,l)}
+      ${pieceNote('work',i,l.note)}
+      <div class="iline" data-lline="${i}">${lineText(l)}</div>
+    </div>`).join('');
+  $('addWork').textContent=works.length?'+ Add more maintenance':'+ Add maintenance';
+  $('worksHint').style.display=works.length?'':'none';
 }
-/* frames and maintenance only: glass is ordered piece by piece */
-function drawOrder(){
-  const show=jobKind!=='glass', on=$('fNeedsOrder').checked;
-  $('orderWrap').style.display=show?'':'none';
-  $('ordTick').classList.toggle('on',on);
-  $('ordMore').style.display=show&&on?'':'none';
-  $('ordWork').style.display=jobKind==='maintenance'?'':'none';
-  $('ordState').innerHTML = jobKind==='frames'
-    ? 'Once the customer confirms, the frames go to <b>To be ordered</b>, then <b>On order</b>, then the job is ready. Each frame is ordered from wherever it says it is coming from.'
-    : 'Once the customer confirms, this goes to <b>To be ordered</b>, then <b>On order</b>, then the job is ready.';
-}
-$('fNeedsOrder').addEventListener('change',drawOrder);
-$('kindPick').addEventListener('click',e=>{
-  const b=e.target.closest('[data-kind]'); if(!b) return;
-  setKind(b.dataset.kind);
+$('works').addEventListener('input',e=>{
+  const t=e.target, map={wdesc:'desc',wsup:'supplier',wqty:'q',wprice:'price'};
+  if(t.dataset.pn!==undefined){ works[+t.dataset.pn.split(':')[1]].note=t.value; return; }
+  for(const k in map) if(t.dataset[k]!==undefined){
+    const i=+t.dataset[k], l=works[i], was=l[map[k]];
+    l[map[k]]=t.value; drawCalc(); refreshLineTotals('works',works);
+    /* anything coming from a supplier has to be ordered */
+    if(k==='wsup'&&!String(was||'').trim()&&t.value.trim()&&!l.order) setLineOrder('works',works,i,true);
+    return; }
 });
+$('works').addEventListener('change',e=>{
+  const t=e.target; if(t.dataset.lord===undefined) return;
+  setLineOrder('works',works,+t.dataset.lord,t.checked); drawCalc();
+});
+$('works').addEventListener('click',e=>{
+  const po=e.target.closest('[data-pnopen]');
+  if(po){ openPieceNote(po.dataset.pnopen); return; }
+  const rm=e.target.closest('[data-rmw]'); if(!rm) return;
+  works.splice(+rm.dataset.rmw,1); NOTEOPEN={}; drawWorks(); drawCalc();
+});
+$('addWork').onclick=()=>{ works.push({desc:'',supplier:'',q:'1',price:'',order:false});
+  drawWorks(); drawCalc();
+  const el=document.querySelector('[data-wdesc="'+(works.length-1)+'"]'); if(el) el.focus(); };
+
 
 function drawPays(){
   $('pays').innerHTML=pays.map((p,i)=>
@@ -4054,9 +4422,13 @@ function drawPays(){
   drawPayBal();
 }
 /* The running balance, shown in the card heading so it is always in view. */
+/* the price of the job sheet as it stands */
+const formTotals=its=>totals(its||items,extras,$('fDisc').value,$('fCard').checked,unit,
+                             {frames,works,noVat:$('fNoVat').checked});
+/* a piece of glass with a size on it, or a stock size with how many */
+const pieceIn=it=>{ const p=prodOf(it.pid); return p.each?(parseInt(it.q)||0)>0:(parseFloat(it.w)>0&&parseFloat(it.h)>0); };
 function drawPayBal(){
-  const t=totals(items,extras,$('fDisc').value,$('fCard').checked,unit,
-                 {frames:jobKind==='frames'?frames:[],noVat:$('fNoVat').checked});
+  const t=formTotals();
   const paid=pays.reduce((s,p)=>s+num(p.amount),0);
   const bal=t.grand-paid;
   const el=$('payBal');
@@ -4085,8 +4457,7 @@ $('addPay').onclick=()=>{
   drawPays(); drawCalc();
 };
 $('payFull').onclick=()=>{
-  const t=totals(items,extras,$('fDisc').value,$('fCard').checked,unit,
-                 {frames:jobKind==='frames'?frames:[],noVat:$('fNoVat').checked});
+  const t=formTotals();
   const bal=t.grand-pays.reduce((s,p)=>s+num(p.amount),0);
   if(bal<=0.005) return;
   pays.push({date:ymd(new Date()),amount:bal.toFixed(2),method:PAY_METHODS[0]});
@@ -4139,15 +4510,15 @@ $('fNoVat').addEventListener('change',()=>{drawCalc();drawPayBal();});
 $('fCard').addEventListener('change',drawCalc);
 
 function drawCalc(){
-  const t=totals(items,extras,$('fDisc').value,$('fCard').checked,unit,
-                 {frames:jobKind==='frames'?frames:[],noVat:$('fNoVat').checked});
+  const t=formTotals();
   $('noVatHint').style.display=$('fNoVat').checked?'':'none';
   const dep=pays.reduce((s,p)=>s+num(p.amount),0);
   $('calcRows').innerHTML=
-    (jobKind==='glass'?`<div class="calcrow"><span>Glass and edgework (${t.area.toFixed(3)} m²)</span><span>${gbp(t.subtotal)}</span></div>`:'')+
-    (jobKind==='frames'?`<div class="calcrow"><span>Frames</span><span>${gbp(t.framesTotal)}</span></div>`:'')+
+    (items.some(pieceIn)||!(frames.length||works.length)?`<div class="calcrow"><span>Glass and edgework (${t.area.toFixed(3)} m²)</span><span>${gbp(t.glassTotal)}</span></div>`:'')+
+    (frames.length?`<div class="calcrow"><span>Frames</span><span>${gbp(t.framesTotal)}</span></div>`:'')+
+    (works.length?`<div class="calcrow"><span>Maintenance</span><span>${gbp(t.worksTotal)}</span></div>`:'')+
     (t.discountAmount?`<div class="calcrow"><span>Discount ${num($('fDisc').value)}%</span><span>−${gbp(t.discountAmount)}</span></div>`:'')+
-    (t.extrasTotal?`<div class="calcrow"><span>${jobKind==='maintenance'?'The work':'Extras'}</span><span>${gbp(t.extrasTotal)}</span></div>`:'')+
+    (t.extrasTotal?`<div class="calcrow"><span>Extras</span><span>${gbp(t.extrasTotal)}</span></div>`:'')+
     `<div class="calcrow"><span>Net</span><span>${gbp(t.net)}</span></div>`+
     (t.noVat?`<div class="calcrow"><span>VAT</span><span>none on this job</span></div>`
             :`<div class="calcrow"><span>VAT @ 20%</span><span>${gbp(t.vat)}</span></div>`)+
@@ -4155,22 +4526,24 @@ function drawCalc(){
     `<div class="calcrow tot"><span>${isTrade?'To invoice':'To pay'}</span><span>${gbp(t.grand)}</span></div>`+
     (dep?`<div class="calcrow"><span>Less paid</span><span>−${gbp(dep)}</span></div>
           <div class="calcrow"><span>Balance</span><span>${gbp(t.grand-dep)}</span></div>`:'');
-  const nc=jobKind==='glass'?items.filter(i=>i.src==='cut').length:0;
-  const no=jobKind==='glass'?items.filter(i=>i.src==='order').length:0;
+  const sized=items.filter(pieceIn);
+  const nc=sized.filter(i=>i.src==='cut').length, no=sized.filter(i=>i.src==='order').length;
+  const lf=frames.filter(f=>f.order).length, lw=works.filter(l=>l.order).length;
   const sup=[];
-  items.filter(i=>i.src==='order').forEach(i=>{const s=i.supplier||'Supplier'; if(sup.indexOf(s)<0) sup.push(s);});
-  $('calcSplit').innerHTML=(nc||no)
-    ? `${nc?nc+' piece'+(nc>1?'s':'')+' onto the cutting list':''}${nc&&no?'<br>':''}${no?no+' piece'+(no>1?'s':'')+' onto the order list ('+esc(sup.join(', '))+')':''}`
-    : '';
+  sized.filter(i=>i.src==='order').forEach(i=>{const s=i.supplier||'Supplier'; if(sup.indexOf(s)<0) sup.push(s);});
+  $('calcSplit').innerHTML=[nc?nc+' piece'+(nc>1?'s':'')+' onto the cutting list':'',
+    no?no+' piece'+(no>1?'s':'')+' onto the order list ('+esc(sup.join(', '))+')':'',
+    lf?lf+' frame'+(lf>1?'s':'')+' to order':'', lw?lw+' maintenance item'+(lw>1?'s':'')+' to order':''].filter(Boolean).join('<br>');
   /* a job priced at older rates says so, and can be brought up to date */
   const notes=[];
-  if(jobKind==='glass'&&items.length){
-    const now=totals(unlocked(items),extras,$('fDisc').value,$('fCard').checked,unit,{frames:[],noVat:$('fNoVat').checked});
+  if(items.length){
+    const now=formTotals(unlocked(items));
     if(Math.abs(now.grand-t.grand)>0.005)
       notes.push(`Priced at the rates it was quoted at. At today's prices it would be ${gbp(now.grand)}. <button type="button" data-reprice="1">Use today's prices</button>`);
   }
   if(ADJ) notes.push(esc(`List prices are running ${ADJ>0?'+':''}${ADJ}% — change that under Prices.`));
   $('calcHint').innerHTML=notes.join('<br>');
+  drawPayBal();
 }
 
 $('calcHint').addEventListener('click',e=>{
@@ -4217,7 +4590,11 @@ function openJob(j){
 function fillForm(j){
   $('fName').value=j?j.name:''; $('fPhone').value=j?(j.phone||''):''; $('fEmail').value=j?(j.email||''):'';
   unit=j&&j.unit?j.unit:'mm';
+  frames=j&&j.frames?clone(j.frames):[];
+  works=j&&j.works?clone(j.works):[];
+  /* a new job, or one with nothing on it yet, starts with a piece of glass */
   items=j&&j.items&&j.items.length?clone(j.items)
+       :j&&(frames.length||works.length)?[]
        :[{pid:'c4mm',w:'',h:'',q:'1',addons:[],src:'cut',supplier:'',arrived:false,cut:false}];
   items.forEach(i=>{ if(!i.src) i.src=defaultSrc(i.pid); });
   extras=j&&j.extras?clone(j.extras):[];
@@ -4225,10 +4602,6 @@ function fillForm(j){
   pays=j&&j.payments?clone(j.payments):[];
   $('fCard').checked=j?!!j.cardFee:false;
   $('fNoVat').checked=j?!!j.noVat:false;
-  frames=j&&j.frames?clone(j.frames):[];
-  $('fNeedsOrder').checked=j?!!j.needsOrder:false;
-  $('fOrdWhat').value=j?(j.ordWhat!==undefined?j.ordWhat:(j.workOrder&&j.workOrder.what)||''):'';
-  $('fOrdSup').value=j?(j.ordSup!==undefined?j.ordSup:(j.workOrder&&j.workOrder.supplier)||''):'';
   photoList=j&&j.photos?clone(j.photos):[]; photoGone=[];
   photoList.filter(p=>!PHOTOCACHE[p.id]).forEach(p=>{
     loadPhoto(p.id).then(drawPhotos).catch(()=>{});
@@ -4252,8 +4625,7 @@ function fillForm(j){
   OTHER={}; NOTEOPEN={};
   setTrade(j?!!j.trade:false);
   setHandover(j?(j.handover||(j.deliver?'delivery':'collection')):'collection');
-  setKind(j?kindOf(j):'glass');
-  drawItems(); drawExtras(); drawPays(); drawCalc(); drawAppts(); $('sugg').innerHTML='';
+  drawItems(); drawFrames(); drawWorks(); drawExtras(); drawPays(); drawCalc(); drawAppts(); $('sugg').innerHTML='';
 }
 $('newBtn').onclick=()=>openJob(null);
 
@@ -4262,35 +4634,29 @@ $('saveJob').onclick=async()=>{
   if(!name){ toast('Needs a customer name',true); $('fName').focus(); return; }
   const attnOn=$('fAttn').checked, attnText=$('fAttnText').value.trim();
   if(attnOn&&!attnText){ toast('Say what needs doing, or untick Needs attention',true); $('fAttnText').focus(); return; }
-  const clean=jobKind==='glass'?items.filter(it=>{
-    const p=prodOf(it.pid);
-    return p.each?(parseInt(it.q)||0)>0:(parseFloat(it.w)>0&&parseFloat(it.h)>0);
-  }).map(it=>{ const c=Object.assign({cut:false,arrived:false},it);
-      c.note=(c.note||'').trim(); if(!c.note) delete c.note; return c; }):[];
+  /* everything on the sheet is kept: glass, frames and maintenance */
+  const clean=items.filter(pieceIn).map(it=>{ const c=Object.assign({cut:false,arrived:false},it);
+      c.note=(c.note||'').trim(); if(!c.note) delete c.note; return c; });
   lockRates(clean);
-  const cleanFrames=jobKind==='frames'
-    ? frames.filter(f=>(f.desc||'').trim()||num(f.price)||parseFloat(f.w)>0)
-        .map(f=>{ const c=Object.assign({arrived:false},f,{price:num(f.price)});
-            if(!c.ostate) c.ostate=c.arrived?'arrived':'toprice';
-            c.note=(c.note||'').trim(); if(!c.note) delete c.note; return c; })
-    : [];
-  if(jobKind==='glass' && !clean.length && !$('fMeasure').checked){
-    toast('Add a size, or tick "needs measuring first" to book a measure',true); return; }
-  if(jobKind==='frames' && !cleanFrames.length && !$('fMeasure').checked){
-    toast('Add a frame, or tick "needs measuring first" to book a measure',true); return; }
-  if(jobKind==='maintenance' && !extras.filter(x=>x.label||num(x.amount)).length && !$('fMeasure').checked){
-    toast('Put what you are charging under "The work"',true); return; }
+  const tidyLine=c=>{ c.desc=String(c.desc||'').trim(); c.supplier=String(c.supplier||'').trim(); c.order=!!c.order;
+    if(!c.ostate) c.ostate=c.arrived?'arrived':'toprice';
+    c.note=(c.note||'').trim(); if(!c.note) delete c.note; return c; };
+  const cleanFrames=frames.filter(f=>String(f.desc||'').trim()||num(f.price)||parseFloat(f.w)>0||String(f.supplier||'').trim())
+    .map(f=>tidyLine(Object.assign({arrived:false},f,{price:num(f.price)})));
+  const cleanWorks=works.filter(l=>String(l.desc||'').trim()||num(l.price)||String(l.supplier||'').trim())
+    .map(l=>tidyLine(Object.assign({},l,{q:String(lineQty(l)),price:num(l.price)})));
+  if(!clean.length && !cleanFrames.length && !cleanWorks.length && !$('fMeasure').checked){
+    toast('Add some glass, a frame or some maintenance, or tick "needs measuring first" to book a measure',true); return; }
   const wasMeasured=editing&&editing.measuredAt?editing.measuredAt:null;
   const markNow=$('fMeasure').checked&&$('fMeasured').checked&&!wasMeasured;
-  if(markNow&&!okToMarkMeasured({no:editing?editing.no:0,kind:jobKind,items:clean,frames:cleanFrames,
-      extras:extras.filter(x=>x.label||num(x.amount))})) return;
+  if(markNow&&!okToMarkMeasured({no:editing?editing.no:0,items:clean,frames:cleanFrames,works:cleanWorks})) return;
   const jobId = editing?editing.id:'j'+Date.now()+Math.random().toString(36).slice(2,6);
   const photos = await syncPhotos(jobId);
   const job=Object.assign({},editing||{},{
     id: jobId,
     no: editing?editing.no:(JOBS.reduce((m,j)=>Math.max(m,j.no||0),1649)+1),
     name, phone:$('fPhone').value.trim(), email:$('fEmail').value.trim(), trade:isTrade,
-    unit, items:clean, frames:cleanFrames, kind:jobKind,
+    unit, items:clean, frames:cleanFrames, works:cleanWorks,
     extras:extras.filter(x=>x.label||num(x.amount)),
     discountPct:num($('fDisc').value), cardFee:$('fCard').checked, noVat:$('fNoVat').checked,
     payments: pays.filter(p=>num(p.amount)!==0).map(p=>({
@@ -4302,10 +4668,6 @@ $('saveJob').onclick=async()=>{
     handover, deliver:handover==='delivery', addr:$('fAddr').value.trim(),
     needsMeasure:$('fMeasure').checked, noteUrgent:$('fUrgent').checked, photos,
     needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt||undefined,
-    needsOrder: jobKind!=='glass'&&$('fNeedsOrder').checked,
-    workOrder: jobKind==='maintenance'&&$('fNeedsOrder').checked
-      ? Object.assign({ostate:'toprice'},editing&&editing.workOrder||{},{what:$('fOrdWhat').value.trim(),supplier:$('fOrdSup').value.trim()})
-      : (editing?editing.workOrder:undefined),
     /* flagged when first ticked; changing the words keeps that time */
     attn: attnOn ? {text:attnText, at:(editing&&needsAttn(editing)&&editing.attn.at)||new Date().toISOString()} : undefined,
     appts: editing?clone(apptsOf(editing)):[],
@@ -4316,7 +4678,7 @@ $('saveJob').onclick=async()=>{
     status: editing?editing.status:'quote',
     takenAt: editing?editing.takenAt:new Date().toISOString()
   });
-  delete job.measured; delete job.ordWhat; delete job.ordSup;
+  delete job.measured; delete job.ordWhat; delete job.ordSup; delete job.kind; delete job.needsOrder; delete job.workOrder;
   job.measuredAt = !$('fMeasure').checked ? wasMeasured
     : $('fMeasured').checked ? (wasMeasured||new Date().toISOString()) : null;
   if(markNow) apptsOf(job).forEach(a=>{ if(a.kind==='measure'&&!a.doneAt) a.doneAt=job.measuredAt; });
@@ -4383,9 +4745,10 @@ function defaultMessage(j,kind){
   if(kind==='quote')   return hi+'Here is your quote, reference '+j.no+':';
   if(kind==='confirm') return hi+'Thanks for your order. We have booked it in as job '+j.no+':';
   if(kind==='balance') return hi+'Here is the balance for job '+j.no+':';
-  const k=kindOf(j);
-  return hi+(k==='maintenance'?'We are ready to do the work for job '+j.no+':'
-            :k==='frames'?'Your frames are ready, job '+j.no+':'
+  const k=kindsOf(j);
+  return hi+(k.length>1?'Everything for job '+j.no+' is ready:'
+            :k[0]==='maintenance'?'We are ready to do the work for job '+j.no+':'
+            :k[0]==='frames'?'Your frames are ready, job '+j.no+':'
             :'Your glass is ready, job '+j.no+':');
 }
 const VISIT_WORD={measure:'Measuring date',fit:'Fitting date',deliver:'Delivery date'};
@@ -4407,7 +4770,12 @@ function customerBlocks(j){
     L.push('Price: '+gbp(num(f.price)*q));
     B.push(L.join('\n'));
   });
-  if(kindOf(j)==='maintenance') (j.extras||[]).forEach(x=>B.push('Work: '+(x.label||'Work')+'\nPrice: '+gbp(x.amount)));
+  worksOf(j).forEach(l=>{
+    const q=lineQty(l), L=['Work: '+(String(l.desc||'').trim()||'Maintenance')];
+    if(q>1) L.push('Quantity: '+q);
+    if(num(l.price)) L.push('Price: '+gbp(num(l.price)*q));
+    B.push(L.join('\n'));
+  });
   (j.items||[]).forEach(it=>B.push(pieceLines(it,j.unit,'to be confirmed')
     .concat(['Price: '+gbp(priceItem(it,j.unit).total)]).join('\n')));
   return B;
@@ -4415,7 +4783,7 @@ function customerBlocks(j){
 function totalLines(j,kind){
   const t=jobTotals(j), L=[];
   if(t.discountAmount>0.005) L.push('Discount ('+num(j.discountPct)+'%): -'+gbp(t.discountAmount));
-  if(kindOf(j)!=='maintenance') (j.extras||[]).forEach(x=>L.push((x.label||'Extra')+': '+gbp(x.amount)));
+  (j.extras||[]).forEach(x=>L.push((x.label||'Extra')+': '+gbp(x.amount)));
   if(!t.noVat){ L.push('Before VAT: '+gbp(t.net)); L.push('VAT (20%): '+gbp(t.vat)); }
   if(t.cardAmount>0.005) L.push('Card payment (2%): '+gbp(t.cardAmount));
   L.push('Total: '+gbp(t.grand));
@@ -4721,15 +5089,15 @@ function apptText(j){
 }
 function jobsCSV(){
   const head=['Job no','Taken','Status','Customer','Phone','Email','Account','Handover','Address',
-    'Job type','Needs measure','Wanted by','Pieces','Frames','Area m2','Subtotal ex VAT','Discount %','Discount','Extras',
+    'Job type','Needs measure','Wanted by','Pieces','Frames','Maintenance','Area m2','Subtotal ex VAT','Discount %','Discount','Extras',
     'Net ex VAT','VAT','Card fee','Total inc VAT','Paid','Balance','Payments','Needs invoice','Invoiced on',
     'Customer told','Told how','Completed','Diary','Notes'];
   const rows=[head];
   JOBS.slice().sort((a,b)=>a.no-b.no).forEach(j=>{
     const t=jobTotals(j);
     rows.push([j.no, (j.takenAt||'').slice(0,10), stat(j.status).label, j.name, j.phone, j.email,
-      j.trade?'Trade':'Retail', handoverLabel(j), j.addr, KINDS[kindOf(j)], j.needsMeasure?'Yes':'', j.wanted,
-      (j.items||[]).length, framesOf(j).length, r2(t.area), r2(t.subtotal), num(j.discountPct)||'', r2(t.discountAmount),
+      j.trade?'Trade':'Retail', handoverLabel(j), j.addr, kindLabel(j), j.needsMeasure?'Yes':'', j.wanted,
+      (j.items||[]).length, framesOf(j).length, worksOf(j).length, r2(t.area), r2(t.subtotal), num(j.discountPct)||'', r2(t.discountAmount),
       r2(t.extrasTotal), r2(t.net), r2(t.vat), r2(t.cardAmount), r2(t.grand), r2(paidOf(j)),
       r2(balanceOf(j)),
       paymentsOf(j).map(x=>x.date+' '+r2(x.amount)+(x.method?' '+x.method:'')).join('; '),
@@ -4765,7 +5133,7 @@ function piecesCSV(){
 }
 const backupJSON=()=>JSON.stringify({
   app:"Wilson's Glass job book", version:4, exported:new Date().toISOString(),
-  jobs:JOBS, prices:PRICES, adjust:ADJ, suppliers:SUPPLIERS, settings:SETTINGS
+  jobs:JOBS, prices:PRICES, adjust:ADJ, suppliers:SUPPLIERS, settings:SETTINGS, events:EVENTS
 },null,1);
 
 async function noteExport(full){
@@ -4955,19 +5323,23 @@ $('printOrder').onclick=()=>{
 $('printDiary').onclick=()=>{
   const from=ymd(new Date(diaryMonth.getFullYear(),diaryMonth.getMonth(),1));
   const to=ymd(new Date(diaryMonth.getFullYear(),diaryMonth.getMonth()+1,0));
-  const rows=allAppts().filter(x=>x.a.date>=from&&x.a.date<=to)
-    .sort((p,q)=>p.a.date.localeCompare(q.a.date)||(p.a.time||'').localeCompare(q.a.time||''));
+  const rows=allAppts().filter(x=>x.a.date>=from&&x.a.date<=to).map(x=>({date:x.a.date,time:x.a.time||'',x}))
+    .concat(EVENTS.filter(e=>e.date>=from&&e.date<=to).map(e=>({date:e.date,time:e.time||'',e})))
+    .sort((p,q)=>p.date.localeCompare(q.date)||p.time.localeCompare(q.time));
   let last='';
   $('printarea').innerHTML=`<div class="ptitle">Diary — ${diaryMonth.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</div>`+
-    (rows.length?rows.map(x=>{
-      const j=x.j, a=x.a;
-      const head=a.date!==last?`<div class="psup">${new Date(a.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</div>`:'';
-      last=a.date;
+    (rows.length?rows.map(r=>{
+      const head=r.date!==last?`<div class="psup">${new Date(r.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</div>`:'';
+      last=r.date;
+      if(r.e) return head+`<div class="pjob"><div class="phead"><span>${esc(evWhen(r.e))} · ${esc(r.e.what)}</span>
+        <span>EVENT${r.e.remind?' · REMINDER':''}</span></div></div>`;
+      const j=r.x.j, a=r.x.a;
       return head+`<div class="pjob"><div class="phead">
         <span>${a.time||'—'} · ${j.no} · ${esc(j.name)}</span>
         <span>${APPT[a.kind].label.toUpperCase()}${a.mins?' · '+(DURS[a.mins]||a.mins+' min'):''}</span></div>
         <div>${esc(j.addr||'No address')}${j.phone?' · '+esc(fmtPhone(j.phone)):''}</div>
-        ${toPrice(j).length||pendingOrder(j).length||pendingCut(j).length?`<div><em>Not finished: ${[toPrice(j).length?toPrice(j).length+' to price':'',pendingOrder(j).length?pendingOrder(j).length+' on order':'',pendingCut(j).length?pendingCut(j).length+' to cut':''].filter(Boolean).join(', ')}</em></div>`:''}
+        ${(n=>n.some(Boolean)?`<div><em>Not finished: ${[n[0]?n[0]+' to order':'',n[1]?n[1]+' on order':'',n[2]?n[2]+' to cut':''].filter(Boolean).join(', ')}</em></div>`:'')
+          ([toPrice(j).length+linesToOrder(j).length,pendingOrder(j).length+linesOnOrder(j).length,pendingCut(j).length])}
         ${j.note?`<div class="pnote">${esc(j.note)}</div>`:''}
       </div>`;}).join('')
      :'<p>Nothing booked this month.</p>');
@@ -4999,10 +5371,12 @@ document.addEventListener('keydown',e=>{
   await initStore();
   await loadAll();
   render();
+  let shown=ymd(new Date());
   setInterval(async()=>{
     if(document.querySelector('.sheet.on')) return;
-    const before=JSON.stringify(JOBS); await loadAll();
-    if(JSON.stringify(JOBS)!==before) render();
+    const before=JSON.stringify(JOBS)+JSON.stringify(EVENTS); await loadAll();
+    /* a new day brings that day's reminders */
+    if(JSON.stringify(JOBS)+JSON.stringify(EVENTS)!==before||ymd(new Date())!==shown){ shown=ymd(new Date()); render(); }
   },10000);
 })();
 </script>
