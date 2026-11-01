@@ -21,7 +21,9 @@ const POSTCODES = {
 };
 
 function makeServer() {
-  const rows = new Map();          // id -> {data, version}
+  const rows = new Map();          // id -> {data, version, seq}
+  const gone = new Map();          // id -> the change number it was deleted at
+  let seqN = 0;                    // the job book's change counter
   const photos = new Map();
   const settings = new Map();
   const settingsV = new Map();      // key -> version, as updated_at in D1
@@ -29,8 +31,14 @@ function makeServer() {
   const log = [];
   const postcodes = new Map(Object.entries(POSTCODES));
   return {
-    rows, settings, settingsV, log, photos, postcodes,
-    seed(job) { rows.set(job.id, { data: JSON.stringify(job), version: 1 }); },
+    rows, gone, settings, settingsV, log, photos, postcodes,
+    /* how many jobs have been sent to the app, to see what a refresh costs */
+    sent: 0,
+    /* oldWorker: no /api/sync at all; noCounter: the database has no
+       change numbers yet, so /api/sync always sends everything */
+    oldWorker: false, noCounter: false,
+    get seq() { return seqN; },
+    seed(job) { rows.set(job.id, { data: JSON.stringify(job), version: 1, seq: 0 }); },
     async handle(url, opt) {
       if (this._photoRoute) { const r = this._photoRoute(url, opt); if (r) return r; }
       const method = (opt && opt.method) || 'GET';
@@ -49,8 +57,21 @@ function makeServer() {
         json: async () => o
       });
 
-      if (path === '/api/jobs' && method === 'GET')
+      if (path === '/api/jobs' && method === 'GET') {
+        this.sent += rows.size;
         return json([...rows.values()].map(r => ({ ...JSON.parse(r.data), _v: r.version })));
+      }
+      /* the same as the real Worker: everything, or just what changed */
+      if (path.startsWith('/api/sync') && method === 'GET') {
+        if (this.oldWorker) return json({ error: 'not found' }, 404);
+        const m = /[?&]since=(-?\d+)/.exec(path), since = m ? +m[1] : -1;
+        const all = since < 0 || this.noCounter;
+        const jobs = [...rows.values()].filter(r => all || (r.seq || 0) > since)
+          .map(r => ({ ...JSON.parse(r.data), _v: r.version }));
+        this.sent += jobs.length;
+        return json({ all, seq: this.noCounter ? null : seqN, jobs,
+                      gone: all ? [] : [...gone.entries()].filter(([, s]) => s > since).map(([id]) => id) });
+      }
 
       /* the same rules as the real Worker: a version per setting, and a
          save is refused unless it names the version it was editing */
@@ -77,12 +98,13 @@ function makeServer() {
         delete job._v;
         const cur = rows.get(id);
         if (!cur) {                                   // fresh insert
-          rows.set(id, { data: JSON.stringify(job), version: 1 });
+          rows.set(id, { data: JSON.stringify(job), version: 1, seq: ++seqN });
+          gone.delete(id);
           return json({ ok: true, version: expected + 1 });
         }
         if (cur.version !== expected)                 // somebody else got there first
           return json({ conflict: true, current: { ...cur, updated_by: 'the office' } }, 409);
-        rows.set(id, { data: JSON.stringify(job), version: cur.version + 1 });
+        rows.set(id, { data: JSON.stringify(job), version: cur.version + 1, seq: ++seqN });
         return json({ ok: true, version: expected + 1 });
       }
 
@@ -90,6 +112,7 @@ function makeServer() {
         const id = path.split('/')[3];
         [...photos.keys()].forEach(k => { if (photos.get(k).job_id === id) photos.delete(k); });
         rows.delete(id);
+        gone.set(id, ++seqN);
         return json({ ok: true });
       }
 

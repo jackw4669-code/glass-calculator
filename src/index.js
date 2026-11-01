@@ -4,6 +4,11 @@ const json = (data, status = 200) =>
     headers: { 'content-type': 'application/json' }
   });
 
+// Before migration 0004 the job book has no change counter. Everything
+// still works then, the old way: loading always sends the whole book.
+const noCounter = e => /no such (table|column)/i.test(String((e && e.message) || e));
+const asJobs = rows => rows.map(r => ({ ...JSON.parse(r.data), _v: r.version }));
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -47,6 +52,35 @@ export default {
         return json(results.map(r => ({ ...JSON.parse(r.data), _v: r.version })));
       }
 
+      // Just what has changed since a machine last looked. Every save or
+      // delete takes the next number from one counter; a machine sends the
+      // last number it saw and gets back only the jobs saved since, the ids
+      // of any deleted since, and the newest number. With no number it gets
+      // the whole book. Read together, so a save is never half seen.
+      if (path === '/api/sync' && request.method === 'GET') {
+        const s = url.searchParams.get('since');
+        const since = s === null || s === '' ? -1 : Number(s);
+        const all = !Number.isInteger(since) || since < 0;
+        try {
+          const q = [
+            env.DB.prepare('SELECT n FROM job_seq WHERE id = 1'),
+            all ? env.DB.prepare('SELECT data, version FROM jobs')
+                : env.DB.prepare('SELECT data, version FROM jobs WHERE seq > ?1').bind(since)
+          ];
+          if (!all) q.push(env.DB.prepare('SELECT id FROM job_deletes WHERE seq > ?1').bind(since));
+          const res = await env.DB.batch(q);
+          return json({
+            all, seq: res[0].results[0]?.n ?? 0,
+            jobs: asJobs(res[1].results),
+            gone: all ? [] : res[2].results.map(r => r.id)
+          });
+        } catch (e) {
+          if (!noCounter(e)) throw e;
+          const { results } = await env.DB.prepare('SELECT data, version FROM jobs').all();
+          return json({ all: true, seq: null, jobs: asJobs(results), gone: [] });
+        }
+      }
+
       if (path.startsWith('/api/jobs/') && request.method === 'PUT') {
         const id = path.split('/')[3];
         const job = await request.json();
@@ -56,27 +90,42 @@ export default {
         // The app works these out before sending. They are copies of what
         // is already inside `data`, kept as real columns so the database
         // can sort and total without unpacking every job.
-        const res = await env.DB.prepare(`
+        const save = counted => `
           INSERT INTO jobs (id,no,name,phone,email,trade,status,confirmed,
             wanted,total,balance,paid,done_at,cost,net,
-            data,updated_at,updated_by,version)
-          VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,1)
+            data,updated_at,updated_by,version${counted ? ',seq' : ''})
+          VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,1${counted ? ',(SELECT n FROM job_seq WHERE id = 1)' : ''})
           ON CONFLICT(id) DO UPDATE SET
             no=?2, name=?3, phone=?4, email=?5, trade=?6, status=?7,
             confirmed=?8, wanted=?9, total=?10, balance=?11, paid=?12,
             done_at=?13, cost=?14, net=?15,
-            data=?16, updated_at=?17, updated_by=?18, version=jobs.version+1
+            data=?16, updated_at=?17, updated_by=?18, version=jobs.version+1${counted ? ', seq=(SELECT n FROM job_seq WHERE id = 1)' : ''}
           WHERE jobs.version = ?19
-        `).bind(
+        `;
+        const args = [
           job.id, job.no, job.name, job.phone || '', job.email || '',
           job.trade ? 1 : 0, job.status, job.confirmed ? 1 : 0,
           job.wanted || '', job._total ?? 0, job._balance ?? 0, job._paid ?? 0,
           job._doneAt || null, job._cost ?? null, job._net ?? null,
           JSON.stringify(job), new Date().toISOString(), who, expected
-        ).run();
+        ];
+        // The next change number, the job, and, if it had been deleted,
+        // clearing the note that says so: all or nothing.
+        let changes;
+        try {
+          const res = await env.DB.batch([
+            env.DB.prepare('UPDATE job_seq SET n = n + 1 WHERE id = 1'),
+            env.DB.prepare(save(true)).bind(...args),
+            env.DB.prepare('DELETE FROM job_deletes WHERE id = ?1 AND EXISTS (SELECT 1 FROM jobs WHERE id = ?1)').bind(job.id)
+          ]);
+          changes = res[1].meta.changes;
+        } catch (e) {
+          if (!noCounter(e)) throw e;
+          changes = (await env.DB.prepare(save(false)).bind(...args).run()).meta.changes;
+        }
 
         // Nothing changed = someone else saved this job first.
-        if (res.meta.changes === 0) {
+        if (changes === 0) {
           const cur = await env.DB
             .prepare('SELECT data, version, updated_by, updated_at FROM jobs WHERE id=?')
             .bind(id).first();
@@ -87,11 +136,23 @@ export default {
 
       if (path.startsWith('/api/jobs/') && request.method === 'DELETE') {
         const id = path.split('/')[3];
-        // photos first, so a failure here cannot orphan them
-        await env.DB.batch([
+        // photos first, so a failure here cannot orphan them; then a note
+        // that the job has gone, so every machine drops it
+        const del = [
           env.DB.prepare('DELETE FROM photos WHERE job_id=?').bind(id),
           env.DB.prepare('DELETE FROM jobs WHERE id=?').bind(id)
-        ]);
+        ];
+        try {
+          await env.DB.batch(del.concat([
+            env.DB.prepare('UPDATE job_seq SET n = n + 1 WHERE id = 1'),
+            env.DB.prepare(`INSERT INTO job_deletes (id, seq, deleted_at)
+              VALUES (?1, (SELECT n FROM job_seq WHERE id = 1), ?2)
+              ON CONFLICT(id) DO UPDATE SET seq = excluded.seq, deleted_at = excluded.deleted_at`).bind(id, new Date().toISOString())
+          ]));
+        } catch (e) {
+          if (!noCounter(e)) throw e;
+          await env.DB.batch(del);
+        }
         return json({ ok: true });
       }
 

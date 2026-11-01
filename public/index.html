@@ -618,6 +618,18 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .rtacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 @media(max-width:620px){ .rtrow{grid-template-columns:1fr 1fr} .rtrow>div:first-child{grid-column:1/-1} }
 
+/* ---------- putting a backup back ---------- */
+.rbox{margin-top:12px;padding:12px 14px;border:1px solid var(--silver);border-radius:var(--r);background:var(--white);
+  font-size:14.5px;line-height:1.45}
+.racts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+.rnote{margin-top:8px}
+.act.rdanger{color:var(--red);border-color:#F0B7B3}
+.act.rdanger:hover{background:#FDECEA;color:var(--red);border-color:var(--red)}
+.act[disabled]{opacity:.45;cursor:default}
+.rdone{margin-top:12px;padding:10px 12px;border:1px solid var(--float);border-left:4px solid var(--float);
+  border-radius:var(--r);background:var(--float-l);font-size:14.5px;line-height:1.45;color:var(--ink)}
+.rdone b{color:var(--float-d)}
+
 /* ---------- glass, frames and maintenance on one job ---------- */
 .cardhint{margin-top:9px}
 .wrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.8fr) minmax(0,1.2fr);gap:9px}
@@ -980,7 +992,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="card">
       <h4>Put a backup back</h4>
       <input class="inp" type="file" id="expFile" accept=".json,application/json">
-      <p class="sub" style="margin-top:9px">Choose a <b>.json</b> backup file. You will be asked to confirm before anything is overwritten.</p>
+      <p class="sub" style="margin-top:9px">Choose a <b>.json</b> backup file. Nothing changes until you choose what to put back.</p>
       <div id="expRestore"></div>
     </div>
     <div class="card" id="expFallbackWrap" style="display:none">
@@ -3314,13 +3326,66 @@ async function mirrorShop(){
   try{ await sSet(KEY_PRICES,p); await sSet(KEY_SUP,s); }catch(e){}
 }
 
-async function loadAll() {
-  try {
-    const r = await fetch(API + '/jobs');
-    if (!r.ok) throw new Error('Could not load the job book');
-    JOBS = (await r.json()).map(normalise);
+/* ---------- keeping up with the job book ----------
+   The first load, and one an hour after that, brings the whole job book.
+   In between, a refresh asks only for what has changed since the last
+   change this machine saw: usually nothing, so it costs next to nothing.
+   Each save or delete takes the next number from one counter in the job
+   book, so nothing can be missed between two looks. A Worker from before
+   this version, or a job book without the counter yet, gets the whole book
+   every time, as it used to be. */
+let SYNCSEQ=null, LASTALL=0;
+const ALL_EVERY=60*60*1000;
+/* each job as the job book last had it, to put one back the way it was
+   when a change to it cannot be saved */
+const SAVED=new Map();
+async function fetchJobs(all){
+  all=all||SYNCSEQ===null||Date.now()-LASTALL>=ALL_EVERY;
+  const r=await fetch(API+'/sync'+(all?'':'?since='+SYNCSEQ));
+  if(r.status===404){
+    const o=await fetch(API+'/jobs');
+    if(!o.ok) throw new Error('Could not load the job book');
+    return {all:true,seq:null,jobs:await o.json(),gone:[]};
+  }
+  if(!r.ok) throw new Error('Could not load the job book');
+  const d=await r.json();
+  if(!d||!Array.isArray(d.jobs)) throw new Error('Could not load the job book');
+  d.gone=Array.isArray(d.gone)?d.gone:[];
+  /* the count went backwards, so the job book itself was put back: start again */
+  if(!all&&!d.all&&(typeof d.seq!=='number'||d.seq<SYNCSEQ)) return fetchJobs(true);
+  return d;
+}
+/* true if anything changed */
+function takeJobs(d){
+  if(d.all){
+    const before=JSON.stringify(JOBS);
+    SAVED.clear();
+    JOBS=d.jobs.map(j=>{ SAVED.set(j.id,JSON.stringify(j)); return normalise(j); });
+    LASTALL=Date.now();
+    SYNCSEQ=typeof d.seq==='number'?d.seq:null;
+    return JSON.stringify(JOBS)!==before;
+  }
+  SYNCSEQ=d.seq;
+  if(!d.jobs.length&&!d.gone.length) return false;
+  const gone=new Set(d.gone), fresh=new Map();
+  d.jobs.forEach(j=>{ SAVED.set(j.id,JSON.stringify(j)); fresh.set(j.id,normalise(j)); gone.delete(j.id); });
+  gone.forEach(id=>SAVED.delete(id));
+  JOBS=JOBS.filter(j=>!gone.has(j.id)).map(j=>{ const f=fresh.get(j.id); if(!f) return j; fresh.delete(j.id); return f; })
+    .concat([...fresh.values()]);
+  return true;
+}
 
+/* true if anything on screen needs drawing again. opt.all asks for the
+   whole job book, whatever the time. */
+async function loadAll(opt) {
+  opt = opt || {};
+  const wasOnline = ONLINE;
+  let changed = false;
+  try {
+    const d = await fetchJobs(!!opt.all);
     const s = await (await fetch(API + '/settings')).json();
+    /* only now, with both in, does anything change */
+    changed = takeJobs(d);
     const ver = (s && s._versions) || {};
     if (s.shop) {
       applyShop(s.shop);
@@ -3344,13 +3409,21 @@ async function loadAll() {
 
     /* Keep a copy on this machine so the counter can still look things up
        if Cloudflare is unreachable. Only written when something changed. */
-    const snapJSON = JSON.stringify(JOBS);
-    if (snapJSON !== MIRROR) { MIRROR = snapJSON; try { await sSet(KEY_JOBS, snapJSON); } catch (e) {} }
+    if (changed || !MIRROR) {
+      const snapJSON = JSON.stringify(JOBS);
+      if (snapJSON !== MIRROR) { MIRROR = snapJSON; try { await sSet(KEY_JOBS, snapJSON); } catch (e) {} }
+    }
   } catch (err) {
     ONLINE = false;
+    SYNCSEQ = null;                       /* the whole book again once it is back */
     try {
       const raw = await sGet(KEY_JOBS);
-      if (raw) JOBS = JSON.parse(raw).map(normalise);
+      if (raw) {
+        const before = JSON.stringify(JOBS);
+        JOBS = JSON.parse(raw).map(normalise);
+        SAVED.clear(); JOBS.forEach(j => SAVED.set(j.id, JSON.stringify(j)));
+        changed = JSON.stringify(JOBS) !== before;
+      }
       const ev = await sGet(KEY_EVENTS);
       if (ev) EVENTS = tidyEvents(JSON.parse(ev));
       await readLocalPrices();
@@ -3359,9 +3432,26 @@ async function loadAll() {
     ensureSuppliers();
   }
   setStoreTag();
+  return changed || wasOnline !== ONLINE;
 }
 
-async function pushJob(job) {
+/* Every ten seconds while the app is on screen, and straight away when it
+   comes back on screen. Not while a sheet is open, so nothing changes under
+   somebody's feet, and never two at once. */
+let REFRESHING=false, SHOWNDAY=ymd(new Date());
+async function refreshNow(){
+  if(REFRESHING||document.querySelector('.sheet.on')) return;
+  REFRESHING=true;
+  try{
+    const ev=JSON.stringify(EVENTS), changed=await loadAll();
+    /* a new day brings that day's reminders */
+    if(changed||JSON.stringify(EVENTS)!==ev||ymd(new Date())!==SHOWNDAY){ SHOWNDAY=ymd(new Date()); render(); }
+  }finally{ REFRESHING=false; }
+}
+function pollTick(){ if(document.visibilityState!=='hidden') refreshNow(); }
+
+/* the money columns the job book keeps beside each job */
+function stampMoney(job){
   const t = jobTotals(job);
   job._total = t.grand;
   job._paid = paidOf(job);
@@ -3369,36 +3459,50 @@ async function pushJob(job) {
   job._net = t.net;
   /* the date the job counts towards, so the database can group by month */
   job._doneAt = job.status==='done' ? (job.doneAt||'').slice(0,10) : '';
-  
+}
+async function pushJob(job) {
+  stampMoney(job);
   try {
     const r = await fetch(`${API}/jobs/${job.id}`, {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(job)
     });
-    
+
     if (r.status === 409) {
       const { current } = await r.json();
       toast(`${current.updated_by || 'Someone'} changed job ${job.no} while you had it open — reloading`, true);
-      await loadAll();
+      await loadAll({ all: true });
       render();
       return false;
     }
-    
-    if (!r.ok) { 
-      toast('Could not save — check the connection', true); 
-      return false; 
+
+    if (!r.ok) {
+      putBack(job);
+      toast('Could not save — check the connection', true);
+      return false;
     }
-    
+
     const { version } = await r.json();
     job._v = version;
+    SAVED.set(job.id, JSON.stringify(job));
     const i = JOBS.findIndex(j => j.id === job.id);
     if (i >= 0) JOBS[i] = job; else JOBS.push(job);
     return true;
   } catch (err) {
+    putBack(job);
     toast('Could not save — check the connection', true);
     return false;
   }
+}
+/* A button pressed with no connection changes the job before it is sent.
+   When it cannot be saved, the job goes straight back to how the job book
+   has it, so it does not look as if it worked. */
+function putBack(job){
+  const i=JOBS.findIndex(j=>j.id===job.id), was=SAVED.get(job.id);
+  if(i<0||JOBS[i]!==job||!was) return;
+  JOBS[i]=normalise(JSON.parse(was));
+  render();
 }
 
 async function dropJob(id) {
@@ -5173,7 +5277,7 @@ function drawExport(){
      </div>`;
 }
 $('expBtn').onclick=()=>{ $('menu').classList.remove('on'); $('expFallbackWrap').style.display='none';
-  $('expRestore').innerHTML=''; drawExport(); showSheet($('expSheet')); };
+  RESTORE=null; $('expRestore').innerHTML=''; drawExport(); showSheet($('expSheet')); };
 $('closeExp').onclick=hideSheets; $('expBack').onclick=hideSheets;
 $('expJson').onclick=()=>offerFile('wilsons-glass-backup-'+stamp()+'.json',backupJSON(),'application/json',true);
 $('expJobs').onclick=()=>offerFile('wilsons-glass-jobs-'+stamp()+'.csv',jobsCSV(),'text/csv',false);
@@ -5182,32 +5286,145 @@ $('expCopy').onclick=async()=>{
   try{ await navigator.clipboard.writeText($('expText').value); toast('Copied'); }
   catch(e){ $('expText').select(); toast('Select the box and copy',true); }
 };
+/* ---------- putting a backup back ----------
+   It goes to the job book itself, so every machine gets it, in one of two
+   ways:
+   - the jobs that are missing now (deleted since the backup) go back in,
+     and nothing else is touched;
+   - or the whole job book goes back to how it was in the backup: every
+     job, the prices and suppliers, and the diary events. Jobs added since
+     are deleted. A copy of the job book as it is now is downloaded first.
+   Photos are not in a backup, and are deleted with their job, so a job put
+   back after being deleted comes back without them. */
+let RESTORE=null, RESTORING=false;
+const backupWhen=d=>realDate(d.exported)
+  ?new Date(d.exported).toLocaleString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
+  :'an unknown date';
+const jobNames=list=>list.slice(0,6).map(j=>esc(j.no+' '+(j.name||''))).join(', ')+(list.length>6?' and '+(list.length-6)+' more':'');
 $('expFile').addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=async()=>{
-    let data;
-    try{ data=JSON.parse(r.result); }catch(err){ $('expRestore').innerHTML='<div class="warnbox">That file is not a backup — it could not be read.</div>'; return; }
-    if(!data||!Array.isArray(data.jobs)){ $('expRestore').innerHTML='<div class="warnbox">That file has no jobs in it.</div>'; return; }
-    const when=data.exported?new Date(data.exported).toLocaleString('en-GB'):'unknown date';
-    if(!window.confirm('Restore '+data.jobs.length+' jobs from the backup taken '+when+'?\n\nThis replaces the '+JOBS.length+' job'+(JOBS.length===1?'':'s')+' currently in the book for everyone.')) { e.target.value=''; return; }
-    JOBS=data.jobs.map(normalise);
-    if(data.prices) PRICES=data.prices;
-    if(data.adjust!==undefined) ADJ=num(data.adjust);
-    if(Array.isArray(data.suppliers)&&data.suppliers.length) SUPPLIERS=data.suppliers;
-    ensureSuppliers();
-    if(data.settings) SETTINGS=Object.assign(SETTINGS,data.settings);
-    try{
-      await sSet(KEY_JOBS,JSON.stringify(JOBS));
-      await sSet(KEY_PRICES,JSON.stringify({prices:PRICES,adj:ADJ}));
-      await sSet(KEY_SUP,JSON.stringify({suppliers:SUPPLIERS,settings:SETTINGS}));
-      $('expRestore').innerHTML='<div class="sub" style="color:var(--float-d)"><b>Restored.</b> '+JOBS.length+' jobs are back.</div>';
-      render(); toast('Backup restored');
-    }catch(err){ $('expRestore').innerHTML='<div class="warnbox">Could not write the restored jobs to storage.</div>'; }
     e.target.value='';
+    let data=null;
+    try{ data=JSON.parse(r.result); }catch(err){}
+    if(!data||typeof data!=='object'){ RESTORE=null; $('expRestore').innerHTML='<div class="warnbox">That file is not a backup — it could not be read.</div>'; return; }
+    if(!Array.isArray(data.jobs)||!data.jobs.some(j=>j&&j.id)){ RESTORE=null; $('expRestore').innerHTML='<div class="warnbox">That file has no jobs in it.</div>'; return; }
+    RESTORE={data,name:f.name};
+    await drawRestore();
   };
   r.readAsText(f);
 });
+/* what is in the backup, against the job book as it is now */
+async function drawRestore(){
+  const el=$('expRestore');
+  if(!RESTORE){ el.innerHTML=''; return; }
+  el.innerHTML='<p class="sub rnote">Checking the backup against the job book…</p>';
+  await loadAll({all:true});
+  if(!ONLINE){ el.innerHTML='<div class="warnbox">The job book cannot be reached, so nothing can be put back. Try again once it is connected.</div>'; return; }
+  const list=RESTORE.data.jobs.filter(j=>j&&j.id), have=new Set(JOBS.map(j=>j.id)), inBackup=new Set(list.map(j=>j.id));
+  const missing=list.filter(j=>!have.has(j.id)), added=JOBS.filter(j=>!inBackup.has(j.id));
+  const clash=missing.filter(j=>JOBS.some(x=>x.no===j.no));
+  const ev=Array.isArray(RESTORE.data.events), s=n=>n===1?'':'s';
+  el.innerHTML=`<div class="rbox">
+    <p><b>The backup from ${esc(backupWhen(RESTORE.data))}</b> has ${list.length} job${s(list.length)}.
+      ${missing.length?`${missing.length} of them ${missing.length===1?'is':'are'} not in the job book now: ${jobNames(missing)}.`
+                     :'Every one of them is still in the job book.'}</p>
+    ${clash.length?`<p class="sub rnote">${clash.length===1?'One of them has a job number':clash.length+' of them have job numbers'} now used by another job, so there would be two with the same number.</p>`:''}
+    <div class="racts">
+      <button class="act go" data-restore="missing"${missing.length?'':' disabled'}>Put back the ${missing.length} missing job${s(missing.length)}</button>
+      <button class="act rdanger" data-restore="all">Replace the whole job book with the backup</button>
+    </div>
+    <p class="sub rnote">Putting back the missing jobs leaves everything else as it is. Their photos cannot come back, as photos are not kept in a backup.</p>
+    <p class="sub rnote">Replacing the whole job book takes every machine back to how things were in the backup: every job, the prices and suppliers${ev?' and the diary events':''}.
+      ${added.length?`The ${added.length} job${s(added.length)} added since would be deleted, and any`:'Any'} changes made since would be lost. A copy of the job book as it is now is downloaded first.</p>
+  </div>`;
+}
+$('expRestore').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-restore]'); if(!b||b.disabled||!RESTORE||RESTORING) return;
+  const all=b.dataset.restore==='all';
+  if(all){
+    if(!window.confirm('Replace the whole job book with the backup from '+backupWhen(RESTORE.data)+'?\n\nEvery machine goes back to how things were then. Jobs added since are deleted, and changes made since are lost.\n\nA copy of the job book as it is now is downloaded first.')) return;
+    offerFile('wilsons-glass-before-restoring-'+stamp()+'.json',backupJSON(),'application/json',true);
+  }
+  await runRestore(all);
+});
+/* quietly, one job at a time: true once the job book has it */
+async function sendJob(job,overwrite){
+  stampMoney(job);
+  for(let n=0;n<2;n++){
+    let r;
+    try{ r=await fetch(`${API}/jobs/${job.id}`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(job)}); }
+    catch(e){ return false; }
+    if(r.status===409){
+      /* changed or put back on another machine meanwhile */
+      if(!overwrite) return 'there';
+      let cur=null; try{ cur=(await r.json()).current; }catch(e){}
+      if(!cur) return false;
+      job._v=cur.version; continue;
+    }
+    return r.ok;
+  }
+  return false;
+}
+async function sendDelete(id){
+  try{ return (await fetch(`${API}/jobs/${id}`,{method:'DELETE'})).ok; }catch(e){ return false; }
+}
+/* the prices and suppliers in the backup, for the whole shop */
+async function putShop(data){
+  const sup=Array.isArray(data.suppliers)&&data.suppliers.length?data.suppliers:null;
+  if(!data.prices&&!sup) return true;
+  const value={prices:data.prices||PRICES, adj:data.adjust!==undefined?num(data.adjust):ADJ, suppliers:sup||SUPPLIERS,
+               settings:Object.assign({},SETTINGS,data.settings||{})};
+  for(let n=0;n<2;n++){
+    let r;
+    try{ r=await fetch(API+'/settings/shop',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({value,base:SHOPV})}); }
+    catch(e){ return false; }
+    if(r.status===409){ let cur=null; try{ cur=(await r.json()).current; }catch(e){} SHOPV=cur?cur.version:null; continue; }
+    if(!r.ok) return false;
+    let v=null; try{ v=(await r.json()).version; }catch(e){}
+    applyShop(value); SHOPV=v; ensureSuppliers(); await mirrorShop();
+    return true;
+  }
+  return false;
+}
+async function runRestore(all){
+  const el=$('expRestore'), data=RESTORE.data, when=backupWhen(data), s=n=>n===1?'':'s';
+  RESTORING=true;
+  try{
+    el.innerHTML='<p class="sub rnote">Getting the job book as it is now…</p>';
+    await loadAll({all:true});
+    if(!ONLINE){ el.innerHTML='<div class="warnbox">The job book cannot be reached, so nothing has been put back. Try again once it is connected.</div>'; return; }
+    const live=new Map(JOBS.map(j=>[j.id,j]));
+    const list=data.jobs.filter(j=>j&&j.id).map(j=>normalise(clone(j))), inBackup=new Set(list.map(j=>j.id));
+    const send=all?list:list.filter(j=>!live.has(j.id)), drop=all?JOBS.filter(j=>!inBackup.has(j.id)):[];
+    const n=send.length+drop.length;
+    let put=0, gone=0, bad=0, done=0;
+    const step=()=>{ done++; el.innerHTML=`<p class="sub rnote">Putting it back… ${done} of ${n}</p>`; };
+    for(const j of send){
+      const now=live.get(j.id);
+      j.photos=now?clone(now.photos||[]):[];
+      j._v=now?now._v:0;
+      const res=await sendJob(j,all);
+      if(res===true) put++; else if(res!=='there') bad++;
+      step();
+    }
+    for(const j of drop){ (await sendDelete(j.id))?gone++:bad++; step(); }
+    let more='';
+    if(all){
+      more+=(await putShop(data))?' The prices and suppliers are back as they were.':' The prices and suppliers could not be put back.';
+      if(Array.isArray(data.events)) more+=(await saveEvents(()=>data.events))?' So are the diary events.':' The diary events could not be put back.';
+    }
+    await loadAll({all:true});
+    render(); drawExport();
+    const fail=bad?` ${bad} job${s(bad)} could not be ${all?'changed':'saved'}. Check the connection, then choose the backup again${all?' and replace it again':' to put back whatever is still missing'}.`:'';
+    el.innerHTML=all
+      ?`<div class="rdone"><b>The job book is back to how it was on ${esc(when)}.</b> ${put} job${s(put)} put back${gone?', '+gone+' deleted':''}.${more}${fail}</div>`
+      :`<div class="rdone"><b>Put back ${put} job${s(put)}.</b> Every machine has ${put===1?'it':'them'} now.${fail}</div>`;
+    toast(bad?'Only part of the backup could be put back':'Backup put back',!!bad);
+    RESTORE=null;
+  }finally{ RESTORING=false; }
+}
 
 /* ---------- prices ---------- */
 function drawRateShare(){
@@ -5371,13 +5588,8 @@ document.addEventListener('keydown',e=>{
   await initStore();
   await loadAll();
   render();
-  let shown=ymd(new Date());
-  setInterval(async()=>{
-    if(document.querySelector('.sheet.on')) return;
-    const before=JSON.stringify(JOBS)+JSON.stringify(EVENTS); await loadAll();
-    /* a new day brings that day's reminders */
-    if(JSON.stringify(JOBS)+JSON.stringify(EVENTS)!==before||ymd(new Date())!==shown){ shown=ymd(new Date()); render(); }
-  },10000);
+  setInterval(pollTick,10000);
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') refreshNow(); });
 })();
 </script>
 </body>

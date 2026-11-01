@@ -39,21 +39,28 @@ function params(sql, args) {
   return [named];
 }
 
-/* D1, closely enough: prepare, bind, all, first, run and batch */
+/* D1, closely enough: prepare, bind, all, first, run and batch. A batch
+   runs as one transaction and gives back each statement's rows (for a
+   SELECT) or how many rows it changed, the way D1 does. */
 function d1(db) {
+  const exec = (sql, args) => {
+    const st = db.prepare(sql), p = params(sql, args);
+    if (/^\s*(select|with)\b/i.test(sql)) return { results: st.all(...p), meta: { changes: 0 } };
+    return { results: [], meta: { changes: Number(st.run(...p).changes) } };
+  };
   const stmt = (sql, args = []) => ({
     bind: (...a) => stmt(sql, a),
-    exec() { return db.prepare(sql).run(...params(sql, args)); },
+    exec: () => exec(sql, args),
     async all() { return { results: db.prepare(sql).all(...params(sql, args)) }; },
     async first() { return db.prepare(sql).get(...params(sql, args)) ?? null; },
-    async run() { return { meta: { changes: Number(db.prepare(sql).run(...params(sql, args)).changes) } }; }
+    async run() { return exec(sql, args); }
   });
   return {
     prepare: sql => stmt(sql),
     async batch(list) {
       db.exec('BEGIN');
       try {
-        const out = list.map(s => ({ meta: { changes: Number(s.exec().changes) } }));
+        const out = list.map(s => s.exec());
         db.exec('COMMIT'); return out;
       } catch (e) { db.exec('ROLLBACK'); throw e; }
     }
@@ -69,11 +76,11 @@ writeFileSync(join(dir, 'worker.mjs'), readFileSync(WORKER, 'utf8'));
 const worker = (await import(pathToFileURL(join(dir, 'worker.mjs')).href)).default;
 const env = { DB: d1(db), ASSETS: { fetch: async () => new Response('the app') } };
 
-async function call(method, path, body) {
+async function call(method, path, body, e = env) {
   const res = await worker.fetch(new Request('https://glass.test' + path, {
     method, headers: { 'content-type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body)
-  }), env, {});
+  }), e, {});
   const type = res.headers.get('content-type') || '';
   const out = { status: res.status, type, body: type.includes('json') ? await res.json() : new Uint8Array(await res.arrayBuffer()) };
   if (res.status >= 500 && !workerError) workerError = (out.body && out.body.error) || 'status ' + res.status;
@@ -156,6 +163,61 @@ await section('photos, as before', async () => {
   r = await call('DELETE', '/api/jobs/j1');
   ok(r.status === 200, 'deleting the job works');
   ok((await call('GET', '/p/abc')).status === 404, 'and takes its photos with it');
+});
+
+await section('only what has changed', async () => {
+  if (!readdirSync(MIGRATIONS).some(f => /^0004.*\.sql$/.test(f)))
+    throw new Error('migrations/0004_job_changes.sql is missing. Copy the migrations folder from the zip');
+  const job = (id, no, name, extra = {}) => Object.assign({ id, no, name, status: 'quote', _total: 10, _balance: 10, _paid: 0,
+                                                             _net: 8.33, items: [] }, extra);
+  let r = await call('GET', '/api/sync');
+  ok(r.status === 200 && r.body.all === true && typeof r.body.seq === 'number' && Array.isArray(r.body.jobs),
+     'with no number, it sends the whole job book and the newest change number');
+  const start = r.body.seq;
+  r = await call('GET', '/api/sync?since=' + start);
+  ok(r.body.all === false && !r.body.jobs.length && !r.body.gone.length && r.body.seq === start,
+     'asked again with that number, nothing has changed, so nothing comes back');
+  await call('PUT', '/api/jobs/s1', Object.assign({ _v: 0 }, job('s1', 1801, 'Sync One')));
+  await call('PUT', '/api/jobs/s2', Object.assign({ _v: 0 }, job('s2', 1802, 'Sync Two')));
+  r = await call('GET', '/api/sync?since=' + start);
+  ok(r.body.jobs.map(j => j.id).sort().join() === 's1,s2' && r.body.seq === start + 2 && r.body.jobs.every(j => j._v === 1),
+     'two new jobs: just those two come back, with their versions');
+  const mid = r.body.seq;
+  await call('PUT', '/api/jobs/s1', Object.assign({ _v: 1 }, job('s1', 1801, 'Sync One', { note: 'changed' })));
+  r = await call('GET', '/api/sync?since=' + mid);
+  ok(r.body.jobs.length === 1 && r.body.jobs[0].note === 'changed' && r.body.jobs[0]._v === 2, 'a change to one job: just that job');
+  const v = r.body.seq;
+  r = await call('PUT', '/api/jobs/s1', Object.assign({ _v: 1 }, job('s1', 1801, 'Stale')));
+  ok(r.status === 409, 'a save from an out-of-date copy is still refused');
+  r = await call('GET', '/api/sync?since=' + v);
+  ok(!r.body.jobs.length && !r.body.gone.length, 'and is not sent to anyone as a change');
+  await call('DELETE', '/api/jobs/s2');
+  r = await call('GET', '/api/sync?since=' + v);
+  ok(r.body.gone.join() === 's2' && !r.body.jobs.length, 'a deleted job comes back as gone, so every machine drops it');
+  await call('PUT', '/api/jobs/s2', Object.assign({ _v: 0 }, job('s2', 1802, 'Sync Two')));
+  r = await call('GET', '/api/sync?since=' + v);
+  ok(r.body.jobs.map(j => j.id).join() === 's2' && !r.body.gone.length, 'put back with Undo, it is a job again, not gone');
+  const plan = db.prepare('EXPLAIN QUERY PLAN SELECT data, version FROM jobs WHERE seq > 5').all().map(x => x.detail).join(' ');
+  ok(/idx_jobs_seq/.test(plan), 'the database finds changes by their number, without reading every job');
+  r = await call('GET', '/api/jobs');
+  ok(r.status === 200 && r.body.some(j => j.id === 's1'), 'loading everything the old way still works, for a machine not reloaded yet');
+});
+
+await section('before the database has the change numbers', async () => {
+  const old = new DatabaseSync(':memory:');
+  for (const f of readdirSync(MIGRATIONS).filter(f => f.endsWith('.sql') && f < '0004').sort())
+    old.exec(readFileSync(join(MIGRATIONS, f), 'utf8'));
+  const e = { DB: d1(old), ASSETS: env.ASSETS };
+  const job = { id: 'o1', no: 1901, name: 'Old Book', status: 'quote', _total: 1, _balance: 1, _paid: 0, _net: 1, items: [] };
+  let r = await call('PUT', '/api/jobs/o1', Object.assign({ _v: 0 }, job), e);
+  ok(r.status === 200 && r.body.version === 1, 'saving works the old way');
+  r = await call('PUT', '/api/jobs/o1', Object.assign({ _v: 0 }, job), e);
+  ok(r.status === 409, 'with the same check that nobody else saved it first');
+  r = await call('GET', '/api/sync?since=3', undefined, e);
+  ok(r.status === 200 && r.body.all === true && r.body.seq === null && r.body.jobs.length === 1,
+     'asked for changes, it sends the whole job book, as before');
+  r = await call('DELETE', '/api/jobs/o1', undefined, e);
+  ok(r.status === 200 && !old.prepare('SELECT id FROM jobs').all().length, 'and deleting works');
 });
 
 await section('everything else', async () => {
