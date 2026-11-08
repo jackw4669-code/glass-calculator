@@ -40,6 +40,8 @@ function makeServer() {
     get seq() { return seqN; },
     seed(job) { rows.set(job.id, { data: JSON.stringify(job), version: 1, seq: 0 }); },
     async handle(url, opt) {
+      /* extra(url, opt): a test's own answer for anything else, e.g. the page itself */
+      if (this.extra) { const r = this.extra(url, opt); if (r) return r; }
       if (this._photoRoute) { const r = this._photoRoute(url, opt); if (r) return r; }
       const method = (opt && opt.method) || 'GET';
       const path = url.replace(/^https?:\/\/[^/]+/, '');
@@ -162,12 +164,19 @@ async function boot(opts = {}) {
       /* jsdom has no canvas, so the shrink step is stubbed in tests */
       w.__photos = server.photos;
       w.offline = () => { w.fetch = async () => { throw new Error('offline'); }; };
+      /* opts.before(w) runs before the app does: pretend to be an iPhone, etc. */
+      if (opts.before) opts.before(w);
     }
   });
 
   const w = dom.window;
   await new Promise(r => w.addEventListener('load', r));
   await settle(w);
+  /* The app opens on the Diary. Most suites were written for the Live
+     list, so they start there: pass tab: null to keep the tab the app
+     opened on, or another tab's name to start on that. */
+  const tab = 'tab' in opts ? opts.tab : 'all';
+  if (tab && w.eval('filter') !== tab) await click(w, w.document.querySelector(`#rail [data-f="${tab}"]`));
   return { dom, w, doc: w.document, server };
 }
 

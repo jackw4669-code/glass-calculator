@@ -33,14 +33,12 @@ const addPhoto = async (w, name) => {
     const n = q(w, '.note.urgent');
     ok(!!n, 'and the note is shown in the loud style');
     ok(/Read this first/.test(txt(n)), 'with a heading that says so');
-    /* jsdom does not resolve custom properties, so this checks the rule
-       lands on the element rather than the final pixel colour */
-    ok(w.getComputedStyle(q(w, '.job.urgent')).color === 'var(--red)',
-       'the job text is set to the red');
-    ok(w.getComputedStyle(q(w, '.job.urgent h3')).color === 'var(--red)',
-       'including the customer name');
-    ok(w.getComputedStyle(q(w, '.job.urgent .money')).color === 'var(--red)',
-       'and the price');
+    /* older jsdom leaves custom properties as written (var(--red)), newer
+       versions work them out (#98302F), so either shows the rule landed */
+    const red = el => ['var(--red)', 'rgb(152, 48, 47)'].includes(w.getComputedStyle(el).color);
+    ok(red(q(w, '.job.urgent')), 'the job text is set to the red');
+    ok(red(q(w, '.job.urgent h3')), 'including the customer name');
+    ok(red(q(w, '.job.urgent .money')), 'and the price');
     ok(parseFloat(w.getComputedStyle(n).fontSize) > 15, 'and the note is bigger than normal text');
     w.close();
   }

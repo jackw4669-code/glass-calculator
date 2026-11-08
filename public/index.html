@@ -4,10 +4,38 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Wilson's Glass — Job Book</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Which version of the app this is. Change it whenever this file
+     changes, and every machine with the app open offers the new one. -->
+<meta name="wg-build" content="2026-11-08.1">
+<!-- Installing the job book as an app: its name, icons and colours -->
+<link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
+<meta name="theme-color" content="#16262B">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Job Book">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preload" href="/fonts/archivo-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+/* The app's two typefaces, kept with the app so it starts faster, opens
+   with no signal and never contacts Google. Archivo and IBM Plex Mono are
+   free fonts (SIL Open Font License); the licences are in /fonts. A phone
+   only fetches the files for letters it actually shows. */
+@font-face{font-family:'Archivo';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/archivo-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/archivo-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/archivo-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/archivo-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/archivo-latin-ext-600-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/archivo-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/archivo-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/archivo-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-ext-600-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 :root{
   --pane:#EDF1EF; --white:#FBFDFC; --ink:#16262B; --ink2:#54696F;
   --silver:#C6D0CD; --silver2:#DFE6E3;
@@ -667,6 +695,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .banner.remind b{color:var(--red)}
 .banner.remind button{color:var(--red)}
 .banner.remind .rmlist{flex:1 1 100%;min-width:0}
+/* a new version of the app is ready */
+.banner.update{background:var(--float-l);border-color:#A8CDBA;border-left-color:var(--float)}
+.banner.update b{color:var(--float-d)}
+.banner.update button{color:var(--float-d)}
 .rmrow{display:flex;justify-content:space-between;align-items:baseline;gap:4px 14px;flex-wrap:wrap;
   margin-top:7px;padding-top:7px;border-top:1px solid #F0B7B3}
 .rmrow .mono{font-weight:600}
@@ -1266,7 +1298,7 @@ const STATUSES=[
 const stat=k=>STATUSES.find(s=>s.k===k)||STATUSES[0];
 const DURS={30:'30 min',60:'1 hr',90:'1½ hr',120:'2 hr',180:'3 hr',240:'Half day',360:'6 hr',480:'Full day'};
 
-let JOBS=[], CUSTOMERS=[], PRICES={}, ADJ=0, filter='all', editing=null, mailJob=null, mailKind='ready';
+let JOBS=[], CUSTOMERS=[], PRICES={}, ADJ=0, filter='diary', editing=null, mailJob=null, mailKind='ready';
 let items=[], extras=[], costs=[], pays=[], frames=[], works=[], formInvoicedAt='', formMeasuredAt='', formAttnAt='';
 let EVENTS=[], EVENTSV=null, MIRROREV='', evEditing=null;
 let isTrade=false, handover='collection', unit='mm';
@@ -2043,7 +2075,7 @@ function toast(m,bad,undoLabel){
   t.className=bad?'on bad':'on';
   clearTimeout(t._x);
   /* leave an undo on screen long enough to actually notice the mistake */
-  t._x=setTimeout(()=>{t.className='';},undoLabel?9000:3200);
+  t._x=setTimeout(()=>{t.className='';},undoLabel?9000:Math.max(3200,String(m).length*60));
 }
 const daysAgo=iso=>iso?Math.floor((Date.now()-new Date(iso))/864e5):0;
 
@@ -2165,6 +2197,9 @@ function render(){
       <span style="display:flex;gap:8px;align-items:center">
         <button data-undo="1">Undo</button>
         <button class="dismiss" data-undodrop="1">Dismiss</button></span></div>`);
+  if(NEWBUILD)
+    bars.push(`<div class="banner update"><div><b>A new version of the job book is ready.</b>
+      Everything saved stays as it is.</div><button data-update="1">Update now</button></div>`);
   const rem=remindersToday();
   if(rem.length)
     bars.push(`<div class="banner remind"><div class="rmlist"><b>Reminder${rem.length>1?'s':''} for today</b>
@@ -3049,7 +3084,7 @@ $('dayPrint').onclick=()=>{
         <div style="margin-top:5px;font-weight:700">${bal>0.005?gbp(bal)+(j.trade?' to invoice':' TO COLLECT'):'Paid'}</div>
       </div>`;}).join('')
      :(apptsOn(d).length?'<p>Everything booked for this day is done.</p>':'<p>Nothing booked.</p>'));
-  window.print();
+  printNow();
 };
 
 /* ---------- booking ---------- */
@@ -3448,12 +3483,14 @@ async function refreshNow(){
   if(REFRESHING||document.querySelector('.sheet.on')) return;
   REFRESHING=true;
   try{
-    const ev=JSON.stringify(EVENTS), changed=await loadAll();
+    const was=ONLINE, ev=JSON.stringify(EVENTS), changed=await loadAll();
+    /* back online after opening without signal: is this still the newest? */
+    if(!was&&ONLINE) checkBuild(true);
     /* a new day brings that day's reminders */
     if(changed||JSON.stringify(EVENTS)!==ev||ymd(new Date())!==SHOWNDAY){ SHOWNDAY=ymd(new Date()); render(); }
   }finally{ REFRESHING=false; }
 }
-function pollTick(){ if(document.visibilityState!=='hidden') refreshNow(); }
+function pollTick(){ if(document.visibilityState!=='hidden'){ refreshNow(); checkBuild(); } }
 
 /* the money columns the job book keeps beside each job */
 function stampMoney(job){
@@ -3586,6 +3623,7 @@ document.addEventListener('click',async e=>{
   const day=e.target.closest('[data-day]');
   if(day){ selDay=day.dataset.day; renderDiary(); return; }
 
+  if(e.target.closest('[data-update]')){ reloadApp(); return; }
   const bu=e.target.closest('[data-backup]');
   if(bu){ $('expBtn').click(); return; }
   const ng=e.target.closest('[data-nag]');
@@ -5526,7 +5564,7 @@ $('printCut').onclick=()=>{
       ${pendingOrder(r.j).length?`<div><em>Rest of this job is on order from ${esc(Object.keys(waitingSuppliers(r.j)).join(', '))}</em></div>`:''}
       ${r.j.note?`<div>${esc(r.j.note)}</div>`:''}</div>`).join('')
      :'<p>Nothing waiting to be cut.</p>');
-  $('menu').classList.remove('on'); window.print();
+  $('menu').classList.remove('on'); printNow();
 };
 $('printOrder').onclick=()=>{
   const bySup={};
@@ -5540,7 +5578,7 @@ $('printOrder').onclick=()=>{
         <div class="phead"><span>${r.j.no} · ${esc(r.j.name)}</span><span>${r.j.wanted?'by '+new Date(r.j.wanted).toLocaleDateString('en-GB'):''}</span></div>
         ${pieceLine(r.j,r.it)}</div>`).join('')).join('')
      :'<p>Nothing on order.</p>');
-  $('menu').classList.remove('on'); window.print();
+  $('menu').classList.remove('on'); printNow();
 };
 $('printDiary').onclick=()=>{
   const from=ymd(new Date(diaryMonth.getFullYear(),diaryMonth.getMonth(),1));
@@ -5565,7 +5603,7 @@ $('printDiary').onclick=()=>{
         ${j.note?`<div class="pnote">${esc(j.note)}</div>`:''}
       </div>`;}).join('')
      :'<p>Nothing booked this month.</p>');
-  $('menu').classList.remove('on'); window.print();
+  $('menu').classList.remove('on'); printNow();
 };
 
 document.addEventListener('keydown',e=>{
@@ -5584,6 +5622,41 @@ document.addEventListener('keydown',e=>{
   if(e.key==='/'&&!/input|textarea|select/i.test(e.target.tagName)){ e.preventDefault(); $('search').focus(); }
 });
 
+/* ---------- printing ----------
+   An iPhone or iPad running the job book from its home screen ignores
+   printing altogether (Apple's limit, not the app's), so the print buttons
+   say so instead of doing nothing. In Safari, or on the PC, it prints. */
+const IOS_APP=window.navigator.standalone===true;
+function printNow(){
+  if(IOS_APP){ toast("iPhones can't print from the home-screen app. Print in Safari or on the PC.",true); return; }
+  window.print();
+}
+
+/* ---------- a new version ----------
+   Every version of the app carries its own build mark (wg-build, at the
+   top of this file). Now and then the app asks the shop's server for the
+   page again and compares marks: a few seconds after it opens, when it
+   comes back on screen or back online, and every ten minutes while it is
+   open. That costs next to nothing, as the server only answers "same as
+   before" unless the page has changed. If it is newer, a bar offers it.
+   Nothing reloads by itself, so nobody loses what they are typing. */
+const BUILD=(document.querySelector('meta[name="wg-build"]')||{}).content||'';
+const BUILD_EVERY=10*60*1000;
+let NEWBUILD='', BUILDAT=Date.now();
+async function checkBuild(now){
+  if(!BUILD||(!now&&Date.now()-BUILDAT<BUILD_EVERY)) return;
+  BUILDAT=Date.now();
+  try{
+    const r=await fetch('/',{cache:'no-cache'});
+    if(!r.ok) return;
+    const m=/<meta name="wg-build" content="([^"]*)"/.exec(await r.text());
+    if(!m) return;
+    const next=m[1]&&m[1]!==BUILD?m[1]:'';
+    if(next!==NEWBUILD){ NEWBUILD=next; render(); }
+  }catch(e){}
+}
+function reloadApp(){ location.reload(); }
+
 /* ---------- boot ---------- */
 (async()=>{
   drawDraftCount();
@@ -5592,9 +5665,16 @@ document.addEventListener('keydown',e=>{
   $('rail').addEventListener('scroll',()=>railEdges(false),{passive:true});
   await initStore();
   await loadAll();
+  if(filter==='diary'&&!selDay) selDay=ymd(new Date());   /* the Diary opens on today */
   render();
   setInterval(pollTick,10000);
-  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') refreshNow(); });
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ refreshNow(); checkBuild(); } });
+  setTimeout(()=>checkBuild(true),5000);
+  /* Keep a copy of the app itself on this machine, so it opens with no
+     signal (see sw.js). Customers' details are never in it: those stay in
+     the app's own offline copy, as before. */
+  if('serviceWorker' in navigator&&window.isSecureContext)
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
 })();
 </script>
 </body>
