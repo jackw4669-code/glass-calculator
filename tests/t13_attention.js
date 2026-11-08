@@ -19,8 +19,9 @@ const JOB_TEXT = 'Order the toughened glass from Firmans — customer wants it F
   console.log('\n--- the tab ---');
   {
     const { w } = await boot({ seed: [job()] });
-    const order = qa(w, '#rail .chip').map(c => c.dataset.f);
-    ok(order[0] === 'attn' && order[1] === 'all', 'Needs attention is the first tab, before Live');
+    const tabs = qa(w, '#rail .chip').map(c => txt(c).replace(/ \d+$/, '')).join(' | ');
+    ok(tabs === 'Diary | To be booked in | Needs attention | Live | Quotes | To be ordered | On order | To cut | Ready | Not told | To invoice | Closed',
+       'the tabs go Diary, To be booked in, Needs attention, Live, then the rest');
     ok(/^Needs attention 0$/.test(txt(chip(w, 'attn'))) && !chip(w, 'attn').classList.contains('alert'),
        'it reads Needs attention 0, and is quiet while nothing is flagged');
     ok(w.eval('filter') === 'all', 'the app still opens on Live');

@@ -61,6 +61,10 @@ header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--white)
 .railwrap::after{content:'';position:absolute;top:0;right:0;bottom:1px;width:34px;pointer-events:none;
   background:linear-gradient(to right,rgba(255,255,255,0),var(--white));transition:opacity .15s}
 .railwrap.atend::after{opacity:0}
+/* and at the left, once the tabs have scrolled along, so it is plain there are more that way */
+.railwrap::before{content:'';position:absolute;top:0;left:0;bottom:1px;width:34px;pointer-events:none;z-index:1;
+  background:linear-gradient(to left,rgba(255,255,255,0),var(--white));transition:opacity .15s}
+.railwrap.atstart::before{opacity:0}
 .railwrap .rail{position:static}
 .chip{padding:11px 15px;border-right:1px solid var(--silver2);white-space:nowrap;display:flex;gap:8px;align-items:baseline;color:var(--ink2);font-size:14px;font-weight:500;border-bottom:3px solid transparent}
 .chip b{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--ink)}
@@ -2121,7 +2125,7 @@ function measureHeader(){
   const hd=document.querySelector('header');
   if(hd) document.documentElement.style.setProperty('--hh',hd.offsetHeight+'px');
 }
-/* Fade the rail's right edge while there are more tabs off to the side,
+/* Fade the rail's edges while there are more tabs off to that side,
    and scroll the chosen tab into view if it is hidden. */
 function railEdges(follow){
   const r=$('rail'), w=$('railwrap'); if(!r||!w) return;
@@ -2131,6 +2135,7 @@ function railEdges(follow){
       r.scrollLeft=Math.max(0,on.offsetLeft-24);
   }
   w.classList.toggle('atend',r.scrollLeft+r.clientWidth>=r.scrollWidth-2);
+  w.classList.toggle('atstart',r.scrollLeft<=2);
 }
 
 function backupDue(){
@@ -2144,11 +2149,11 @@ function render(){
   const q=$('search').value.trim();
   const untold=bucket('told');
 
-  $('rail').innerHTML=[
-    ['attn','Needs attention'],['all','Live'],['book','To be booked in'],['quote','Quotes'],['pricing','To be ordered'],['order','On order'],['cut','To cut'],
+  /* the tabs in the order the shop works through them, the Diary first */
+  $('rail').innerHTML=`<button class="chip ${filter==='diary'?'on':''}" data-f="diary">Diary</button>`+[
+    ['book','To be booked in'],['attn','Needs attention'],['all','Live'],['quote','Quotes'],['pricing','To be ordered'],['order','On order'],['cut','To cut'],
     ['ready','Ready'],['told','Not told'],['invoice','To invoice'],['closed','Closed']
-  ].map(x=>`<button class="chip ${filter===x[0]?'on':''} ${x[0]==='attn'?'attnchip':''} ${(x[0]==='attn'&&bucket('attn').length)||(x[0]==='told'&&untold.length)||(x[0]==='invoice'&&bucket('invoice').some(j=>j.status==='done'))?'alert':''}" data-f="${x[0]}">${x[1]} <b>${bucket(x[0]).length}</b></button>`).join('')
-   +`<button class="chip ${filter==='diary'?'on':''}" data-f="diary">Diary</button>`;
+  ].map(x=>`<button class="chip ${filter===x[0]?'on':''} ${x[0]==='attn'?'attnchip':''} ${(x[0]==='attn'&&bucket('attn').length)||(x[0]==='told'&&untold.length)||(x[0]==='invoice'&&bucket('invoice').some(j=>j.status==='done'))?'alert':''}" data-f="${x[0]}">${x[1]} <b>${bucket(x[0]).length}</b></button>`).join('');
   railEdges(true);
 
   const stale=untold.filter(j=>daysAgo(j.readyAt)>=1);
