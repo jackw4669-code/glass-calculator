@@ -6,7 +6,7 @@
 <title>Wilson's Glass — Job Book</title>
 <!-- Which version of the app this is. Change it whenever this file
      changes, and every machine with the app open offers the new one. -->
-<meta name="wg-build" content="2026-11-08.1">
+<meta name="wg-build" content="2026-11-09.1">
 <!-- Installing the job book as an app: its name, icons and colours -->
 <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
 <meta name="theme-color" content="#16262B">
@@ -699,6 +699,15 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .banner.update{background:var(--float-l);border-color:#A8CDBA;border-left-color:var(--float)}
 .banner.update b{color:var(--float-d)}
 .banner.update button{color:var(--float-d)}
+/* saving a job: covers the screen until the save has gone through */
+.savecover{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(22,38,43,.6)}
+.savecover[hidden]{display:none}
+.savebox{background:var(--white);border-radius:10px;padding:26px 24px 24px;width:100%;max-width:340px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.28);outline:none}
+.spinner{display:block;width:36px;height:36px;margin:0 auto 16px;border-radius:50%;border:4px solid var(--float-l);border-top-color:var(--float);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spinner{animation-duration:2.5s}}
+.savemsg{font-size:18px;font-weight:600;line-height:1.35;color:var(--ink)}
+.saveslow{margin-top:8px;font-size:15px;line-height:1.4;color:var(--ink2)}
 .rmrow{display:flex;justify-content:space-between;align-items:baseline;gap:4px 14px;flex-wrap:wrap;
   margin-top:7px;padding-top:7px;border-top:1px solid #F0B7B3}
 .rmrow .mono{font-weight:600}
@@ -1064,6 +1073,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <div class="sheetfoot"><div class="footinner"><button class="save" id="saveRates">Save for the whole shop</button></div></div>
 </div>
 
+<!-- saving a job: covers the screen until the save has gone through -->
+<div class="savecover" id="savingCover" hidden>
+  <div class="savebox" id="savingBox" role="alert" tabindex="-1">
+    <span class="spinner" aria-hidden="true"></span>
+    <p class="savemsg">Hold on, we are saving this job.</p>
+    <p class="saveslow" id="savingSlow" hidden>Still going. A weak signal can make this take a little longer.</p>
+  </div>
+</div>
 <div id="toast"></div>
 <div id="printarea"></div>
 
@@ -3502,18 +3519,57 @@ function stampMoney(job){
   /* the date the job counts towards, so the database can group by month */
   job._doneAt = job.status==='done' ? (job.doneAt||'').slice(0,10) : '';
 }
-async function pushJob(job) {
+/* fetch, but give up after `ms`: on a bad signal a request can hang for
+   minutes. Giving up does not stop the shop's server finishing a save it
+   has already received, which is why saving a job is safe to try again. */
+function fetchWait(url,opt,ms){
+  if(!ms||typeof AbortController==='undefined') return fetch(url,opt);
+  const c=new AbortController(), t=setTimeout(()=>c.abort(),ms);
+  return fetch(url,Object.assign({},opt,{signal:c.signal})).finally(()=>clearTimeout(t));
+}
+/* the same job, whatever order its fields are in (its version aside) */
+const canon=v=>Array.isArray(v)?'['+v.map(canon).join(',')+']'
+  :v&&typeof v==='object'?'{'+Object.keys(v).filter(k=>k!=='_v'&&v[k]!==undefined).sort()
+      .map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}'
+  :JSON.stringify(v===undefined?null:v);
+const sameJob=(a,b)=>canon(a)===canon(b);
+function keepSaved(job){
+  SAVED.set(job.id, JSON.stringify(job));
+  const i = JOBS.findIndex(j => j.id === job.id);
+  if (i >= 0) JOBS[i] = job; else JOBS.push(job);
+}
+/* opt.wait: give up after this long. opt.fresh: a job that is new on
+   this sheet, so one already on the server can only be an earlier try. */
+async function pushJob(job, opt) {
+  opt = opt || {};
   stampMoney(job);
   try {
-    const r = await fetch(`${API}/jobs/${job.id}`, {
+    const r = await fetchWait(`${API}/jobs/${job.id}`, {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(job)
-    });
+    }, opt.wait);
 
     if (r.status === 409) {
       const { current } = await r.json();
-      toast(`${current.updated_by || 'Someone'} changed job ${job.no} while you had it open — reloading`, true);
+      let was = null;
+      try { was = current ? JSON.parse(current.data) : null; } catch (e) {}
+      if (was && !opt.again) {
+        /* The server already has exactly this: an earlier try got through
+           but its answer was lost on a bad signal. Nothing more to send. */
+        if (sameJob(was, job)) { job._v = current.version; keepSaved(job); return true; }
+        /* A new job that is already there can only be an earlier try of
+           this same one (its id is made when its sheet opens). It goes
+           again on top of that copy, keeping its number, rather than
+           becoming a second job. */
+        if (opt.fresh) {
+          job._v = current.version;
+          if (was.no) job.no = was.no;
+          if (was.takenAt) job.takenAt = was.takenAt;
+          return pushJob(job, Object.assign({}, opt, { again: true }));
+        }
+      }
+      toast(`${(current && current.updated_by) || 'Someone'} changed job ${job.no} while you had it open — reloading`, true);
       await loadAll({ all: true });
       render();
       return false;
@@ -3527,9 +3583,7 @@ async function pushJob(job) {
 
     const { version } = await r.json();
     job._v = version;
-    SAVED.set(job.id, JSON.stringify(job));
-    const i = JOBS.findIndex(j => j.id === job.id);
-    if (i >= 0) JOBS[i] = job; else JOBS.push(job);
+    keepSaved(job);
     return true;
   } catch (err) {
     putBack(job);
@@ -4166,15 +4220,17 @@ $('photoGrid').addEventListener('change',e=>{
    keeps is only the list of names and ids. */
 async function syncPhotos(jobId){
   for(const id of photoGone){
-    try{ await fetch(API+'/photo/'+id,{method:'DELETE'}); delete PHOTOCACHE[id]; }catch(e){}
+    try{ await fetchWait(API+'/photo/'+id,{method:'DELETE'},SAVE_WAIT); delete PHOTOCACHE[id]; }catch(e){}
   }
   photoGone=[];
   for(const p of photoList){
     if(!p.isNew) continue;
     const body={id:p.id,jobId,name:p.name,mime:p.mime,w:p.w,h:p.h,
                 data:String(p.data).split(',')[1]||''};
-    const r=await fetch(API+'/photos',{method:'POST',
-      headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+    /* no answer at all (no signal, or too slow) stops the save: the photo
+       stays waiting and goes with the next try */
+    const r=await fetchWait(API+'/photos',{method:'POST',
+      headers:{'content-type':'application/json'},body:JSON.stringify(body)},PHOTO_WAIT);
     if(!r.ok){ toast('A photo would not save',true); continue; }
     PHOTOCACHE[p.id]=p.data; p.isNew=false;
   }
@@ -4776,7 +4832,39 @@ function fillForm(j){
 }
 $('newBtn').onclick=()=>openJob(null);
 
+/* ---------- saving a job: once, however many taps ----------
+   On a bad signal a save can take a while and it looked as if nothing was
+   happening, so Save job got tapped again and the job was saved more than
+   once. Now the first tap covers the screen with "Hold on, we are saving
+   this job." until the save has gone through or failed, and every other
+   tap is ignored. A new job also keeps one id from the moment its sheet
+   opens (and in its draft), so trying again after a failed save carries
+   on with the same job rather than making a second one. */
+let SAVING=false, SAVE_WAIT=30000, PHOTO_WAIT=60000, SAVE_SLOW=8000, saveSlowTimer=null;
+function newJobId(){
+  return draftKey&&/^new:/.test(draftKey) ? 'j'+draftKey.slice(4)
+       : 'j'+Date.now()+Math.random().toString(36).slice(2,6);
+}
+function savingOn(){
+  SAVING=true;
+  $('saveJob').disabled=true;
+  $('jobSheet').inert=true;
+  $('savingSlow').hidden=true;
+  $('savingCover').hidden=false;
+  $('savingBox').focus();
+  clearTimeout(saveSlowTimer);
+  saveSlowTimer=setTimeout(()=>{ $('savingSlow').hidden=false; },SAVE_SLOW);
+}
+function savingOff(){
+  if(!SAVING) return;
+  SAVING=false;
+  clearTimeout(saveSlowTimer);
+  $('savingCover').hidden=true;
+  $('saveJob').disabled=false;
+  $('jobSheet').inert=false;
+}
 $('saveJob').onclick=async()=>{
+  if(SAVING) return;                       /* already saving: this tap does nothing */
   const name=$('fName').value.trim();
   if(!name){ toast('Needs a customer name',true); $('fName').focus(); return; }
   const attnOn=$('fAttn').checked, attnText=$('fAttnText').value.trim();
@@ -4797,46 +4885,54 @@ $('saveJob').onclick=async()=>{
   const wasMeasured=editing&&editing.measuredAt?editing.measuredAt:null;
   const markNow=$('fMeasure').checked&&$('fMeasured').checked&&!wasMeasured;
   if(markNow&&!okToMarkMeasured({no:editing?editing.no:0,items:clean,frames:cleanFrames,works:cleanWorks})) return;
-  const jobId = editing?editing.id:'j'+Date.now()+Math.random().toString(36).slice(2,6);
-  const photos = await syncPhotos(jobId);
-  const job=Object.assign({},editing||{},{
-    id: jobId,
-    no: editing?editing.no:(JOBS.reduce((m,j)=>Math.max(m,j.no||0),1649)+1),
-    name, phone:$('fPhone').value.trim(), email:$('fEmail').value.trim(), trade:isTrade,
-    unit, items:clean, frames:cleanFrames, works:cleanWorks,
-    extras:extras.filter(x=>x.label||num(x.amount)),
-    discountPct:num($('fDisc').value), cardFee:$('fCard').checked, noVat:$('fNoVat').checked,
-    payments: pays.filter(p=>num(p.amount)!==0).map(p=>({
-      date:p.date||ymd(new Date()), amount:num(p.amount), method:p.method||PAY_METHODS[0]
-    })),
-    /* kept in step so a machine still running the old build reads the
-       right balance until it picks up this version */
-    deposit: pays.reduce((s,p)=>s+num(p.amount),0),
-    handover, deliver:handover==='delivery', addr:$('fAddr').value.trim(),
-    needsMeasure:$('fMeasure').checked, noteUrgent:$('fUrgent').checked, photos,
-    needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt||undefined,
-    /* flagged when first ticked; changing the words keeps that time */
-    attn: attnOn ? {text:attnText, at:(editing&&needsAttn(editing)&&editing.attn.at)||new Date().toISOString()} : undefined,
-    appts: editing?clone(apptsOf(editing)):[],
-    costs: costs.filter(c=>c.label||num(c.amount)),
-    wanted:$('fWanted').value, note:$('fNote').value.trim(),
-    called: editing?!!editing.called:false,
-    confirmed: editing?!!editing.confirmed:false,
-    status: editing?editing.status:'quote',
-    takenAt: editing?editing.takenAt:new Date().toISOString()
-  });
-  delete job.measured; delete job.ordWhat; delete job.ordSup; delete job.kind; delete job.needsOrder; delete job.workOrder;
-  job.measuredAt = !$('fMeasure').checked ? wasMeasured
-    : $('fMeasured').checked ? (wasMeasured||new Date().toISOString()) : null;
-  if(markNow) apptsOf(job).forEach(a=>{ if(a.kind==='measure'&&!a.doneAt) a.doneAt=job.measuredAt; });
-  if(job.status!=='done'&&job.status!=='lost') applyStatus(job);
-  if(await pushJob(job)){
-    dropDraft(draftKey); draftKey=null;
-    hideSheets(); render();
-    toast(markNow?measuredToast(job)
-         :editing?`Job ${job.no} updated`
-         :job.status==='measure'?`Job ${job.no} saved — book the measure in`
-         :`Quote ${job.no} saved — send it, then confirm`);
+  const jobId = editing?editing.id:newJobId();
+  savingOn();
+  try{
+    const photos = await syncPhotos(jobId);
+    const job=Object.assign({},editing||{},{
+      id: jobId,
+      no: editing?editing.no:(JOBS.reduce((m,j)=>Math.max(m,j.no||0),1649)+1),
+      name, phone:$('fPhone').value.trim(), email:$('fEmail').value.trim(), trade:isTrade,
+      unit, items:clean, frames:cleanFrames, works:cleanWorks,
+      extras:extras.filter(x=>x.label||num(x.amount)),
+      discountPct:num($('fDisc').value), cardFee:$('fCard').checked, noVat:$('fNoVat').checked,
+      payments: pays.filter(p=>num(p.amount)!==0).map(p=>({
+        date:p.date||ymd(new Date()), amount:num(p.amount), method:p.method||PAY_METHODS[0]
+      })),
+      /* kept in step so a machine still running the old build reads the
+         right balance until it picks up this version */
+      deposit: pays.reduce((s,p)=>s+num(p.amount),0),
+      handover, deliver:handover==='delivery', addr:$('fAddr').value.trim(),
+      needsMeasure:$('fMeasure').checked, noteUrgent:$('fUrgent').checked, photos,
+      needsInvoice:$('fInvoice').checked, invoicedAt:formInvoicedAt||undefined,
+      /* flagged when first ticked; changing the words keeps that time */
+      attn: attnOn ? {text:attnText, at:(editing&&needsAttn(editing)&&editing.attn.at)||new Date().toISOString()} : undefined,
+      appts: editing?clone(apptsOf(editing)):[],
+      costs: costs.filter(c=>c.label||num(c.amount)),
+      wanted:$('fWanted').value, note:$('fNote').value.trim(),
+      called: editing?!!editing.called:false,
+      confirmed: editing?!!editing.confirmed:false,
+      status: editing?editing.status:'quote',
+      takenAt: editing?editing.takenAt:new Date().toISOString()
+    });
+    delete job.measured; delete job.ordWhat; delete job.ordSup; delete job.kind; delete job.needsOrder; delete job.workOrder;
+    job.measuredAt = !$('fMeasure').checked ? wasMeasured
+      : $('fMeasured').checked ? (wasMeasured||new Date().toISOString()) : null;
+    if(markNow) apptsOf(job).forEach(a=>{ if(a.kind==='measure'&&!a.doneAt) a.doneAt=job.measuredAt; });
+    if(job.status!=='done'&&job.status!=='lost') applyStatus(job);
+    if(await pushJob(job,{fresh:!editing,wait:SAVE_WAIT})){
+      savingOff();
+      dropDraft(draftKey); draftKey=null;
+      hideSheets(); render();
+      toast(markNow?measuredToast(job)
+           :editing?`Job ${job.no} updated`
+           :job.status==='measure'?`Job ${job.no} saved — book the measure in`
+           :`Quote ${job.no} saved — send it, then confirm`);
+    }
+  }catch(e){
+    toast('Could not save — check the connection',true);
+  }finally{
+    savingOff();
   }
 };
 $('delJob').onclick=async()=>{
@@ -5607,6 +5703,8 @@ $('printDiary').onclick=()=>{
 };
 
 document.addEventListener('keydown',e=>{
+  /* a job is being saved: Escape must not close it, nor Enter tap Save again */
+  if(SAVING){ if(e.key==='Escape'||e.key==='Enter') e.preventDefault(); return; }
   if(LB.open){
     if(e.key==='Escape'){ e.preventDefault(); closeLightbox(false); }
     else if(e.key==='ArrowLeft') lbStep(-1);
