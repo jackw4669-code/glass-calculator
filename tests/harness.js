@@ -177,6 +177,10 @@ async function boot(opts = {}) {
      opened on, or another tab's name to start on that. */
   const tab = 'tab' in opts ? opts.tab : 'all';
   if (tab && w.eval('filter') !== tab) await click(w, w.document.querySelector(`#rail [data-f="${tab}"]`));
+  /* The saving screen stays up a moment once saved, so the changes can be
+     read. The older suites expect the job to close straight away, so that
+     pause is off unless a test asks for it (t19 does). */
+  if (!opts.savePause) { try { w.eval('SAVE_SHOW = 0; SAVE_TICK = 0'); } catch (e) {} }
   return { dom, w, doc: w.document, server };
 }
 

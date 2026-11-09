@@ -6,7 +6,7 @@
 <title>Wilson's Glass — Job Book</title>
 <!-- Which version of the app this is. Change it whenever this file
      changes, and every machine with the app open offers the new one. -->
-<meta name="wg-build" content="2026-11-09.1">
+<meta name="wg-build" content="2026-11-09.2">
 <!-- Installing the job book as an app: its name, icons and colours -->
 <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
 <meta name="theme-color" content="#16262B">
@@ -95,7 +95,7 @@ header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--white)
 .railwrap.atstart::before{opacity:0}
 .railwrap .rail{position:static}
 .chip{padding:11px 15px;border-right:1px solid var(--silver2);white-space:nowrap;display:flex;gap:8px;align-items:baseline;color:var(--ink2);font-size:14px;font-weight:500;border-bottom:3px solid transparent}
-.chip b{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--ink)}
+.chip b{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--ink);display:inline-block}
 .chip.on{color:var(--ink);border-bottom-color:var(--float);background:var(--float-l)}
 .chip.alert b{color:var(--amber)}
 .src-quoted{background:var(--silver2);color:var(--ink2)}
@@ -708,6 +708,65 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media (prefers-reduced-motion:reduce){.spinner{animation-duration:2.5s}}
 .savemsg{font-size:18px;font-weight:600;line-height:1.35;color:var(--ink)}
 .saveslow{margin-top:8px;font-size:15px;line-height:1.4;color:var(--ink2)}
+/* what is changing, listed on the saving screen, then a tick once saved */
+.savelist{margin-top:16px;padding-top:12px;border-top:1px solid var(--silver2);text-align:left}
+.savelist h5{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.savelist ul{list-style:none;margin:0;padding:0;max-height:40vh;overflow-y:auto}
+.savelist li{display:flex;gap:10px;padding:4px 0;font-size:15px;line-height:1.35;color:var(--ink);animation:liIn .3s ease both}
+.savelist li .k{flex:0 0 auto;min-width:6.5em;color:var(--ink2);font-weight:600}
+.savelist li .v{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+.savelist li.more{color:var(--ink2)}
+@keyframes liIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.tick{display:none;width:40px;height:40px;margin:0 auto 14px}
+.tick circle{fill:var(--float-l);stroke:var(--float);stroke-width:2.5}
+.tick path{fill:none;stroke:var(--float-d);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;animation:tickDraw .35s .08s ease-out forwards}
+@keyframes tickDraw{to{stroke-dashoffset:0}}
+.savebox.done .spinner{display:none}
+.savebox.done .tick{display:block;animation:tickPop .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes tickPop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.savebox.done .savemsg{color:var(--float-d)}
+/* sheets slide up as they open; buttons give a little under a tap */
+.sheet.on{animation:sheetIn .2s cubic-bezier(.2,.8,.2,1)}
+@keyframes sheetIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.act,.save,.hbtn{transition:transform .08s ease}
+.act:active,.save:active,.hbtn:active{transform:scale(.96)}
+/* a button that is saving: a spinner in place of its words */
+button.busy{position:relative;color:transparent!important;pointer-events:none}
+button.busy::after{content:"";position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-9px 0 0 -9px;border-radius:50%;border:2px solid var(--ink2);border-top-color:transparent;animation:spin .7s linear infinite}
+.act.go.busy::after,.act.warn.busy::after,.act.blue.busy::after,.save.busy::after{border-color:var(--white);border-top-color:transparent}
+/* ---------- motion: where things went ---------- */
+#motion{position:fixed;inset:0;z-index:97;pointer-events:none;overflow:hidden}
+.mpill{position:fixed;left:0;top:0;max-width:min(330px,calc(100vw - 24px));padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--white);box-shadow:0 10px 28px rgba(0,0,0,.28);font-size:14px;line-height:1.35;will-change:transform,opacity}
+.mpill b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mpill .mroute{display:block;color:#BFE3D2;font-weight:600}
+.mpill .mnote{display:block;color:#C9D3D6;font-size:13px}
+.mpill.draft{background:var(--white);color:var(--ink);border:1px solid var(--silver)}
+.mpill.draft .mroute{color:var(--float-d)}
+.mpill.diary .mroute{color:#FFD9A8}
+.mpill.calm{left:50%;top:auto;bottom:86px;transform:translateX(-50%);animation:calmPill 2.2s ease both}
+@keyframes calmPill{0%{opacity:0}10%{opacity:1}82%{opacity:1}100%{opacity:0}}
+.mghost{position:fixed;margin:0;pointer-events:none}
+.mghost > *{margin:0!important;background:var(--white);border-radius:6px;box-shadow:0 6px 18px rgba(22,38,43,.14)}
+.chip.bump b{animation:countUp .6s cubic-bezier(.2,.8,.2,1)}
+.chip.bump{animation:chipGlow .9s ease}
+@keyframes countUp{0%{transform:scale(1)}35%{transform:scale(1.4);color:var(--float)}100%{transform:none}}
+@keyframes chipGlow{0%{box-shadow:inset 0 -3px 0 var(--float),0 0 0 0 rgba(78,158,126,.45)}100%{box-shadow:inset 0 -3px 0 transparent,0 0 0 8px rgba(78,158,126,0)}}
+.chip.drop b{animation:countDown .5s ease}
+@keyframes countDown{0%{opacity:1}40%{opacity:.25;transform:translateY(3px)}100%{opacity:1;transform:none}}
+#draftsBtn.bump{animation:draftBump .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes draftBump{0%{transform:none}35%{transform:scale(1.14)}100%{transform:none}}
+.mk-in{animation:mkIn .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes mkIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.mk-flash{animation:mkFlash 1.6s ease}
+@keyframes mkFlash{0%{box-shadow:0 0 0 3px rgba(78,158,126,.55)}100%{box-shadow:0 0 0 3px rgba(78,158,126,0)}}
+.cell.mk-pulse{animation:cellPulse 1.3s ease}
+@keyframes cellPulse{0%{box-shadow:inset 0 0 0 3px var(--float)}100%{box-shadow:inset 0 0 0 3px rgba(78,158,126,0)}}
+@media (prefers-reduced-motion:reduce){
+  .sheet.on,.mk-in,.savelist li,.tick path,.savebox.done .tick,.chip.bump b,.chip.drop b,#draftsBtn.bump{animation:none}
+  .tick path{stroke-dashoffset:0}
+  .act:active,.save:active,.hbtn:active{transform:none}
+  button.busy::after{animation-duration:2s}
+}
 .rmrow{display:flex;justify-content:space-between;align-items:baseline;gap:4px 14px;flex-wrap:wrap;
   margin-top:7px;padding-top:7px;border-top:1px solid #F0B7B3}
 .rmrow .mono{font-weight:600}
@@ -1077,10 +1136,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div class="savecover" id="savingCover" hidden>
   <div class="savebox" id="savingBox" role="alert" tabindex="-1">
     <span class="spinner" aria-hidden="true"></span>
-    <p class="savemsg">Hold on, we are saving this job.</p>
+    <svg class="tick" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17"/><path d="M12.5 20.5l5 5 10-11"/></svg>
+    <p class="savemsg" id="savingMsg">Hold on, we are saving this job.</p>
     <p class="saveslow" id="savingSlow" hidden>Still going. A weak signal can make this take a little longer.</p>
+    <div class="savelist" id="savingList" hidden></div>
   </div>
 </div>
+<!-- the animations that show where things went: never in the way of a tap -->
+<div id="motion" aria-hidden="true"></div>
 <div id="toast"></div>
 <div id="printarea"></div>
 
@@ -1316,6 +1379,11 @@ const stat=k=>STATUSES.find(s=>s.k===k)||STATUSES[0];
 const DURS={30:'30 min',60:'1 hr',90:'1½ hr',120:'2 hr',180:'3 hr',240:'Half day',360:'6 hr',480:'Full day'};
 
 let JOBS=[], CUSTOMERS=[], PRICES={}, ADJ=0, filter='diary', editing=null, mailJob=null, mailKind='ready';
+/* the tabs after the Diary, in the order the shop works through them */
+const TABS=[['book','To be booked in'],['attn','Needs attention'],['all','Live'],['quote','Quotes'],['pricing','To be ordered'],
+  ['order','On order'],['cut','To cut'],['ready','Ready'],['told','Not told'],['invoice','To invoice'],['closed','Closed']];
+/* what the animations remember between one draw of the screen and the next */
+const MOTION={local:new Set(), events:false, tabs:new Map(), diary:new Map(), counts:{}, B:null, quiet:false};
 let items=[], extras=[], costs=[], pays=[], frames=[], works=[], formInvoicedAt='', formMeasuredAt='', formAttnAt='';
 let EVENTS=[], EVENTSV=null, MIRROREV='', evEditing=null;
 let isTrade=false, handover='collection', unit='mm';
@@ -2193,16 +2261,24 @@ function backupDue(){
   const days = lastFull ? daysAgo(lastFull) : 9999;
   return (new Date().getDay()===5 && days>=1) || days>=7;
 }
+/* Every redraw goes through here: note where things are, draw, then
+   animate whatever this machine has just changed (see MOTION). */
 function render(){
+  const snap=motionBefore();
+  drawAll();
+  motionAfter(snap);
+}
+function drawAll(){
   if(dayViewDate&&$('daySheet').classList.contains('on')) renderDay();
   const q=$('search').value.trim();
   const untold=bucket('told');
 
   /* the tabs in the order the shop works through them, the Diary first */
-  $('rail').innerHTML=`<button class="chip ${filter==='diary'?'on':''}" data-f="diary">Diary</button>`+[
-    ['book','To be booked in'],['attn','Needs attention'],['all','Live'],['quote','Quotes'],['pricing','To be ordered'],['order','On order'],['cut','To cut'],
-    ['ready','Ready'],['told','Not told'],['invoice','To invoice'],['closed','Closed']
-  ].map(x=>`<button class="chip ${filter===x[0]?'on':''} ${x[0]==='attn'?'attnchip':''} ${(x[0]==='attn'&&bucket('attn').length)||(x[0]==='told'&&untold.length)||(x[0]==='invoice'&&bucket('invoice').some(j=>j.status==='done'))?'alert':''}" data-f="${x[0]}">${x[1]} <b>${bucket(x[0]).length}</b></button>`).join('');
+  /* every tab's jobs, worked out once: for the counts here, and so the
+     animations can tell which tabs a job has left and which it has joined */
+  const B={}; TABS.forEach(x=>{ B[x[0]]=x[0]==='told'?untold:bucket(x[0]); }); MOTION.B=B;
+  $('rail').innerHTML=`<button class="chip ${filter==='diary'?'on':''}" data-f="diary">Diary</button>`+TABS
+    .map(x=>`<button class="chip ${filter===x[0]?'on':''} ${x[0]==='attn'?'attnchip':''} ${(x[0]==='attn'&&B.attn.length)||(x[0]==='told'&&untold.length)||(x[0]==='invoice'&&B.invoice.some(j=>j.status==='done'))?'alert':''}" data-f="${x[0]}">${x[1]} <b>${B[x[0]].length}</b></button>`).join('');
   railEdges(true);
 
   const stale=untold.filter(j=>daysAgo(j.readyAt)>=1);
@@ -2301,7 +2377,7 @@ function jobCard(j){
   const nCut=pendingCut(j).length;
   const need=bookable(j)?neededAppts(j):[];
   const appt=nextAppt(j);
-  return `<article class="job ${flag?'flag':''} ${j.noteUrgent&&j.note?'urgent':''}">
+  return `<article class="job ${flag?'flag':''} ${j.noteUrgent&&j.note?'urgent':''}" data-mk="j|${j.id}">
     <div class="jobtop" data-open="${j.id}">
       <div class="ticket">${j.no}</div>
       <div class="who">
@@ -2543,7 +2619,7 @@ function renderDiary(){
             <button class="act" data-evnew="${selDay}">+ Add an event</button></span></div>
         ${evBlock(dayEv)}
         ${dayJobs.length>1?orderPicker(dayOd,dayJobs):''}
-        ${dayJobs.length?dayJobs.map((x,n)=>`<div class="slot">
+        ${dayJobs.length?dayJobs.map((x,n)=>`<div class="slot" data-mk="a|${x.j.id}|${x.a.kind}|${x.a.date}">
             <div class="tm">${x.a.time||'—'}<div class="dur">${DURS[x.a.mins]||((+x.a.mins||0)+' min')}${x.a.time?'<br>to '+endTime(x.a.time,x.a.mins):''}</div></div>
             <div style="flex:1;min-width:0">
               ${posRow(x,dayMode==='time'?0:n+1,dayJobs.length)}
@@ -3234,7 +3310,7 @@ async function saveEvents(change){
     }
     if(!r.ok){ toast('Could not save — check the connection',true); return false; }
     let v=null; try{ v=(await r.json()).version; }catch(e){}
-    EVENTS=next; EVENTSV=v; await mirrorEvents();
+    EVENTS=next; EVENTSV=v; MOTION.events=true; await mirrorEvents();
     return true;
   }
   toast('The diary kept changing on another machine — try again',true);
@@ -3249,8 +3325,12 @@ async function removeEvent(id){
   return true;
 }
 
+let evSaving=false, evNewId='';
 function openEvent(ev,date){
   evEditing=ev||null;
+  /* a new event keeps one id while its sheet is open, so a second save of
+     it can never add it twice */
+  evNewId=ev?'':'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   $('evTitle').textContent=ev?'Change the event':'New event';
   $('evWhat').value=ev?ev.what:'';
   $('evDate').value=ev?ev.date:(date||ymd(new Date()));
@@ -3283,18 +3363,22 @@ function drawEvent(){
 $('evBtn').onclick=()=>openEvent(null,filter==='diary'&&selDay?selDay:ymd(new Date()));
 $('closeEv').onclick=hideSheets; $('evCancel').onclick=hideSheets;
 $('evSave').onclick=async()=>{
+  if(evSaving) return;                      /* already saving: this tap does nothing */
   const what=$('evWhat').value.trim(), date=$('evDate').value;
   if(!what){ toast('Say what it is',true); $('evWhat').focus(); return; }
   if(!date){ toast('Needs a date',true); $('evDate').focus(); return; }
   const was=evEditing, time=$('evMins').value==='0'?'':$('evTime').value;
-  const ev={id:was?was.id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+  const ev={id:was?was.id:(evNewId||'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
             what, date, time, mins:time?(+$('evMins').value||60):0, remind:$('evRemind').checked,
             at:was&&was.at?was.at:new Date().toISOString()};
-  if(!await saveEvents(upsertEvent(ev))) return;
-  hideSheets();
-  if(filter==='diary'){ selDay=date; diaryMonth=new Date(date+'T12:00:00'); }
-  render();
-  toast((was?'Changed':'In the diary')+' for '+longDate(date)+(ev.remind?' — it will remind everyone on the day':''));
+  evSaving=true; $('evSave').classList.add('busy');
+  try{
+    if(!await saveEvents(upsertEvent(ev))) return;
+    hideSheets();
+    if(filter==='diary'){ selDay=date; diaryMonth=new Date(date+'T12:00:00'); }
+    render();
+    toast((was?'Changed':'In the diary')+' for '+longDate(date)+(ev.remind?' — it will remind everyone on the day':''));
+  }finally{ evSaving=false; $('evSave').classList.remove('busy'); }
 };
 $('evDel').onclick=async()=>{
   const ev=evEditing; if(!ev) return;
@@ -3321,7 +3405,7 @@ const remindersToday=()=>{ const t=ymd(new Date()), s=seenToday(); return events
 
 /* the events on a day, as a block above that day's jobs */
 function evRow(e){
-  return `<div class="evrow">
+  return `<div class="evrow" data-mk="e|${esc(e.id)}">
     <span class="evt">${esc(evWhen(e))}</span>
     <span class="evw">${esc(e.what)}${e.remind?' <span class="tag evrem">Reminder</span>':''}
       ${e.time&&e.mins?`<span class="evd">${esc(evMinsText(+e.mins))}</span>`:''}</span>
@@ -3504,7 +3588,9 @@ async function refreshNow(){
     /* back online after opening without signal: is this still the newest? */
     if(!was&&ONLINE) checkBuild(true);
     /* a new day brings that day's reminders */
-    if(changed||JSON.stringify(EVENTS)!==ev||ymd(new Date())!==SHOWNDAY){ SHOWNDAY=ymd(new Date()); render(); }
+    if(changed||JSON.stringify(EVENTS)!==ev||ymd(new Date())!==SHOWNDAY){
+      /* other machines' changes arrive quietly: only what is done here animates */
+      SHOWNDAY=ymd(new Date()); MOTION.quiet=true; try{ render(); }finally{ MOTION.quiet=false; } }
   }finally{ REFRESHING=false; }
 }
 function pollTick(){ if(document.visibilityState!=='hidden'){ refreshNow(); checkBuild(); } }
@@ -3542,6 +3628,7 @@ function keepSaved(job){
    this sheet, so one already on the server can only be an earlier try. */
 async function pushJob(job, opt) {
   opt = opt || {};
+  MOTION.local.add(job.id);                 /* changed here: animate it on the next draw */
   stampMoney(job);
   try {
     const r = await fetchWait(`${API}/jobs/${job.id}`, {
@@ -3617,7 +3704,7 @@ async function dropJob(id) {
 }
 
 /* ---------- list events ---------- */
-document.addEventListener('click',async e=>{
+async function onAppClick(e){
   if(!e.target.closest('.menuwrap')) $('menu').classList.remove('on');
   if(!e.target.closest('.suggest')) $('sugg').innerHTML='';
 
@@ -3928,6 +4015,16 @@ document.addEventListener('click',async e=>{
   if(m){ openMail(JOBS.find(x=>x.id===m.dataset.mail)); return; }
   const o=e.target.closest('[data-open]');
   if(o){ openJob(JOBS.find(x=>x.id===o.dataset.open)); return; }
+}
+/* A button that saves something shows a spinner if it takes a moment,
+   and another tap on it does nothing until it is done. */
+document.addEventListener('click',async e=>{
+  const b=e.target.closest&&e.target.closest('button.act');
+  if(b&&b.dataset.working) return;
+  let t=0;
+  if(b){ b.dataset.working='1'; t=setTimeout(()=>b.classList.add('busy'),150); }
+  try{ await onAppClick(e); }
+  finally{ if(b){ clearTimeout(t); delete b.dataset.working; b.classList.remove('busy'); } }
 });
 document.addEventListener('change',async e=>{
   const sp=e.target.closest&&e.target.closest('[data-seq]');
@@ -3943,9 +4040,13 @@ function showSheet(el){
   if(el!==$('jobSheet')&&$('jobSheet').classList.contains('on')) saveDraftNow();
   document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on')); el.classList.add('on'); window.scrollTo({top:0}); }
 function hideSheets(){
-  if($('jobSheet').classList.contains('on')) saveDraftNow();
+  const jobOpen=$('jobSheet').classList.contains('on');
+  if(jobOpen) saveDraftNow();
+  /* closed without saving, and kept: show it going into Drafts */
+  const kept=jobOpen&&draftKey?getDraft(draftKey):null;
   document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on'));
   if(dayBack&&dayViewDate){ dayBack=false; renderDay(); $('daySheet').classList.add('on'); }
+  if(kept) draftTrip(kept);
 }
 $('closeJob').onclick=hideSheets; $('cancelJob').onclick=hideSheets;
 $('closeRate').onclick=hideSheets; $('closeMail').onclick=hideSheets; $('mBack').onclick=hideSheets;
@@ -4841,12 +4942,20 @@ $('newBtn').onclick=()=>openJob(null);
    opens (and in its draft), so trying again after a failed save carries
    on with the same job rather than making a second one. */
 let SAVING=false, SAVE_WAIT=30000, PHOTO_WAIT=60000, SAVE_SLOW=8000, saveSlowTimer=null;
+/* Once saved, the tick shows for SAVE_TICK, and a list of changes stays
+   up until SAVE_SHOW after the screen opened, so it can be read. A tap,
+   Escape or Enter closes it sooner. */
+let SAVE_SHOW=1600, SAVE_TICK=650, saveOpenAt=0, saveSkip=null;
 function newJobId(){
   return draftKey&&/^new:/.test(draftKey) ? 'j'+draftKey.slice(4)
        : 'j'+Date.now()+Math.random().toString(36).slice(2,6);
 }
 function savingOn(){
   SAVING=true;
+  saveOpenAt=Date.now(); saveSkip=null;
+  $('savingBox').classList.remove('done');
+  $('savingMsg').textContent='Hold on, we are saving this job.';
+  showChanges(null);
   $('saveJob').disabled=true;
   $('jobSheet').inert=true;
   $('savingSlow').hidden=true;
@@ -4857,12 +4966,36 @@ function savingOn(){
 }
 function savingOff(){
   if(!SAVING) return;
-  SAVING=false;
+  SAVING=false; saveSkip=null;
   clearTimeout(saveSlowTimer);
   $('savingCover').hidden=true;
   $('saveJob').disabled=false;
   $('jobSheet').inert=false;
 }
+/* the changes, in plain words, on the saving screen (null clears them) */
+function showChanges(lines){
+  const box=$('savingList');
+  if(!lines){ box.hidden=true; box.innerHTML=''; return; }
+  const shown=lines.slice(0,6), more=lines.length-shown.length;
+  box.innerHTML=lines.length
+    ? `<h5>What's changing</h5><ul>${shown.map((x,i)=>`<li style="animation-delay:${60+i*70}ms"><span class="k">${esc(x[0])}</span><span class="v">${esc(x[1])}</span></li>`).join('')}${
+        more?`<li class="more" style="animation-delay:${60+shown.length*70}ms">and ${more} more change${more>1?'s':''}</li>`:''}</ul>`
+    : '<h5>Nothing has changed</h5>';
+  box.hidden=false;
+}
+/* the tick, then long enough to read the changes */
+function savedPause(){
+  clearTimeout(saveSlowTimer); $('savingSlow').hidden=true;
+  $('savingBox').classList.add('done'); $('savingMsg').textContent='Saved';
+  const reading=!!$('savingList').querySelector('li');
+  const wait=Math.max(SAVE_TICK, reading?SAVE_SHOW-(Date.now()-saveOpenAt):0);
+  if(wait<=0) return Promise.resolve();
+  return new Promise(res=>{
+    const t=setTimeout(()=>{ saveSkip=null; res(); },wait);
+    saveSkip=()=>{ clearTimeout(t); saveSkip=null; res(); };
+  });
+}
+$('savingCover').addEventListener('click',()=>{ if(saveSkip) saveSkip(); });
 $('saveJob').onclick=async()=>{
   if(SAVING) return;                       /* already saving: this tap does nothing */
   const name=$('fName').value.trim();
@@ -4920,7 +5053,9 @@ $('saveJob').onclick=async()=>{
       : $('fMeasured').checked ? (wasMeasured||new Date().toISOString()) : null;
     if(markNow) apptsOf(job).forEach(a=>{ if(a.kind==='measure'&&!a.doneAt) a.doneAt=job.measuredAt; });
     if(job.status!=='done'&&job.status!=='lost') applyStatus(job);
+    if(editing) showChanges(jobChanges(editing,job));
     if(await pushJob(job,{fresh:!editing,wait:SAVE_WAIT})){
+      await savedPause();
       savingOff();
       dropDraft(draftKey); draftKey=null;
       hideSheets(); render();
@@ -5704,7 +5839,7 @@ $('printDiary').onclick=()=>{
 
 document.addEventListener('keydown',e=>{
   /* a job is being saved: Escape must not close it, nor Enter tap Save again */
-  if(SAVING){ if(e.key==='Escape'||e.key==='Enter') e.preventDefault(); return; }
+  if(SAVING){ if(e.key==='Escape'||e.key==='Enter'){ e.preventDefault(); if(saveSkip) saveSkip(); } return; }
   if(LB.open){
     if(e.key==='Escape'){ e.preventDefault(); closeLightbox(false); }
     else if(e.key==='ArrowLeft') lbStep(-1);
@@ -5719,6 +5854,370 @@ document.addEventListener('keydown',e=>{
     hideSheets(); }
   if(e.key==='/'&&!/input|textarea|select/i.test(e.target.tagName)){ e.preventDefault(); $('search').focus(); }
 });
+
+/* ============================================================
+   MOTION
+   Small animations that show where things went: a job moving to another
+   tab, a job kept in Drafts, something put in or taken out of the diary.
+   They never hold anything up and never get in the way of a tap. On a
+   phone or PC set to reduce motion, they are quiet: the same words fade
+   in and out, and nothing travels across the screen.
+   Only changes made on this machine animate (pushJob and saveEvents mark
+   them); other machines' changes arrive without any fuss.
+   ============================================================ */
+function calm(){ try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
+function canMove(){ return !calm()&&typeof document.body.animate==='function'; }
+const STAGES=['quote','pricing','order','cut','ready','closed'];
+const tabName=f=>f==='diary'?'Diary':((TABS.find(x=>x[0]===f)||[])[1]||'');
+const chipFor=f=>()=>document.querySelector('#rail [data-f="'+f+'"]');
+const slotDay=d=>new Date(d+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+const slotWhen=(d,t)=>slotDay(d)+(t?', '+t:'');
+
+/* every booking and event in the diary, by a key that survives a redraw */
+function diaryMap(){
+  const m=new Map();
+  allAppts().forEach(x=>m.set('a|'+x.j.id+'|'+x.a.kind+'|'+x.a.date,
+    {date:x.a.date,time:x.a.time||'',what:APPT[x.a.kind].label,job:x.j}));
+  EVENTS.forEach(e=>m.set('e|'+e.id,{date:e.date,time:e.time||'',what:e.what,ev:true}));
+  return m;
+}
+/* Before a redraw that follows a change made here: where everything on
+   screen is, so it can move on smoothly afterwards. */
+function motionBefore(){
+  if(MOTION.quiet||(!MOTION.local.size&&!MOTION.events)) return null;
+  const at=new Map(), vh=window.innerHeight||800;
+  document.querySelectorAll('#list [data-mk]').forEach(el=>{
+    const r=el.getBoundingClientRect(), seen=r.bottom>-40&&r.top<vh+40;
+    at.set(el.dataset.mk,{r,html:seen?el.outerHTML:''});
+  });
+  return {at};
+}
+function motionAfter(snap){
+  const B=MOTION.B||{}, tabs=new Map(), counts={};
+  Object.keys(B).forEach(f=>{
+    counts[f]=B[f].length;
+    if(f==='all') return;
+    B[f].forEach(j=>{ const t=tabs.get(j.id); if(t) t.push(f); else tabs.set(j.id,[f]); });
+  });
+  const diary=diaryMap();
+  /* an animation going wrong must never stop the job book working */
+  if(snap) try{ playMotion(snap,tabs,diary,counts); }catch(err){}
+  MOTION.tabs=tabs; MOTION.diary=diary; MOTION.counts=counts;
+  if(!MOTION.quiet){ MOTION.local.clear(); MOTION.events=false; }
+}
+const pickTab=list=>list.find(f=>STAGES.indexOf(f)>=0)||list[0]||'';
+
+function playMotion(snap,tabs,diary,counts){
+  const inDiary=filter==='diary'&&!$('search').value.trim();
+  const sheetUp=!!document.querySelector('.sheet.on');
+  const now=new Map(); document.querySelectorAll('#list [data-mk]').forEach(el=>now.set(el.dataset.mk,el));
+  const mid={x:(window.innerWidth||400)/2,y:(window.innerHeight||800)*0.45};
+  const fromJob=id=>{ const w=snap.at.get('j|'+id);
+    return w&&w.html?{x:w.r.left+w.r.width/2,y:w.r.top+Math.min(w.r.height/2,60)}:mid; };
+
+  /* the diary: what came in, went out, or moved day */
+  const prev=MOTION.diary, mine=k=>k.indexOf('e|')===0?MOTION.events:MOTION.local.has(k.split('|')[1]);
+  const added=[], removed=[], moved=[];
+  diary.forEach((v,k)=>{ if(!mine(k)) return;
+    if(!prev.has(k)) added.push([k,v]);
+    else if(prev.get(k).date!==v.date) moved.push([k,v,prev.get(k)]); });
+  prev.forEach((v,k)=>{ if(mine(k)&&!diary.has(k)) removed.push([k,v]); });
+  /* a booking moved to another day shows as out on one day and in on another */
+  const kindOf=k=>k.split('|').slice(0,3).join('|');
+  for(let i=removed.length-1;i>=0;i--){
+    const n=added.findIndex(x=>kindOf(x[0])===kindOf(removed[i][0]));
+    if(n>=0){ moved.push([added[n][0],added[n][1],removed[i][1]]); added.splice(n,1); removed.splice(i,1); }
+  }
+
+  /* each job changed here: which tabs it left and joined */
+  const trips=[];
+  MOTION.local.forEach(id=>{
+    const j=JOBS.find(x=>x.id===id); if(!j) return;          /* deleted: its own message says so */
+    const before=MOTION.tabs.get(id)||[], after=tabs.get(id)||[];
+    const left=before.filter(f=>after.indexOf(f)<0), joined=after.filter(f=>before.indexOf(f)<0);
+    const dLines=[];
+    added.filter(x=>x[1].job===j).forEach(x=>dLines.push(x[1].what+' booked · '+slotWhen(x[1].date,x[1].time)));
+    moved.filter(x=>x[1].job===j).forEach(x=>dLines.push(x[1].what+' moved to '+slotWhen(x[1].date,x[1].time)));
+    removed.filter(x=>x[1].job===j).forEach(x=>dLines.push(x[1].what+' taken out of the diary'));
+    if(!left.length&&!joined.length&&!dLines.length) return;
+    const from=pickTab(left), to=pickTab(joined);
+    const route=from&&to?tabName(from)+' → '+tabName(to):to?'Now in '+tabName(to):from?'No longer in '+tabName(from):'';
+    trips.push({j,route,from,to,dLines,
+      dest:(dLines.length&&!inDiary&&(added.some(x=>x[1].job===j)||moved.some(x=>x[1].job===j)))?'diary':to,
+      at:fromJob(id),
+      stage:STAGES.indexOf(from)>=0||STAGES.indexOf(to)>=0});
+  });
+
+  /* moving pieces on the list itself */
+  flipList(snap,now);
+  snap.at.forEach((w,k)=>{
+    if(now.has(k)||!w.html) return;
+    const id=k.split('|')[1];
+    if(k.indexOf('j|')===0?MOTION.local.has(id):mine(k)) ghostOut(w);
+  });
+  MOTION.local.forEach(id=>{
+    const el=now.get('j|'+id), t=trips.find(x=>x.j.id===id);
+    if(el&&t&&t.stage){ const s=el.querySelector('.stat'); if(s) flash(s); }
+  });
+  if(inDiary){
+    let seen=false;
+    added.concat(moved).forEach(x=>{ const el=now.get(x[0]); if(!el) return;
+      el.classList.add('mk-in'); flash(el);
+      /* below the fold after a sheet closed: bring it into view to see it arrive */
+      const r=el.getBoundingClientRect();
+      if(!seen&&(r.top>(window.innerHeight||800)-40||r.bottom<0)&&el.scrollIntoView)
+        try{ el.scrollIntoView({block:'center',behavior:canMove()?'smooth':'auto'}); }catch(e){}
+      seen=true; });
+    const days=new Set(); added.concat(removed).forEach(x=>days.add(x[1].date));
+    moved.forEach(x=>{ days.add(x[1].date); days.add(x[2].date); });
+    days.forEach(d=>{ const c=document.querySelector('#list .cell[data-day="'+d+'"]'); if(c) pulseCell(c); });
+  }
+
+  /* the tab counts that changed: the one gaining ticks up as things arrive */
+  const arriving=new Set(trips.map(t=>t.dest).filter(Boolean));
+  Object.keys(counts).forEach(f=>{
+    if(MOTION.counts[f]===undefined||counts[f]===MOTION.counts[f]) return;
+    const c=chipFor(f)(); if(!c) return;
+    if(counts[f]<MOTION.counts[f]) dropChip(c);
+    else if(!arriving.has(f)||!canMove()||sheetUp) bumpChip(c);
+  });
+
+  /* the pills that travel: several jobs going the same way share one.
+     A booking made while looking at the diary needs none: it slides in
+     right there. */
+  const groups=[];
+  trips.filter(t=>!(inDiary&&t.dLines.length&&!t.stage)).forEach(t=>{
+    const key=t.route+'|'+t.dest+'|'+t.dLines.join('|');
+    const g=trips.length>3&&groups.find(x=>x.key===key);
+    if(g) g.list.push(t); else groups.push({key,list:[t]});
+  });
+  groups.slice(0,4).forEach((g,i)=>{
+    const t=g.list[0], n=g.list.length;
+    const head=n>1?n+' jobs':'Job '+t.j.no+' · '+esc(t.j.name);
+    const lines=[head];
+    if(t.route) lines.push('<span class="mroute">'+esc(t.route)+'</span>');
+    t.dLines.slice(0,2).forEach(s=>lines.push('<span class="mnote">'+esc(s)+'</span>'));
+    const dest=t.dest==='diary'?chipFor('diary'):t.dest?chipFor(t.dest):null;
+    trip(lines,t.dest==='diary'?'diary':'',t.at,dest,i*200,sheetUp);
+  });
+
+  /* diary events changed here */
+  const evs=added.filter(x=>x[1].ev).map(x=>['In the diary',x[1]])
+    .concat(moved.filter(x=>x[1].ev).map(x=>['Moved in the diary',x[1]]))
+    .concat(removed.filter(x=>x[1].ev).map(x=>['Taken out of the diary',x[1]]));
+  if(!inDiary) evs.slice(0,2).forEach((x,i)=>{
+    const out=x[0]==='Taken out of the diary';
+    trip(['<span class="mroute">'+esc(x[0])+'</span>','<b>'+esc(x[1].what)+'</b>','<span class="mnote">'+esc(slotWhen(x[1].date,x[1].time))+'</span>'],
+      'diary',mid,out?null:chipFor('diary'),(groups.length+i)*200,sheetUp);
+    if(out){ const c=chipFor('diary')(); if(c) dropChip(c); }
+  });
+}
+
+/* A pill that says what happened, then travels to where it went (to()
+   finds the place when it is time to go). Quiet, it just fades in place. */
+function trip(lines,cls,from,to,delay,still){
+  const layer=$('motion'); if(!layer) return null;
+  const p=document.createElement('div');
+  p.className='mpill '+(cls||'');
+  p.innerHTML=lines.map((s,i)=>i===0&&s.indexOf('<')!==0?'<b>'+s+'</b>':s).join('');
+  if(!canMove()||still){
+    p.classList.add('calm');
+    setTimeout(()=>{ layer.appendChild(p); const c=to&&to(); if(c) bumpOn(c);
+      setTimeout(()=>p.remove(),2300); },delay||0);
+    return p;
+  }
+  layer.appendChild(p);
+  const w=p.offsetWidth, ht=p.offsetHeight, W=window.innerWidth, H=window.innerHeight;
+  const x=Math.round(Math.min(Math.max(12,from.x-w/2),W-w-12)), y=Math.round(Math.min(Math.max(12,from.y-ht/2),H-ht-12));
+  const at=(tx,ty,s)=>'translate('+tx+'px,'+ty+'px) scale('+s+')';
+  p.style.opacity='0'; p.style.transform=at(x,y,1);
+  const first=to&&to(); if(first) revealChip(first);
+  const show=p.animate([{transform:at(x,y+10,.94),opacity:0},{transform:at(x,y,1),opacity:1,offset:.22},{transform:at(x,y,1),opacity:1}],
+    {duration:900,delay:delay||0,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  show.onfinish=()=>{
+    const c=to&&to();
+    if(!c){
+      p.animate([{transform:at(x,y,1),opacity:1},{transform:at(x,y-26,.96),opacity:0}],
+        {duration:420,easing:'ease-in',fill:'forwards'}).onfinish=()=>p.remove();
+      return;
+    }
+    const r=c.getBoundingClientRect(), tx=r.left+r.width/2-w/2, ty=r.top+r.height/2-ht/2;
+    p.animate([{transform:at(x,y,1),opacity:1},{transform:at(tx,ty,.3),opacity:.2}],
+      {duration:560,easing:'cubic-bezier(.55,0,.75,.2)',fill:'forwards'}).onfinish=()=>{ p.remove(); bumpOn(c); settleRail(); };
+  };
+  return p;
+}
+function bumpOn(el){ if(el.id==='draftsBtn') bumpDrafts(); else bumpChip(el); }
+function bumpChip(c){ c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); setTimeout(()=>c.classList.remove('bump'),950); }
+function dropChip(c){ c.classList.remove('drop'); void c.offsetWidth; c.classList.add('drop'); setTimeout(()=>c.classList.remove('drop'),600); }
+function bumpDrafts(){ const b=$('draftsBtn'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); setTimeout(()=>b.classList.remove('bump'),650); }
+function flash(el){ el.classList.remove('mk-flash'); void el.offsetWidth; el.classList.add('mk-flash'); setTimeout(()=>el.classList.remove('mk-flash'),1700); }
+function pulseCell(c){ c.classList.remove('mk-pulse'); void c.offsetWidth; c.classList.add('mk-pulse'); setTimeout(()=>c.classList.remove('mk-pulse'),1400); }
+/* a tab off the edge of the rail is brought into view before things arrive */
+function revealChip(c){
+  const r=$('rail'); if(!r||!r.contains(c)) return;
+  if(c.offsetLeft<r.scrollLeft+8||c.offsetLeft+c.offsetWidth>r.scrollLeft+r.clientWidth-8){
+    const left=Math.max(0,c.offsetLeft-(r.clientWidth-c.offsetWidth)/2);
+    try{ r.scrollTo({left,behavior:'smooth'}); }catch(e){ r.scrollLeft=left; }
+  }
+}
+/* ...and the rail goes back to the tab being looked at */
+let railBack=0;
+function settleRail(){
+  clearTimeout(railBack);
+  railBack=setTimeout(()=>{
+    const r=$('rail'), on=r&&r.querySelector('.chip.on'); if(!on) return;
+    if(on.offsetLeft<r.scrollLeft||on.offsetLeft+on.offsetWidth>r.scrollLeft+r.clientWidth)
+      try{ r.scrollTo({left:Math.max(0,on.offsetLeft-24),behavior:'smooth'}); }catch(e){ r.scrollLeft=Math.max(0,on.offsetLeft-24); }
+  },700);
+}
+/* things that stay on the list glide to where they now sit */
+function flipList(snap,now){
+  if(!canMove()) return;
+  const vh=window.innerHeight||800;
+  now.forEach((el,k)=>{
+    const w=snap.at.get(k); if(!w||!w.html) return;
+    const r=el.getBoundingClientRect(), dx=w.r.left-r.left, dy=w.r.top-r.top;
+    if(Math.abs(dx)<2&&Math.abs(dy)<2) return;
+    if(r.bottom<-40||r.top>vh+40) return;
+    el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});
+  });
+}
+/* something that has gone from the list fades out where it was */
+function ghostOut(w){
+  if(!canMove()) return;
+  const g=document.createElement('div');
+  g.className='mghost'; g.innerHTML=w.html;
+  /* without the entrance it had when it arrived */
+  g.querySelectorAll('.mk-in,.mk-flash,.busy').forEach(el=>{ el.classList.remove('mk-in'); el.classList.remove('mk-flash'); el.classList.remove('busy'); });
+  g.style.left=w.r.left+'px'; g.style.top=w.r.top+'px'; g.style.width=w.r.width+'px'; g.style.height=w.r.height+'px';
+  $('motion').appendChild(g);
+  g.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateX(-18px) scale(.97)'}],
+    {duration:360,easing:'ease-in',fill:'forwards'}).onfinish=()=>g.remove();
+}
+/* a job closed without saving goes into the Drafts button */
+function draftTrip(d){
+  const name=String(d.form&&d.form.name||'').trim();
+  const who=d.jobNo?'Job '+d.jobNo+(name?' · '+name:''):(name||'New job');
+  const p=trip(['<span class="mroute">Kept in Drafts</span>','<b>'+esc(who)+'</b>'],'',
+    {x:(window.innerWidth||400)/2,y:(window.innerHeight||800)*0.45},()=>$('draftsBtn'),0,false);
+  if(p) p.classList.add('draft');
+}
+
+/* ---------- what changed ----------
+   The differences between a job as it was and as it is being saved, in
+   plain words, most important first, for the saving screen. */
+function jobChanges(a,b){
+  const top=[], rest=[];
+  const s=v=>String(v==null?'':v).trim();
+  const cut=(v,n)=>v.length>n?v.slice(0,n-1)+'…':v;
+  const one=(list,k,x,y,show)=>{ x=s(x); y=s(y); if(x===y) return; const f=show||(v=>v);
+    list.push([k, !x?f(y)+' added' : !y?'taken off' : f(x)+' → '+f(y)]); };
+  const u=b.unit||'mm';
+  const size=it=>(s(it.w)||'?')+' × '+(s(it.h)||'?')+' '+u;
+
+  const ga=jobTotals(a).grand, gb=jobTotals(b).grand;
+  if(Math.abs(ga-gb)>0.005) top.push(['Price',gbp(ga)+' → '+gbp(gb)]);
+  if(a.status!==b.status) top.push(['Stage',stat(a.status).label+' → '+stat(b.status).label]);
+  if(!a.confirmed&&b.confirmed) top.push(['Customer','confirmed']);
+  const na=needsAttn(a), nb=needsAttn(b);
+  if(!na&&nb) top.push(['Attention','flagged: “'+cut(s(b.attn.text),50)+'”']);
+  else if(na&&!nb) top.push(['Attention','sorted']);
+  else if(na&&nb&&s(a.attn.text)!==s(b.attn.text)) top.push(['Attention','“'+cut(s(b.attn.text),50)+'”']);
+  Object.keys(APPT).forEach(k=>{
+    const x=apptsOf(a).filter(q=>q.kind===k), y=apptsOf(b).filter(q=>q.kind===k);
+    if(canon(x)===canon(y)) return;
+    const L=APPT[k].label;
+    if(!x.length) y.forEach(q=>top.push([L,'booked for '+slotWhen(q.date,q.time)]));
+    else if(!y.length) top.push([L,'taken out of the diary']);
+    else if(x.length===1&&y.length===1){
+      if(x[0].date!==y[0].date||s(x[0].time)!==s(y[0].time)) top.push([L,'moved to '+slotWhen(y[0].date,y[0].time)]);
+      else if(!x[0].doneAt&&y[0].doneAt) top.push([L,'done']);
+      else top.push([L,'changed']);
+    }
+    else top.push([L,'bookings changed']);
+  });
+
+  one(rest,'Name',a.name,b.name);
+  one(rest,'Phone',a.phone,b.phone,fmtPhone);
+  one(rest,'Email',a.email,b.email);
+  if(!!a.trade!==!!b.trade) rest.push(['Account',(a.trade?'Trade':'Retail')+' → '+(b.trade?'Trade':'Retail')]);
+  if(handoverLabel(a)!==handoverLabel(b)) rest.push(['Handover',handoverLabel(a)+' → '+handoverLabel(b)]);
+  one(rest,'Address',a.addr,b.addr);
+  one(rest,'Wanted by',a.wanted,b.wanted,fmtDate);
+  if(s(a.note)!==s(b.note)) rest.push(['Note',s(b.note)?'“'+cut(s(b.note),60)+'”':'taken off']);
+  else if(!!a.noteUrgent!==!!b.noteUrgent&&s(b.note)) rest.push(['Note',b.noteUrgent?'now Read this first':'no longer Read this first']);
+  if((a.unit||'mm')!==u) rest.push(['Sizes in',(a.unit||'mm')+' → '+u]);
+
+  /* a list of pieces or lines: one added or taken off anywhere is found,
+     not reported as everything after it changing */
+  const lines=(label,A,B,name,diff)=>{
+    A=A||[]; B=B||[];
+    const same=(p,q)=>canon(p)===canon(q);
+    if(B.length===A.length+1){
+      const i=B.findIndex((q,n)=>!A[n]||!same(A[n],q));
+      if(A.every((p,n)=>same(p,B[n<i?n:n+1]))){ rest.push([label+' '+(i+1),'added — '+name(B[i])]); return; }
+    }
+    if(A.length===B.length+1){
+      const i=A.findIndex((p,n)=>!B[n]||!same(p,B[n]));
+      if(B.every((q,n)=>same(q,A[n<i?n:n+1]))){ rest.push([label+' '+(i+1),'taken off ('+name(A[i])+')']); return; }
+    }
+    for(let n=0;n<Math.max(A.length,B.length);n++){
+      const p=A[n], q=B[n];
+      if(!p) rest.push([label+' '+(n+1),'added — '+name(q)]);
+      else if(!q) rest.push([label+' '+(n+1),'taken off ('+name(p)+')']);
+      else if(!same(p,q)) rest.push([label+' '+(n+1),diff(p,q)]);
+    }
+  };
+  lines('Glass piece',a.items,b.items,it=>prodOf(it.pid).name+', '+size(it)+(lineQty(it)>1?' ×'+lineQty(it):''),(p,q)=>{
+    const bits=[];
+    if(p.pid!==q.pid) bits.push(prodOf(p.pid).name+' → '+prodOf(q.pid).name);
+    if(s(p.w)!==s(q.w)||s(p.h)!==s(q.h)) bits.push(size(p)+' → '+size(q));
+    if(lineQty(p)!==lineQty(q)) bits.push('quantity '+lineQty(p)+' → '+lineQty(q));
+    if(canon(p.addons||[])!==canon(q.addons||[])) bits.push('edgework changed');
+    if((p.src||'cut')!==(q.src||'cut')) bits.push(q.src==='order'?'now ordered in':'now cut here');
+    if(s(p.supplier)!==s(q.supplier)&&s(q.supplier)) bits.push('from '+s(q.supplier));
+    if(s(p.note)!==s(q.note)) bits.push('note changed');
+    if(ost(p)!==ost(q)) bits.push(ost(q)==='arrived'?'arrived':ost(q)==='ordered'?'ordered':'not ordered yet');
+    if(!p.cut&&q.cut) bits.push('cut');
+    return bits.join(', ')||'details changed';
+  });
+  const lineName=l=>cut(s(l.desc),40)||'no description';
+  const lineDiff=(p,q)=>{
+    const bits=[];
+    if(s(p.desc)!==s(q.desc)) bits.push('“'+cut(s(q.desc),40)+'”');
+    if(s(p.w)!==s(q.w)||s(p.h)!==s(q.h)) bits.push(size(p)+' → '+size(q));
+    if(lineQty(p)!==lineQty(q)) bits.push('quantity '+lineQty(p)+' → '+lineQty(q));
+    if(num(p.price)!==num(q.price)) bits.push(gbp(p.price)+' → '+gbp(q.price)+' each');
+    if(s(p.supplier)!==s(q.supplier)) bits.push(s(q.supplier)?'from '+s(q.supplier):'no supplier');
+    if(!!p.order!==!!q.order) bits.push(q.order?'to be ordered':'nothing to order');
+    return bits.join(', ')||'details changed';
+  };
+  lines('Frame',a.frames,b.frames,lineName,lineDiff);
+  lines('Maintenance',a.works,b.works,lineName,lineDiff);
+  lines('Extra',a.extras,b.extras,x=>(s(x.label)||'Extra')+' '+gbp(x.amount),
+    (p,q)=>s(p.label)!==s(q.label)?'“'+s(p.label)+'” → “'+s(q.label)+'”':gbp(p.amount)+' → '+gbp(q.amount));
+  if(num(a.discountPct)!==num(b.discountPct)) rest.push(['Discount',num(a.discountPct)+'% → '+num(b.discountPct)+'%']);
+  if(!!a.cardFee!==!!b.cardFee) rest.push(['Card fee',b.cardFee?'added':'taken off']);
+  if(!!a.noVat!==!!b.noVat) rest.push(['VAT',b.noVat?'not charged':'charged']);
+  const pa=paymentsOf(a), pb=paymentsOf(b);
+  if(canon(pa)!==canon(pb)){
+    const sum=l=>l.reduce((t,p)=>t+num(p.amount),0);
+    if(pb.length>pa.length&&canon(pb.slice(0,pa.length))===canon(pa))
+      pb.slice(pa.length).forEach(p=>rest.push(['Payment',gbp(p.amount)+' taken'+(p.method?' ('+String(p.method).toLowerCase()+')':'')]));
+    else rest.push(['Paid',gbp(sum(pa))+' → '+gbp(sum(pb))]);
+  }
+  if(!!a.needsMeasure!==!!b.needsMeasure) rest.push(['Measure first',b.needsMeasure?'yes':'no']);
+  if(!realDate(a.measuredAt)&&realDate(b.measuredAt)) rest.push(['Measured','marked as measured']);
+  else if(realDate(a.measuredAt)&&!realDate(b.measuredAt)) rest.push(['Measured','no longer marked as measured']);
+  if(!!a.needsInvoice!==!!b.needsInvoice) rest.push(['Invoice',b.needsInvoice?'needed':'not needed']);
+  if(!a.invoicedAt&&b.invoicedAt) rest.push(['Invoice','marked invoiced']);
+  else if(a.invoicedAt&&!b.invoicedAt) rest.push(['Invoice','not invoiced after all']);
+  const ida=(a.photos||[]).map(p=>p.id), idb=(b.photos||[]).map(p=>p.id);
+  const pIn=idb.filter(x=>ida.indexOf(x)<0).length, pOut=ida.filter(x=>idb.indexOf(x)<0).length;
+  if(pIn||pOut) rest.push(['Photos',[pIn?pIn+' added':'',pOut?pOut+' taken off':''].filter(Boolean).join(', ')]);
+  return top.concat(rest);
+}
 
 /* ---------- printing ----------
    An iPhone or iPad running the job book from its home screen ignores
