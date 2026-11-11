@@ -6,7 +6,7 @@
 <title>Wilson's Glass — Job Book</title>
 <!-- Which version of the app this is. Change it whenever this file
      changes, and every machine with the app open offers the new one. -->
-<meta name="wg-build" content="2026-11-09.2">
+<meta name="wg-build" content="2026-11-10.2">
 <!-- Installing the job book as an app: its name, icons and colours -->
 <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
 <meta name="theme-color" content="#16262B">
@@ -717,12 +717,12 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .savelist li .v{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
 .savelist li.more{color:var(--ink2)}
 @keyframes liIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.tick{display:none;width:40px;height:40px;margin:0 auto 14px}
-.tick circle{fill:var(--float-l);stroke:var(--float);stroke-width:2.5}
-.tick path{fill:none;stroke:var(--float-d);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;animation:tickDraw .35s .08s ease-out forwards}
+.savetick{display:none;width:40px;height:40px;margin:0 auto 14px}
+.savetick circle{fill:var(--float-l);stroke:var(--float);stroke-width:2.5}
+.savetick path{fill:none;stroke:var(--float-d);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;animation:tickDraw .35s .08s ease-out forwards}
 @keyframes tickDraw{to{stroke-dashoffset:0}}
 .savebox.done .spinner{display:none}
-.savebox.done .tick{display:block;animation:tickPop .3s cubic-bezier(.2,.8,.2,1)}
+.savebox.done .savetick{display:block;animation:tickPop .3s cubic-bezier(.2,.8,.2,1)}
 @keyframes tickPop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
 .savebox.done .savemsg{color:var(--float-d)}
 /* sheets slide up as they open; buttons give a little under a tap */
@@ -762,8 +762,8 @@ button.busy::after{content:"";position:absolute;left:50%;top:50%;width:14px;heig
 .cell.mk-pulse{animation:cellPulse 1.3s ease}
 @keyframes cellPulse{0%{box-shadow:inset 0 0 0 3px var(--float)}100%{box-shadow:inset 0 0 0 3px rgba(78,158,126,0)}}
 @media (prefers-reduced-motion:reduce){
-  .sheet.on,.mk-in,.savelist li,.tick path,.savebox.done .tick,.chip.bump b,.chip.drop b,#draftsBtn.bump{animation:none}
-  .tick path{stroke-dashoffset:0}
+  .sheet.on,.mk-in,.savelist li,.savetick path,.savebox.done .savetick,.chip.bump b,.chip.drop b,#draftsBtn.bump{animation:none}
+  .savetick path{stroke-dashoffset:0}
   .act:active,.save:active,.hbtn:active{transform:none}
   button.busy::after{animation-duration:2s}
 }
@@ -1136,7 +1136,7 @@ button.busy::after{content:"";position:absolute;left:50%;top:50%;width:14px;heig
 <div class="savecover" id="savingCover" hidden>
   <div class="savebox" id="savingBox" role="alert" tabindex="-1">
     <span class="spinner" aria-hidden="true"></span>
-    <svg class="tick" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17"/><path d="M12.5 20.5l5 5 10-11"/></svg>
+    <svg class="savetick" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17"/><path d="M12.5 20.5l5 5 10-11"/></svg>
     <p class="savemsg" id="savingMsg">Hold on, we are saving this job.</p>
     <p class="saveslow" id="savingSlow" hidden>Still going. A weak signal can make this take a little longer.</p>
     <div class="savelist" id="savingList" hidden></div>
@@ -2269,6 +2269,7 @@ function render(){
   motionAfter(snap);
 }
 function drawAll(){
+  NEWS=false;
   if(dayViewDate&&$('daySheet').classList.contains('on')) renderDay();
   const q=$('search').value.trim();
   const untold=bucket('told');
@@ -2496,9 +2497,13 @@ function wsRow(j,it,n,kind){
   const rest = kind==='cut'&&notArrived(j).length
     ? `<div class="flagtxt">Rest of this job is on order from ${esc(Object.keys(waitingSuppliers(j)).join(', '))}</div>` : '';
   const orderBox=`<div class="costwrap"><button class="miniact" data-mko="${j.id}|${n}" title="Mark just this piece as ordered">Mark as ordered</button></div>`;
-  const tickBox=`<button class="tick" data-${kind==='cut'?'pc':'pa'}="${j.id}|${n}" title="${kind==='cut'?'Tick off when it is cut':'Tick off when it arrives'}" aria-label="Tick off">&#10003;</button>`;
+  /* To be ordered: the tick does what the piece's Mark as ordered button does
+     (that button is hidden on a phone, so the tick is the way to do it there) */
+  const tickBox=kind==='toprice'
+    ? `<button class="tick" data-pord="${j.id}|${n}" title="Tick off when it is ordered" aria-label="Tick off">&#10003;</button>`
+    : `<button class="tick" data-${kind==='cut'?'pc':'pa'}="${j.id}|${n}" title="${kind==='cut'?'Tick off when it is cut':'Tick off when it arrives'}" aria-label="Tick off">&#10003;</button>`;
   return `<div class="wsrow ${overdue(j)?'late':''} ${j.noteUrgent&&j.note?'urgent':''}">
-    ${kind==='toprice'?'':tickBox}
+    ${tickBox}
     <button class="info" data-open="${j.id}">
       <div class="ref">${j.no} &middot; ${esc(j.name)}${j.trade?' (trade)':''}${kind==='toprice'&&dueText(j)?' &middot; '+esc(dueText(j)):''}</div>
       <div class="dim">${pi.p.each?(it.q||1)+' off':esc(it.w)+' × '+esc(it.h)+' <span style="color:var(--silver)">×</span>'+(it.q||1)}</div>
@@ -3474,22 +3479,49 @@ async function mirrorShop(){
    Each save or delete takes the next number from one counter in the job
    book, so nothing can be missed between two looks. A Worker from before
    this version, or a job book without the counter yet, gets the whole book
-   every time, as it used to be. */
-let SYNCSEQ=null, LASTALL=0;
+   every time, as it used to be.
+
+   The same answer says which copy of each setting (the prices and
+   suppliers, the diary's events) is the current one, so those are only
+   fetched when one of them has changed. A Worker from before that fetches
+   them every time.
+
+   Every check gives up after a time limit. A check left hanging, by a phone
+   going to sleep part way through or a signal dropping, used to hold up
+   every check after it, so nothing new showed until the app was reloaded. */
+let SYNCSEQ=null, LASTALL=0, SETV=null, NEWS=false;
 const ALL_EVERY=60*60*1000;
+/* how often to check while the app is on screen; the time limits for a
+   check of what has changed, for the whole job book, and for the settings;
+   and how long before a check that still hasn't finished is left behind */
+let POLL_EVERY=5000, SYNC_WAIT=15000, ALL_WAIT=60000, SET_WAIT=20000, STUCK_AFTER=120000;
+/* GET some JSON, giving up after `ms`, with the whole of the answer read */
+async function fetchJSON(url,ms){
+  const c=ms&&typeof AbortController!=='undefined'?new AbortController():null;
+  const t=c?setTimeout(()=>c.abort(),ms):0;
+  try{
+    const r=await fetch(url,c?{signal:c.signal}:undefined);
+    let data=null;
+    try{ data=await r.json(); }catch(e){ if(c&&c.signal.aborted) throw e; }
+    return {ok:r.ok,status:r.status,data};
+  }finally{ if(t) clearTimeout(t); }
+}
+/* the same copy of every setting: the same names, the same versions */
+const sameVers=(a,b)=>{ const k=Object.keys(a);
+  return k.length===Object.keys(b).length&&k.every(n=>Object.prototype.hasOwnProperty.call(b,n)&&a[n]===b[n]); };
 /* each job as the job book last had it, to put one back the way it was
    when a change to it cannot be saved */
 const SAVED=new Map();
 async function fetchJobs(all){
   all=all||SYNCSEQ===null||Date.now()-LASTALL>=ALL_EVERY;
-  const r=await fetch(API+'/sync'+(all?'':'?since='+SYNCSEQ));
+  const r=await fetchJSON(API+'/sync'+(all?'':'?since='+SYNCSEQ),all?ALL_WAIT:SYNC_WAIT);
   if(r.status===404){
-    const o=await fetch(API+'/jobs');
-    if(!o.ok) throw new Error('Could not load the job book');
-    return {all:true,seq:null,jobs:await o.json(),gone:[]};
+    const o=await fetchJSON(API+'/jobs',ALL_WAIT);
+    if(!o.ok||!Array.isArray(o.data)) throw new Error('Could not load the job book');
+    return {all:true,seq:null,jobs:o.data,gone:[]};
   }
   if(!r.ok) throw new Error('Could not load the job book');
-  const d=await r.json();
+  const d=r.data;
   if(!d||!Array.isArray(d.jobs)) throw new Error('Could not load the job book');
   d.gone=Array.isArray(d.gone)?d.gone:[];
   /* the count went backwards, so the job book itself was put back: start again */
@@ -3504,13 +3536,19 @@ function takeJobs(d){
     JOBS=d.jobs.map(j=>{ SAVED.set(j.id,JSON.stringify(j)); return normalise(j); });
     LASTALL=Date.now();
     SYNCSEQ=typeof d.seq==='number'?d.seq:null;
-    return JSON.stringify(JOBS)!==before;
+    const changed=JSON.stringify(JOBS)!==before;
+    if(changed) NEWS=true;
+    return changed;
   }
   SYNCSEQ=d.seq;
   if(!d.jobs.length&&!d.gone.length) return false;
   const gone=new Set(d.gone), fresh=new Map();
   d.jobs.forEach(j=>{ SAVED.set(j.id,JSON.stringify(j)); fresh.set(j.id,normalise(j)); gone.delete(j.id); });
   gone.forEach(id=>SAVED.delete(id));
+  /* something to draw only if it looks different here: a job this machine
+     has just saved comes back as it already is */
+  if(JOBS.some(j=>gone.has(j.id))||[...fresh.values()].some(f=>{ const j=JOBS.find(x=>x.id===f.id); return !j||!sameJob(j,f); }))
+    NEWS=true;
   JOBS=JOBS.filter(j=>!gone.has(j.id)).map(j=>{ const f=fresh.get(j.id); if(!f) return j; fresh.delete(j.id); return f; })
     .concat([...fresh.values()]);
   return true;
@@ -3524,28 +3562,43 @@ async function loadAll(opt) {
   let changed = false;
   try {
     const d = await fetchJobs(!!opt.all);
-    const s = await (await fetch(API + '/settings')).json();
+    /* the prices, suppliers and diary events: with the whole job book, or
+       when the Worker says one of them has changed since they were last
+       fetched (a Worker from before doesn't say, so every time) */
+    let s = null;
+    if (opt.all || d.all || !SETV || !d.settings || !sameVers(d.settings, SETV)) {
+      const r = await fetchJSON(API + '/settings', SET_WAIT);
+      if (!r.ok || !r.data || typeof r.data !== 'object') throw new Error('Could not load the settings');
+      s = r.data;
+    }
+    /* a newer check has taken over from this one: leave everything to it */
+    if (opt.gen && opt.gen !== REFRESHGEN) return false;
     /* only now, with both in, does anything change */
     changed = takeJobs(d);
-    const ver = (s && s._versions) || {};
-    if (s.shop) {
-      applyShop(s.shop);
-      SHOPV = ver.shop || null;
-    } else {
-      /* Nothing shared yet. Use an older shared copy if there is one,
-         otherwise this machine's own saved copy. */
-      SHOPV = null;
-      if (s.prices) { PRICES = s.prices.prices || {}; ADJ = num(s.prices.adj); }
-      else await readLocalPrices();
-      if (s.suppliers) { SUPPLIERS = s.suppliers.suppliers || SUPPLIERS;
-        SETTINGS = Object.assign(SETTINGS, s.suppliers.settings || {}); }
-      else await readLocalSuppliers();
+    if (s) {
+      const ver = s._versions || {};
+      if (s.shop) {
+        applyShop(s.shop);
+        SHOPV = ver.shop || null;
+      } else {
+        /* Nothing shared yet. Use an older shared copy if there is one,
+           otherwise this machine's own saved copy. */
+        SHOPV = null;
+        if (s.prices) { PRICES = s.prices.prices || {}; ADJ = num(s.prices.adj); }
+        else await readLocalPrices();
+        if (s.suppliers) { SUPPLIERS = s.suppliers.suppliers || SUPPLIERS;
+          SETTINGS = Object.assign(SETTINGS, s.suppliers.settings || {}); }
+        else await readLocalSuppliers();
+      }
+      ensureSuppliers();
+      if (s.shop) await mirrorShop();
+      const evBefore = JSON.stringify(EVENTS);
+      EVENTS = tidyEvents(s.events && s.events.list);
+      EVENTSV = ver.events || null;
+      if (JSON.stringify(EVENTS) !== evBefore) NEWS = true;
+      SETV = ver;
+      await mirrorEvents();
     }
-    ensureSuppliers();
-    if (s.shop) await mirrorShop();
-    EVENTS = tidyEvents(s.events && s.events.list);
-    EVENTSV = ver.events || null;
-    await mirrorEvents();
     ONLINE = true;
 
     /* Keep a copy on this machine so the counter can still look things up
@@ -3555,8 +3608,9 @@ async function loadAll(opt) {
       if (snapJSON !== MIRROR) { MIRROR = snapJSON; try { await sSet(KEY_JOBS, snapJSON); } catch (e) {} }
     }
   } catch (err) {
+    if (opt.gen && opt.gen !== REFRESHGEN) return false;
     ONLINE = false;
-    SYNCSEQ = null;                       /* the whole book again once it is back */
+    SYNCSEQ = null;                       /* the whole book again once it is back, and the settings with it */
     try {
       const raw = await sGet(KEY_JOBS);
       if (raw) {
@@ -3564,9 +3618,10 @@ async function loadAll(opt) {
         JOBS = JSON.parse(raw).map(normalise);
         SAVED.clear(); JOBS.forEach(j => SAVED.set(j.id, JSON.stringify(j)));
         changed = JSON.stringify(JOBS) !== before;
+        if (changed) NEWS = true;
       }
       const ev = await sGet(KEY_EVENTS);
-      if (ev) EVENTS = tidyEvents(JSON.parse(ev));
+      if (ev) { const was = JSON.stringify(EVENTS); EVENTS = tidyEvents(JSON.parse(ev)); if (JSON.stringify(EVENTS) !== was) NEWS = true; }
       await readLocalPrices();
       await readLocalSuppliers();
     } catch (e) {}
@@ -3576,22 +3631,33 @@ async function loadAll(opt) {
   return changed || wasOnline !== ONLINE;
 }
 
-/* Every ten seconds while the app is on screen, and straight away when it
-   comes back on screen. Not while a sheet is open, so nothing changes under
-   somebody's feet, and never two at once. */
-let REFRESHING=false, SHOWNDAY=ymd(new Date());
-async function refreshNow(){
-  if(REFRESHING||document.querySelector('.sheet.on')) return;
-  REFRESHING=true;
+/* Every few seconds while the app is on screen, and straight away when it
+   comes back on screen, comes back online, or is clicked into. One at a
+   time; but one that still hasn't finished after STUCK_AFTER, or any
+   check when coming back to the app, goes ahead regardless, and whatever
+   the older one brings back is ignored.
+
+   Not while something is being typed or chosen in a pop-up, so nothing
+   changes under somebody's feet; closing it checks straight away. The Day
+   view and the Drafts list keep up to date while they're open. */
+const HOLD_SHEETS=['jobSheet','moveSheet','mailSheet','bookSheet','evSheet','expSheet','rateSheet'];
+const holding=()=>HOLD_SHEETS.some(id=>{ const el=$(id); return !!el&&el.classList.contains('on'); });
+let REFRESHING=0, REFRESHGEN=0, HELD=false, SHOWNDAY=ymd(new Date());
+async function refreshNow(takeover){
+  if(holding()){ HELD=true; return; }
+  if(REFRESHING&&!takeover&&Date.now()-REFRESHING<STUCK_AFTER) return;
+  const gen=++REFRESHGEN; REFRESHING=Date.now();
   try{
-    const was=ONLINE, ev=JSON.stringify(EVENTS), changed=await loadAll();
+    const was=ONLINE;
+    await loadAll({gen});
+    if(gen!==REFRESHGEN) return;
     /* back online after opening without signal: is this still the newest? */
     if(!was&&ONLINE) checkBuild(true);
     /* a new day brings that day's reminders */
-    if(changed||JSON.stringify(EVENTS)!==ev||ymd(new Date())!==SHOWNDAY){
+    if(NEWS||was!==ONLINE||ymd(new Date())!==SHOWNDAY){
       /* other machines' changes arrive quietly: only what is done here animates */
       SHOWNDAY=ymd(new Date()); MOTION.quiet=true; try{ render(); }finally{ MOTION.quiet=false; } }
-  }finally{ REFRESHING=false; }
+  }finally{ if(gen===REFRESHGEN) REFRESHING=0; }
 }
 function pollTick(){ if(document.visibilityState!=='hidden'){ refreshNow(); checkBuild(); } }
 
@@ -3960,9 +4026,10 @@ async function onAppClick(e){
     return;
   }
 
-  const mko=e.target.closest('[data-mko]');
+  /* one piece on order: its Mark as ordered button, or its tick on the To be ordered list */
+  const mko=e.target.closest('[data-mko],[data-pord]');
   if(mko){
-    const q=mko.dataset.mko.split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
+    const q=(mko.dataset.mko||mko.dataset.pord).split('|'), j=JOBS.find(x=>x.id===q[0]); if(!j) return;
     const snap=snapshot('One piece put on order on job '+j.no,[j]);
     const it=j.items[+q[1]];
     it.ostate='ordered'; it.orderedAt=new Date().toISOString();
@@ -4047,6 +4114,8 @@ function hideSheets(){
   document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on'));
   if(dayBack&&dayViewDate){ dayBack=false; renderDay(); $('daySheet').classList.add('on'); }
   if(kept) draftTrip(kept);
+  /* checks were held back while it was open: catch up now */
+  if(HELD){ HELD=false; setTimeout(()=>refreshNow(),300); }
 }
 $('closeJob').onclick=hideSheets; $('cancelJob').onclick=hideSheets;
 $('closeRate').onclick=hideSheets; $('closeMail').onclick=hideSheets; $('mBack').onclick=hideSheets;
@@ -6264,8 +6333,15 @@ function reloadApp(){ location.reload(); }
   await loadAll();
   if(filter==='diary'&&!selDay) selDay=ymd(new Date());   /* the Diary opens on today */
   render();
-  setInterval(pollTick,10000);
-  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ refreshNow(); checkBuild(); } });
+  setInterval(pollTick,POLL_EVERY);
+  /* coming back to the app checks straight away, even if a check from
+     before it went to sleep never finished; so does the network coming
+     back, and clicking into the window */
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ refreshNow(true); checkBuild(); } });
+  document.addEventListener('resume',()=>refreshNow(true));
+  window.addEventListener('pageshow',e=>{ if(e.persisted) refreshNow(true); });
+  window.addEventListener('online',()=>refreshNow(true));
+  window.addEventListener('focus',()=>refreshNow());
   setTimeout(()=>checkBuild(true),5000);
   /* Keep a copy of the app itself on this machine, so it opens with no
      signal (see sw.js). Customers' details are never in it: those stay in

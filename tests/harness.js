@@ -35,8 +35,9 @@ function makeServer() {
     /* how many jobs have been sent to the app, to see what a refresh costs */
     sent: 0,
     /* oldWorker: no /api/sync at all; noCounter: the database has no
-       change numbers yet, so /api/sync always sends everything */
-    oldWorker: false, noCounter: false,
+       change numbers yet, so /api/sync always sends everything; oldSync:
+       /api/sync doesn't say which settings have changed (before 10 Nov) */
+    oldWorker: false, noCounter: false, oldSync: false,
     get seq() { return seqN; },
     seed(job) { rows.set(job.id, { data: JSON.stringify(job), version: 1, seq: 0 }); },
     async handle(url, opt) {
@@ -71,8 +72,11 @@ function makeServer() {
         const jobs = [...rows.values()].filter(r => all || (r.seq || 0) > since)
           .map(r => ({ ...JSON.parse(r.data), _v: r.version }));
         this.sent += jobs.length;
-        return json({ all, seq: this.noCounter ? null : seqN, jobs,
-                      gone: all ? [] : [...gone.entries()].filter(([, s]) => s > since).map(([id]) => id) });
+        /* which copy of each setting is current (not from a Worker before that) */
+        const sv = {}; settings.forEach((v, k) => { sv[k] = settingsV.get(k) || 'seed'; });
+        return json(Object.assign({ all, seq: this.noCounter ? null : seqN, jobs,
+                      gone: all ? [] : [...gone.entries()].filter(([, s]) => s > since).map(([id]) => id) },
+                      this.oldSync || this.noCounter ? {} : { settings: sv }));
       }
 
       /* the same rules as the real Worker: a version per setting, and a
@@ -164,6 +168,16 @@ async function boot(opts = {}) {
       /* jsdom has no canvas, so the shrink step is stubbed in tests */
       w.__photos = server.photos;
       w.offline = () => { w.fetch = async () => { throw new Error('offline'); }; };
+      /* The app checks the shop's server every few seconds. The tests ask
+         for a check themselves (refreshNow() or pollTick()), so one can't
+         land in the middle of a test and upset it. opts.poll keeps the
+         app's own timer, and w._polls records how often it asked for. */
+      w._polls = [];
+      const every = w.setInterval.bind(w);
+      w.setInterval = (fn, ms, ...a) => {
+        if (fn && fn.name === 'pollTick') { w._polls.push(ms); if (!opts.poll) return 0; }
+        return every(fn, ms, ...a);
+      };
       /* opts.before(w) runs before the app does: pretend to be an iPhone, etc. */
       if (opts.before) opts.before(w);
     }

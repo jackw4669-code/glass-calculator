@@ -18,6 +18,9 @@ async function startJob(w, name) {
   await type(w, $(w, 'fName'), name);
   await type(w, q(w, '[data-k="w"][data-i="0"]'), '900');
   await type(w, q(w, '[data-k="h"][data-i="0"]'), '600');
+  /* a new job puts the cursor in the name box a moment after it opens;
+     let that happen first, as it would for a person typing */
+  await pause(100);
 }
 /* the shop's server, but it sits on job saves until told to answer */
 function holdSaves(w, server) {

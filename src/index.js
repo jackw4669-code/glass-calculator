@@ -1,7 +1,9 @@
+// Never kept by a browser or anything in between: a machine checking for
+// changes must always get the job book as it is now.
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
-    headers: { 'content-type': 'application/json' }
+    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' }
   });
 
 // Before migration 0004 the job book has no change counter. Everything
@@ -57,6 +59,9 @@ export default {
       // last number it saw and gets back only the jobs saved since, the ids
       // of any deleted since, and the newest number. With no number it gets
       // the whole book. Read together, so a save is never half seen.
+      // It also says which copy of each setting (prices and suppliers, the
+      // diary's events) is current, so a machine fetches those only when
+      // one of them has changed.
       if (path === '/api/sync' && request.method === 'GET') {
         const s = url.searchParams.get('since');
         const since = s === null || s === '' ? -1 : Number(s);
@@ -68,11 +73,15 @@ export default {
                 : env.DB.prepare('SELECT data, version FROM jobs WHERE seq > ?1').bind(since)
           ];
           if (!all) q.push(env.DB.prepare('SELECT id FROM job_deletes WHERE seq > ?1').bind(since));
+          q.push(env.DB.prepare('SELECT key, updated_at FROM settings'));
           const res = await env.DB.batch(q);
+          const settings = {};
+          res[res.length - 1].results.forEach(r => { settings[r.key] = r.updated_at; });
           return json({
             all, seq: res[0].results[0]?.n ?? 0,
             jobs: asJobs(res[1].results),
-            gone: all ? [] : res[2].results.map(r => r.id)
+            gone: all ? [] : res[2].results.map(r => r.id),
+            settings
           });
         } catch (e) {
           if (!noCounter(e)) throw e;

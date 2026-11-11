@@ -82,7 +82,8 @@ async function call(method, path, body, e = env) {
     body: body === undefined ? undefined : JSON.stringify(body)
   }), e, {});
   const type = res.headers.get('content-type') || '';
-  const out = { status: res.status, type, body: type.includes('json') ? await res.json() : new Uint8Array(await res.arrayBuffer()) };
+  const out = { status: res.status, type, cache: res.headers.get('cache-control') || '',
+                body: type.includes('json') ? await res.json() : new Uint8Array(await res.arrayBuffer()) };
   if (res.status >= 500 && !workerError) workerError = (out.body && out.body.error) || 'status ' + res.status;
   return out;
 }
@@ -201,6 +202,27 @@ await section('only what has changed', async () => {
   ok(/idx_jobs_seq/.test(plan), 'the database finds changes by their number, without reading every job');
   r = await call('GET', '/api/jobs');
   ok(r.status === 200 && r.body.some(j => j.id === 's1'), 'loading everything the old way still works, for a machine not reloaded yet');
+});
+
+await section('which settings have changed', async () => {
+  let r = await call('GET', '/api/sync');
+  const s = await call('GET', '/api/settings');
+  const v = s.body._versions, keys = Object.keys(v).sort().join();
+  ok(keys === 'events,shop' && r.body.settings && Object.keys(r.body.settings).sort().join() === keys
+     && Object.keys(v).every(k => r.body.settings[k] === v[k]),
+     'every check says which copy of each setting is current, the same as loading them does');
+  const seq = r.body.seq;
+  r = await call('GET', '/api/sync?since=' + seq);
+  ok(!r.body.jobs.length && Object.keys(v).every(k => r.body.settings[k] === v[k]), 'with nothing changed, it says the same again');
+  await wait(3);
+  const p = await call('PUT', '/api/settings/events',
+    { value: { list: s.body.events.list.concat([{ id: 'e3', what: 'Van MOT', date: '2026-11-12', time: '', mins: 0 }]) }, base: v.events });
+  r = await call('GET', '/api/sync?since=' + seq);
+  ok(p.status === 200 && r.body.settings.events === p.body.version && r.body.settings.events !== v.events
+     && r.body.settings.shop === v.shop && !r.body.jobs.length,
+     'a diary event saved on another machine shows as a new copy of the events, and nothing else changes');
+  ok(r.cache === 'no-store' && (await call('GET', '/api/settings')).cache === 'no-store',
+     'and no browser or anything in between may keep an old answer');
 });
 
 await section('before the database has the change numbers', async () => {
